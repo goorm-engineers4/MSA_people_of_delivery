@@ -1,0 +1,93 @@
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+      routes:
+        # ===== User Service =====
+        # 공개 라우트(로그인/회원가입 등): 검증 + 헤더전파만 (AuthFilter)
+        - id: user-service-public
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user-service/auth/**,/api/user-service/oauth2/**,/api/user-service/docs/**,/api/user-service/actuator/**
+          filters:
+            - AuthFilter
+            - RewritePath=/api/user-service/(?<segment>.*), /${segment}
+
+        # 보호 라우트(반드시 인증): 무효면 게이트웨이에서 401 (AuthPermissionFilter)
+        - id: user-service-protected
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user-service/**
+          filters:
+            - AuthPermissionFilter
+            - RewritePath=/api/user-service/(?<segment>.*), /${segment}
+
+        # ===== Store Service =====
+        - id: store-service
+          uri: lb://store-service
+          predicates:
+            - Path=/api/store-service/**
+          filters:
+            - AuthFilter           # 로그인 있으면 헤더 전파 (서비스에서 비로그인 허용 가능)
+            - RewritePath=/api/store-service/(?<segment>.*), /${segment}
+
+        # ===== Order Service (보호 라우트 예시) =====
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/order-service/**
+          filters:
+            - AuthPermissionFilter
+            - RewritePath=/api/order-service/(?<segment>.*), /${segment}
+
+        # ===== Payment Service =====
+        # 웹훅 등 공개 엔드포인트는 public 라우트로 분리
+        - id: payment-service-public
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payment-service/webhook/**,/api/payment-service/docs/**
+          filters:
+            - AuthFilter
+            - RewritePath=/api/payment-service/(?<segment>.*), /${segment}
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payment-service/**
+          filters:
+            - AuthPermissionFilter
+            - RewritePath=/api/payment-service/(?<segment>.*), /${segment}
+
+        # ===== AI Service (읽기 공개, 쓰기 보호 같은 패턴이 필요하면 라우트 2개) =====
+        - id: ai-service-public
+          uri: lb://ai-service
+          predicates:
+            - Path=/api/ai-service/public/**,/api/ai-service/docs/**
+          filters:
+            - AuthFilter
+            - RewritePath=/api/ai-service/(?<segment>.*), /${segment}
+
+        - id: ai-service
+          uri: lb://ai-service
+          predicates:
+            - Path=/api/ai-service/**
+          filters:
+            - AuthPermissionFilter
+            - RewritePath=/api/ai-service/(?<segment>.*), /${segment}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
