@@ -12,10 +12,14 @@ import org.springframework.util.StringUtils;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class AuthPermissionFilter extends AbstractGatewayFilterFactory<AuthPermissionFilter.Config> {
 
     private final JwtUtil jwtUtil;
+
+    public AuthPermissionFilter(JwtUtil jwtUtil) {
+        super(AuthPermissionFilter.Config.class);
+        this.jwtUtil = jwtUtil;
+    }
 
     public static class Config { }
 
