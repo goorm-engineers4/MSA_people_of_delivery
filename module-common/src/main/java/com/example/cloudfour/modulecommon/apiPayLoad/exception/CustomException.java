@@ -1,6 +1,6 @@
-package com.example.modulecommon.apiPayLoad.exception;
+package com.example.cloudfour.modulecommon.apiPayLoad.exception;
 
-import com.example.modulecommon.apiPayLoad.code.BaseErrorCode;
+import com.example.cloudfour.modulecommon.apiPayLoad.code.BaseErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package com.example.modulecommon.config;
+package com.example.cloudfour.modulecommon.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

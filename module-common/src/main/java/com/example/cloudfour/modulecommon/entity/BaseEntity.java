@@ -1,4 +1,4 @@
-package com.example.modulecommon.entity;
+package com.example.cloudfour.modulecommon.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
