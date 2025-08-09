@@ -1,7 +1,6 @@
 package com.example.cloudfour.storeservice.domain.menu.dto;
 
 import com.example.cloudfour.storeservice.domain.menu.controller.MenuCommonRequestDTO;
-import com.example.cloudfour.storeservice.domain.menu.controller.MenuOptionCommonResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

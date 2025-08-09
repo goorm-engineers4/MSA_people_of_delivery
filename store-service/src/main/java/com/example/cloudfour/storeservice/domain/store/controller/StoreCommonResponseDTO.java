@@ -2,6 +2,8 @@ package com.example.cloudfour.storeservice.domain.store.controller;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.UUID;
+
 @Getter
 @Builder
 public class StoreCommonResponseDTO {
@@ -21,5 +23,14 @@ public class StoreCommonResponseDTO {
     public static class StoreCommonOptionResponseDTO{
         private float rating;
         private int reviewCount;
+    }
+
+    @Getter
+    @Builder
+    public static class StoreCommonsBaseResponseDTO{
+        protected UUID storeId;
+        protected String name;
+        protected String address;
+        protected String storePicture;
     }
 }

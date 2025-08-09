@@ -2,7 +2,11 @@ package com.example.cloudfour.storeservice.domain.region.entity;
 
 import com.example.cloudfour.storeservice.domain.store.entity.Store;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,14 +23,14 @@ public class Region {
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false)
-    private String si;
+    @Column(nullable = false, length = 20)
+    private String siDo;
 
-    @Column(nullable = false)
-    private String gu;
+    @Column(nullable = false, length = 20)
+    private String siGunGu;
 
-    @Column(nullable = false)
-    private String dong;
+    @Column(nullable = false, length = 50)
+    private String eupMyeonDong;
 
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "region", cascade = CascadeType.ALL)

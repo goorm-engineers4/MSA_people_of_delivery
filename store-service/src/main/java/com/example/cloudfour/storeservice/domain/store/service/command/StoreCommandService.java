@@ -1,6 +1,7 @@
 package com.example.cloudfour.storeservice.domain.store.service.command;
 
 import com.example.cloudfour.storeservice.domain.region.entity.Region;
+import com.example.cloudfour.storeservice.domain.region.service.RegionService;
 import com.example.cloudfour.storeservice.domain.region.repository.RegionRepository;
 import com.example.cloudfour.storeservice.domain.store.converter.StoreCategoryConverter;
 import com.example.cloudfour.storeservice.domain.store.converter.StoreConverter;
@@ -25,6 +26,7 @@ public class StoreCommandService {
 
     private final StoreRepository storeRepository;
     private final RegionRepository regionRepository;
+    private final RegionService regionService;
     private final StoreCategoryRepository storeCategoryRepository;
 
     public StoreResponseDTO.StoreCreateResponseDTO createStore(
@@ -41,7 +43,7 @@ public class StoreCommandService {
                         StoreCategoryConverter.toStoreCategory(dto.getStoreCommonRequestDTO().getCategory())
                 ));
 
-        Long regionId = regionService.parseAndSaveRegion(dto.getStoreCommonRequestDTO().getAddress());
+        UUID regionId = regionService.parseAndSaveRegion(dto.getStoreCommonRequestDTO().getAddress());
         Region region = regionRepository.findById(regionId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
 
@@ -54,7 +56,6 @@ public class StoreCommandService {
         return StoreConverter.toStoreCreateResponseDTO(store);
     }
 
-    /** 가게 수정 */
     public StoreResponseDTO.StoreUpdateResponseDTO updateStore(
             UUID storeId,
             StoreRequestDTO.StoreUpdateRequestDTO dto,
@@ -63,17 +64,14 @@ public class StoreCommandService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
 
-        // 소유자 검증
         if (!store.getOwnerId().equals(userId)) {
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        // 이름 중복 체크 (본인 가게 제외 로직 필요 시 보강)
         if (dto.getStoreCommonRequestDTO().getName() != null && storeRepository.existsByName(dto.getStoreCommonRequestDTO().getName())) {
             throw new StoreException(StoreErrorCode.ALREADY_ADD);
         }
 
-        // 카테고리 upsert
         if (dto.getStoreCommonRequestDTO().getCategory() != null) {
             StoreCategory category = storeCategoryRepository
                     .findByCategory(dto.getStoreCommonRequestDTO().getCategory())
@@ -83,15 +81,12 @@ public class StoreCommandService {
             store.setStoreCategory(category);
         }
 
-        // 필드 부분 업데이트
         store.update(dto.getStoreCommonRequestDTO().getName(), dto.getStoreCommonRequestDTO().getAddress());
-        // TODO: 주소 변경 시 Region 매핑/생성 로직 추가
-
         storeRepository.save(store);
         return StoreConverter.toStoreUpdateResponseDTO(store);
     }
 
-    /** 가게 삭제(소프트 삭제) */
+    
     public void deleteStore(UUID storeId, UUID userId) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));

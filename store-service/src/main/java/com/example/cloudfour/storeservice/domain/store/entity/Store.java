@@ -3,9 +3,23 @@ package com.example.cloudfour.storeservice.domain.store.entity;
 
 import com.example.cloudfour.storeservice.domain.menu.entity.Menu;
 import com.example.cloudfour.storeservice.domain.region.entity.Region;
-import com.example.common.entity.BaseEntity; //추후 common/build.gradle에 의존성 추가할 예정
-import jakarta.persistence.*;
-import lombok.*;
+import com.example.modulecommon.entity.BaseEntity;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +31,7 @@ import java.util.UUID;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "p_store")
-public class Store extends BaseEntity {
+public class Store extends BaseEntity{
 
     @Id
     @GeneratedValue
@@ -62,8 +76,7 @@ public class Store extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "regionId", nullable = false)
     private Region region;
-
-    /** 소유자 ID (User 마이크로서비스 참조 대신 UUID로만 저장) */
+    
     @Column(nullable = false, name = "owner_id")
     private UUID ownerId;
 
@@ -89,10 +102,5 @@ public class Store extends BaseEntity {
     public void update(String name, String address) {
         if (name != null) this.name = name;
         if (address != null) this.address = address;
-    }
-
-    /** 소프트 삭제 */
-    public void softDelete() {
-        this.setDeleted(true); // BaseEntity에 deleted 플래그가 있다고 가정
     }
 }

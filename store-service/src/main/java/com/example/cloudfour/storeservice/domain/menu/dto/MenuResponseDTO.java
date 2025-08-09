@@ -1,7 +1,6 @@
 package com.example.cloudfour.storeservice.domain.menu.dto;
 
 import com.example.cloudfour.storeservice.domain.menu.controller.MenuCommonResponseDTO;
-import com.example.cloudfour.storeservice.domain.menu.enums.MenuStatus;
 import lombok.Builder;
 import lombok.Getter;
 

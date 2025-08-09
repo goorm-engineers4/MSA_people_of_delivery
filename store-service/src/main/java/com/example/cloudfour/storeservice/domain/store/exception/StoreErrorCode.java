@@ -1,6 +1,7 @@
 package com.example.cloudfour.storeservice.domain.store.exception;
 
-import com.example.global.apiPayLoad.code.BaseErrorCode;
+import com.example.modulecommon.apiPayLoad.code.BaseErrorCode;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

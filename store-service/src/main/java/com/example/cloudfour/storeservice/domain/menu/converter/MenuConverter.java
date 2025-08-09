@@ -4,6 +4,9 @@ import com.example.cloudfour.storeservice.domain.menu.controller.MenuCommonRespo
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuRequestDTO;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.entity.Menu;
+import com.example.cloudfour.storeservice.domain.menu.entity.MenuOption;
+
+import java.util.List;
 
 public class MenuConverter {
 
@@ -17,10 +20,33 @@ public class MenuConverter {
                 .build();
     }
 
-    public static MenuResponseDTO.MenuDetailResponseDTO toMenuDetailResponseDTO(Menu menu) {
+    public static MenuResponseDTO.MenuDetailResponseDTO toMenuDetail1ResponseDTO(Menu menu) {
         return MenuResponseDTO.MenuDetailResponseDTO.builder()
                 .menuCommonResponseDTO(toMenuCommonResponseDTO(menu))
+                .storeName(menu.getStore().getName())
                 .content(menu.getContent())
+                .createdAt(menu.getCreatedAt())
+                .updatedAt(menu.getUpdatedAt())
+                .build();
+    }
+
+    public static MenuResponseDTO.MenuDetailResponseDTO toMenuDetail2ResponseDTO(
+            Menu menu, List<MenuResponseDTO.MenuOptionDTO> options) {
+        return MenuResponseDTO.MenuDetailResponseDTO.builder()
+                .menuCommonResponseDTO(toMenuCommonResponseDTO(menu))
+                .storeName(menu.getStore().getName())
+                .content(menu.getContent())
+                .createdAt(menu.getCreatedAt())
+                .updatedAt(menu.getUpdatedAt())
+                .menuOptions(options)
+                .build();
+    }
+
+    public static MenuResponseDTO.MenuOptionDTO toMenuOptionDTO(MenuOption option) {
+        return MenuResponseDTO.MenuOptionDTO.builder()
+                .menuOptionId(option.getId())
+                .optionName(option.getOptionName())
+                .additionalPrice(option.getAdditionalPrice())
                 .build();
     }
 
@@ -34,8 +60,10 @@ public class MenuConverter {
     public static MenuResponseDTO.MenuTopResponseDTO toMenuTopResponseDTO(Menu menu) {
         return MenuResponseDTO.MenuTopResponseDTO.builder()
                 .menuCommonResponseDTO(toMenuCommonResponseDTO(menu))
+                .storeName(menu.getStore().getName())
                 .build();
     }
+
 
     public static MenuResponseDTO.MenuTimeTopResponseDTO toMenuTimeTopResponseDTO(Menu menu) {
         return MenuResponseDTO.MenuTimeTopResponseDTO.builder()
@@ -44,8 +72,18 @@ public class MenuConverter {
     }
 
     public static MenuResponseDTO.MenuRegionTopResponseDTO toMenuRegionTopResponseDTO(Menu menu) {
+        var store = menu.getStore();
+
+        String regionStr = null;
+        if (store.getAddress() != null) {
+            String[] parts = store.getAddress().trim().split("\\s+");
+            if (parts.length >= 2) regionStr = parts[0] + " " + parts[1];
+        }
+
         return MenuResponseDTO.MenuRegionTopResponseDTO.builder()
                 .menuCommonResponseDTO(toMenuCommonResponseDTO(menu))
+                .storeName(store.getName())
+                .region(regionStr)
                 .build();
     }
 

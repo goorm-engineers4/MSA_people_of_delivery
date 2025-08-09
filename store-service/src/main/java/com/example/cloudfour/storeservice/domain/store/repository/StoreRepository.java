@@ -1,6 +1,6 @@
 package com.example.cloudfour.storeservice.domain.store.repository;
 
-import com.example.cloudfour.peopleofdelivery.domain.store.entity.Store;
+import com.example.cloudfour.storeservice.domain.store.entity.Store;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

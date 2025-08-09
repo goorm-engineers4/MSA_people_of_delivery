@@ -34,8 +34,6 @@ public class MenuCommandService {
     private final StoreRepository storeRepository;
     private final MenuCategoryRepository menuCategoryRepository;
     private final MenuOptionRepository menuOptionRepository;
-
-    /** 메뉴 생성 */
     public MenuResponseDTO.MenuDetailResponseDTO createMenu(
             MenuRequestDTO.MenuCreateRequestDTO requestDTO,
             UUID storeId,
@@ -44,34 +42,30 @@ public class MenuCommandService {
         Store store = storeRepository.findByIdAndIsDeletedFalse(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
 
-        // 소유자 검증
         if (!store.getOwnerId().equals(userId)) {
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        // 카테고리 조회/생성
         MenuCategory menuCategory = menuCategoryRepository.findByCategory(requestDTO.getMenuCommonMainRequestDTO().getCategory())
                 .orElseGet(() -> menuCategoryRepository.save(
                         MenuCategory.builder().category(requestDTO.getMenuCommonMainRequestDTO().getCategory()).build()
                 ));
 
-        // 중복 메뉴명 체크
         if (menuRepository.existsByNameAndStoreId(requestDTO.getMenuCommonMainRequestDTO().getName(), store.getId())) {
             throw new MenuException(MenuErrorCode.ALREADY_ADD);
         }
 
-        // 메뉴 생성
         Menu menu = MenuConverter.toMenu(requestDTO);
         menu.setStore(store);
         menu.setMenuCategory(menuCategory);
 
 
         Menu savedMenu = menuRepository.save(menu);
-        return MenuConverter.toMenuDetailResponseDTO(menu);
+        return MenuConverter.toMenuDetail1ResponseDTO(savedMenu);
 
     }
 
-    /** 메뉴 수정 */
+    
     public MenuResponseDTO.MenuDetailResponseDTO updateMenu(
             UUID menuId,
             MenuRequestDTO.MenuUpdateRequestDTO requestDTO,
@@ -102,11 +96,11 @@ public class MenuCommandService {
         menu.setMenuCategory(menuCategory);
 
         Menu updatedMenu = menuRepository.save(menu);
-        return MenuConverter.toMenuDetailResponseDTO(menu);
+        return MenuConverter.toMenuDetail1ResponseDTO(updatedMenu);
 
     }
 
-    /** 메뉴 삭제 */
+    
     public void deleteMenu(UUID menuId, UUID userId) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
@@ -119,8 +113,6 @@ public class MenuCommandService {
         log.info("메뉴 ID: {}가 삭제되었습니다.", menuId);
     }
 
-
-    /** 메뉴 옵션 생성 */
     public MenuOptionResponseDTO.MenuOptionDetailResponseDTO createMenuOption(
             MenuRequestDTO.MenuOptionCreateRequestDTO requestDTO,
             UUID userId, UUID menuId
@@ -145,8 +137,7 @@ public class MenuCommandService {
 
         return MenuOptionConverter.toMenuOptionDetailResponseDTO(menuOption);
     }
-
-    /** 메뉴 옵션 수정 */
+    
     public MenuOptionResponseDTO.MenuOptionDetailResponseDTO updateMenuOption(
             UUID optionId,
             MenuRequestDTO.MenuOptionUpdateRequestDTO requestDTO,
@@ -170,7 +161,7 @@ public class MenuCommandService {
         return MenuOptionConverter.toMenuOptionDetailResponseDTO(savedOption);
     }
 
-    /** 메뉴 옵션 삭제 */
+    
     public void deleteMenuOption(UUID optionId, UUID userId) {
         MenuOption menuOption = menuOptionRepository.findByIdWithMenu(optionId)
                 .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));

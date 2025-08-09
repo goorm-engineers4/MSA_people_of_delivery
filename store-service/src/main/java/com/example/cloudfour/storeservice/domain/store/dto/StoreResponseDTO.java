@@ -1,7 +1,9 @@
 package com.example.cloudfour.storeservice.domain.store.dto;
 
 import com.example.cloudfour.storeservice.domain.store.controller.StoreCommonResponseDTO;
-import lombok.*;
+
+import lombok.Builder;
+import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
@@ -13,10 +15,7 @@ public class StoreResponseDTO {
     @Getter
     @SuperBuilder
     public static abstract class StoreBaseResponseDTO {
-        protected UUID storeId;
-        protected String name;
-        protected String address;
-        protected String storePicture;
+        StoreCommonResponseDTO.StoreCommonsBaseResponseDTO storeCommonsBaseResponseDTO;
     }
 
     @Getter
@@ -38,15 +37,7 @@ public class StoreResponseDTO {
     @SuperBuilder
     public static class StoreListResponseDTO extends StoreBaseResponseDTO {
         StoreCommonResponseDTO.StoreCommonOptionResponseDTO storeCommonOptionResponseDTO;
-
         private LocalDateTime createdAt;
-    }
-
-    @Getter
-    @SuperBuilder
-    public static class StoreDetailResponseDTO extends StoreBaseResponseDTO {
-        StoreCommonResponseDTO.StoreCommonMainResponseDTO storeCommonMainResponseDTO;
-        StoreCommonResponseDTO.StoreCommonOptionResponseDTO storeCommonOptionResponseDTO;
     }
 
     @Getter
@@ -62,4 +53,12 @@ public class StoreResponseDTO {
                     .build();
         }
     }
+
+    @Getter
+    @SuperBuilder
+    public static class StoreDetailResponseDTO extends StoreBaseResponseDTO {
+        StoreCommonResponseDTO.StoreCommonMainResponseDTO storeCommonMainResponseDTO;
+        StoreCommonResponseDTO.StoreCommonOptionResponseDTO storeCommonOptionResponseDTO;
+    }
+
 }
