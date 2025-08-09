@@ -3,6 +3,7 @@ package com.example.cloudfour.apigateway.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -44,5 +45,35 @@ public class JwtUtil {
         var body = ("{\"success\":false,\"code\":\"" + status.value() + "\",\"message\":\"" + msg + "\"}")
                 .getBytes(StandardCharsets.UTF_8);
         return res.writeWith(Mono.just(res.bufferFactory().wrap(body)));
+    }
+
+    public String createAccessToken(String userId, String role) {
+        long now = System.currentTimeMillis();
+        long exp = now + (props.getExpiration() * 1000L);
+        Key key = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
+        return Jwts.builder()
+                .setSubject(userId)
+                .claim("role", role)
+                .setIssuedAt(new java.util.Date(now))
+                .setExpiration(new java.util.Date(exp))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String createRefreshToken(String userId, String role) {
+        long now = System.currentTimeMillis();
+        long exp = now + (props.getExpiration() * 1000L * 24 * 7); // 7 days
+        Key key = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
+        return Jwts.builder()
+                .setSubject(userId)
+                .claim("role", role)
+                .setIssuedAt(new java.util.Date(now))
+                .setExpiration(new java.util.Date(exp))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public long getAccessTokenTtlSeconds() {
+        return props.getExpiration();
     }
 }
