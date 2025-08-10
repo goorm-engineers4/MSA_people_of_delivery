@@ -232,7 +232,6 @@ public class AuthService {
         verificationCodeRepository.delete(vc);
         log.info("이메일 변경 확정: userId={}, newEmail={}", userId, newEmail);
 
-        // 리프레시 토큰/세션 무효화 정책 적용 ??
     }
 
     private String generateCode(int len) {

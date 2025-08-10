@@ -34,7 +34,6 @@ public class UserConverter {
                 .build();
     }
 
-    // Entities
     public static UserAddress toUserAddress(String address, User user, Region region) {
         UserAddress ua = UserAddress.builder()
                 .address(address)
