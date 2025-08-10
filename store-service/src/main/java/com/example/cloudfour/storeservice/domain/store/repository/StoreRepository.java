@@ -14,14 +14,14 @@ import java.util.UUID;
 
 public interface StoreRepository extends JpaRepository<Store, UUID> {
 
-    @Query("SELECT s FROM Store s WHERE s.user.id = :userId AND s.user.isDeleted = false")
+    @Query("SELECT s FROM Store s WHERE s.ownerId = :userId AND s.user.isDeleted = false")
     Optional<Store> findByUserId(@Param("userId") UUID userId);
 
     boolean existsByName(String name);
 
     Optional<Store> findByIdAndIsDeletedFalse(UUID storeId);
 
-    @Query("select count(s) > 0 from Store s where s.user.id = :userId and s.id = :storeId and s.user.isDeleted = false")
+    @Query("select count(s) > 0 from Store s where s.ownerId = :userId and s.id = :storeId and s.user.isDeleted = false")
     boolean existsByStoreAndUser(@Param("storeId") UUID storeId, @Param("userId") UUID userId);
 
     @Query("SELECT s FROM Store s WHERE s.isDeleted = false AND s.storeCategory.id = :categoryId AND s.createdAt < :cursor ORDER BY s.createdAt DESC")
