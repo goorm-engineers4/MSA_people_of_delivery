@@ -1,5 +1,7 @@
 package com.example.cloudfour.userservice.domain.region.entity;
 
+import com.example.cloudfour.userservice.domain.region.exception.RegionErrorCode;
+import com.example.cloudfour.userservice.domain.region.exception.RegionException;
 import com.example.cloudfour.userservice.domain.user.entity.UserAddress;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -45,7 +47,7 @@ public class Region {
 
     public static class RegionBuilder{
         private RegionBuilder id(UUID id){
-            throw new UnsupportedOperationException("id 수정 불가");
+            throw new RegionException(RegionErrorCode.CREATE_FAILED);
         }
     }
 

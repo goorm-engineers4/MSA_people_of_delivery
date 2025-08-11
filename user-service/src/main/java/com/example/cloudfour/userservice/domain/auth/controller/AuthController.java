@@ -1,10 +1,10 @@
 package com.example.cloudfour.userservice.domain.auth.controller;
 
+import com.example.cloudfour.modulecommon.apiPayLoad.CustomResponse;
 import com.example.cloudfour.userservice.domain.auth.dto.AuthRequestDTO;
 import com.example.cloudfour.userservice.domain.auth.dto.AuthResponseDTO;
 import com.example.cloudfour.userservice.domain.auth.service.AuthService;
 import com.example.cloudfour.userservice.security.GatewayPrincipal;
-import com.example.modulecommon.apiPayLoad.CustomResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
