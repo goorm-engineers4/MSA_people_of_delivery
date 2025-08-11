@@ -1,6 +1,7 @@
 package com.example.cloudfour.cartservice.order.controller;
 
 import com.example.cloudfour.cartservice.config.GatewayPrincipal;
+import com.example.cloudfour.cartservice.order.dto.OrderItemResponseDTO;
 import com.example.cloudfour.cartservice.order.dto.OrderRequestDTO;
 import com.example.cloudfour.cartservice.order.dto.OrderResponseDTO;
 import com.example.cloudfour.cartservice.order.service.command.OrderCommandServiceImpl;
@@ -51,6 +52,16 @@ public class OrderController {
     ){
         OrderResponseDTO.OrderDetailResponseDTO order = orderQueryService.getOrderById(orderId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, order);
+    }
+
+    @GetMapping("/{orderItemId}")
+    @Operation(summary = "주문 아이템 상세 조회", description = "주문 아이템을 상세 조회합니다. 주문 아이템 상세 조회에 사용되는 API입니다.")
+    public CustomResponse<OrderItemResponseDTO.OrderItemListResponseDTO> getOrderItem(
+            @PathVariable("orderItemId") UUID orderItemId,
+            @AuthenticationPrincipal GatewayPrincipal user
+    ){
+        OrderItemResponseDTO.OrderItemListResponseDTO orderItem = orderQueryService.getOrderItemById(orderItemId,user);
+        return CustomResponse.onSuccess(HttpStatus.OK, orderItem);
     }
 
     @GetMapping("/me")

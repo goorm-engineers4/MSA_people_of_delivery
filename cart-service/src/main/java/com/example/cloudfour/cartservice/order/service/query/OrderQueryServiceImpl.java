@@ -12,6 +12,8 @@ import com.example.cloudfour.cartservice.order.entity.Order;
 import com.example.cloudfour.cartservice.order.entity.OrderItem;
 import com.example.cloudfour.cartservice.order.exception.OrderErrorCode;
 import com.example.cloudfour.cartservice.order.exception.OrderException;
+import com.example.cloudfour.cartservice.order.exception.OrderItemErrorCode;
+import com.example.cloudfour.cartservice.order.exception.OrderItemException;
 import com.example.cloudfour.cartservice.order.repository.OrderItemRepository;
 import com.example.cloudfour.cartservice.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +57,21 @@ public class OrderQueryServiceImpl {
         return OrderConverter.toOrderDetailResponseDTO(order,orderItemDTOS);
     }
 
+    public OrderItemResponseDTO.OrderItemListResponseDTO getOrderItemById(UUID orderItemId, GatewayPrincipal user){
+        OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(()->new OrderException(OrderErrorCode.NOT_FOUND));
+        if(orderItemRepository.existsByUserId(orderItem.getId(),user.userId())){
+            throw new OrderItemException(OrderItemErrorCode.UNAUTHORIZED_ACCESS);
+        }
+        log.info("주문 아이템 조회 권한 확인");
+        MenuOptionResponseDTO menuOptionDTO = restTemplate.getForObject(
+                "http://menu-service/api/menus/options/{optionId}/detail",
+                MenuOptionResponseDTO.class,
+                orderItem.getMenuOption()
+        );
+        log.info("주문 아이템 조회 완료");
+        return OrderItemConverter.toOrderItemClassListDTO(orderItem,menuOptionDTO);
+    }
+
     public OrderResponseDTO.OrderUserListResponseDTO getOrderListByUser(GatewayPrincipal user, LocalDateTime cursor, Integer size) {
         if(cursor == null) {
             cursor = first_cursor;
@@ -79,9 +96,10 @@ public class OrderQueryServiceImpl {
     }
 
     public OrderResponseDTO.OrderStoreListResponseDTO getOrderListByStore(UUID storeId, LocalDateTime cursor, Integer size, GatewayPrincipal user) {
-//        if(!storeRepository.existsByStoreAndUser(storeId, user.getId())) {
-//            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
-//        }
+        StoreResponseDTO store = restTemplate.getForObject("http://store-service/api/stores/{storeId}", StoreResponseDTO.class, storeId);
+        if(store.getUserId() != user.userId()) {
+            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
+        }
         if(cursor == null) {
             cursor = first_cursor;
         }

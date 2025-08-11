@@ -11,8 +11,6 @@ public class OrderItemConverter {
     public static OrderItemResponseDTO.OrderItemListResponseDTO toOrderItemClassListDTO(OrderItem orderItem, MenuOptionResponseDTO option) {
         return OrderItemResponseDTO.OrderItemListResponseDTO.builder()
                 .option(option)
-                .price(orderItem.getPrice())
-                .quantity(orderItem.getQuantity())
                 .build();
     }
 
