@@ -4,8 +4,7 @@ import lombok.Getter;
 
 import java.util.UUID;
 
-@Getter
-@Builder
+
 public class StoreCommonResponseDTO {
     @Getter
     @Builder

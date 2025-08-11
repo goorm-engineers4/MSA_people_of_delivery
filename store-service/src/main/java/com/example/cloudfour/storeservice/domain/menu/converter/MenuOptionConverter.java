@@ -5,12 +5,6 @@ import com.example.cloudfour.storeservice.domain.menu.dto.MenuOptionResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.entity.MenuOption;
 
 public class MenuOptionConverter {
-    public static MenuOptionResponseDTO.MenuOptionListResponseDTO toMenuOptionListResponseDTO(MenuOption option) {
-        return MenuOptionResponseDTO.MenuOptionListResponseDTO.builder()
-                .menuOptionCommonResponseDTO(toMenuOptionCommonResponseDTO(option))
-                .build();
-    }
-
     public static MenuOptionResponseDTO.MenuOptionDetailResponseDTO toMenuOptionDetailResponseDTO(MenuOption option) {
         return MenuOptionResponseDTO.MenuOptionDetailResponseDTO.builder()
                 .menuOptionCommonResponseDTO(toMenuOptionCommonResponseDTO(option))

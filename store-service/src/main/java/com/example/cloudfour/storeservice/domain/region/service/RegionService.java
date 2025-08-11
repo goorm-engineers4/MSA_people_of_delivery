@@ -2,11 +2,13 @@ package com.example.cloudfour.storeservice.domain.region.service;
 
 import com.example.cloudfour.storeservice.domain.region.entity.Region;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class RegionService {
 
@@ -19,12 +21,12 @@ public class RegionService {
         String siDo = parts[0], siGunGu = parts[1], eupMyeonDong = parts[2];
 
         return regionRepository.findBySiDoAndSiGunGuAndEupMyeonDong(siDo, siGunGu, eupMyeonDong)
-                .map(Region::getId) // UUID
+                .map(Region::getId)
                 .orElseGet(() -> {
                     Region newRegion = Region.builder()
                             .siDo(siDo).siGunGu(siGunGu).eupMyeonDong(eupMyeonDong)
                             .build();
-                    return regionRepository.save(newRegion).getId(); // UUID
+                    return regionRepository.save(newRegion).getId();
                 });
     }
 }

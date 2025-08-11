@@ -1,5 +1,7 @@
 package com.example.cloudfour.storeservice.domain.menu.entity;
 
+import com.example.cloudfour.storeservice.domain.menu.exception.MenuOptionErrorCode;
+import com.example.cloudfour.storeservice.domain.menu.exception.MenuOptionException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,7 +38,7 @@ public class MenuCategory {
 
     public static class MenuCategoryBuilder{
         private MenuCategoryBuilder id(UUID id){
-            throw new UnsupportedOperationException("id 수정 불가");
+            throw new MenuOptionException(MenuOptionErrorCode.CREATE_FAILED);
         }
     }
 }

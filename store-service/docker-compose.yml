@@ -1,9 +1,9 @@
 services:
-  postgres:
+  postgres-store:
     image: postgres:latest
-    container_name: sample-postgres
+    container_name: store-postgres
     ports:
-      - 5432:5432
+      - 5435:5432
     environment:
       - POSTGRES_DB=${LOCAL_DB}
       - POSTGRES_USER=${LOCAL_DB_USERNAME}

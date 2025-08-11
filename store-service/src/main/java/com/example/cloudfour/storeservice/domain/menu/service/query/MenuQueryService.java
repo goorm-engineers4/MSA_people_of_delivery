@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,6 +39,7 @@ public class MenuQueryService {
     private final MenuCategoryRepository menuCategoryRepository;
     private final StoreRepository storeRepository;
     private final MenuOptionRepository menuOptionRepository;
+    private final RestTemplate restTemplate;
 
     private static final LocalDateTime FIRST_CURSOR = LocalDateTime.now().plusDays(1);
 
@@ -102,29 +104,30 @@ public class MenuQueryService {
                 .build();
     }
 
-    public List<MenuResponseDTO.MenuTopResponseDTO> getTopMenus(UUID userId) {
-        return menuRepository.findTopMenusByOrderCount(PageRequest.of(0, 20))
-                .stream()
-                .map(MenuConverter::toMenuTopResponseDTO)
-                .toList();
-    }
-
-    public List<MenuResponseDTO.MenuTimeTopResponseDTO> getTimeTopMenus(UUID userId) {
-        LocalDateTime startTime = LocalDateTime.now().minusHours(24);
-        LocalDateTime endTime = LocalDateTime.now();
-
-        return menuRepository.findTopMenusByTimeRange(startTime, endTime, PageRequest.of(0, 20))
-                .stream()
-                .map(MenuConverter::toMenuTimeTopResponseDTO)
-                .toList();
-    }
-
-    public List<MenuResponseDTO.MenuRegionTopResponseDTO> getRegionTopMenus(String si, String gu, UUID userId) {
-        return menuRepository.findTopMenusByRegion(si, gu, PageRequest.of(0, 20))
-                .stream()
-                .map(MenuConverter::toMenuRegionTopResponseDTO)
-                .toList();
-    }
+//    public List<MenuResponseDTO.MenuTopResponseDTO> getTopMenus(UUID userId) {
+//        OrderItemResponseDTO orderItemResponseDTO = restTemplate.getForObject("http://order-service/api/order-items/{userId}", OrderItemResponseDTO.class, userId);
+//        return menuRepository.findTopMenusByOrderCount(PageRequest.of(0, 20))
+//                .stream()
+//                .map(MenuConverter::toMenuTopResponseDTO)
+//                .toList();
+//    }
+//
+//    public List<MenuResponseDTO.MenuTimeTopResponseDTO> getTimeTopMenus(UUID userId) {
+//        LocalDateTime startTime = LocalDateTime.now().minusHours(24);
+//        LocalDateTime endTime = LocalDateTime.now();
+//
+//        return menuRepository.findTopMenusByTimeRange(startTime, endTime, PageRequest.of(0, 20))
+//                .stream()
+//                .map(MenuConverter::toMenuTimeTopResponseDTO)
+//                .toList();
+//    }
+//
+//    public List<MenuResponseDTO.MenuRegionTopResponseDTO> getRegionTopMenus(String si, String gu, UUID userId) {
+//        return menuRepository.findTopMenusByRegion(si, gu, PageRequest.of(0, 20))
+//                .stream()
+//                .map(MenuConverter::toMenuRegionTopResponseDTO)
+//                .toList();
+//    }
 
     public MenuResponseDTO.MenuDetailResponseDTO getMenuDetail(UUID menuId, UUID userId) {
         Menu menu = menuRepository.findById(menuId)

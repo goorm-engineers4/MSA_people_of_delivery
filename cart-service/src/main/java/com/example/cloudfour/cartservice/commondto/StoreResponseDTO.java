@@ -9,5 +9,6 @@ import java.util.UUID;
 @Builder
 public class StoreResponseDTO {
     private UUID storeId;
+    private UUID userId;
     private String name;
 }

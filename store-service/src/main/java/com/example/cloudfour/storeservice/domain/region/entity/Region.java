@@ -1,7 +1,15 @@
 package com.example.cloudfour.storeservice.domain.region.entity;
 
 import com.example.cloudfour.storeservice.domain.store.entity.Store;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.CascadeType;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +39,6 @@ public class Region {
 
     @Column(nullable = false, length = 50)
     private String eupMyeonDong;
-
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "region", cascade = CascadeType.ALL)
     @Builder.Default
