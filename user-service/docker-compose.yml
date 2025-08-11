@@ -3,7 +3,7 @@ services:
     image: postgres:latest
     container_name: sample-postgres
     ports:
-      - 5432:5432
+      - 5436:5432
     environment:
       - POSTGRES_DB=${LOCAL_DB}
       - POSTGRES_USER=${LOCAL_DB_USERNAME}

@@ -1,9 +1,9 @@
 package com.example.cloudfour.userservice.domain.user.entity;
 
 
+import com.example.cloudfour.modulecommon.entity.BaseEntity;
 import com.example.cloudfour.userservice.domain.user.enums.LoginType;
 import com.example.cloudfour.userservice.domain.user.enums.Role;
-import com.example.modulecommon.entity.BaseEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
