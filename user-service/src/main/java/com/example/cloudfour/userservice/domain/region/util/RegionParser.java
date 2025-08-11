@@ -19,7 +19,6 @@ public final class RegionParser {
         String normalized = fullAddress.trim().replaceAll("\\s+", " ");
         String[] tokens = normalized.split(" ");
         if (tokens.length < 3) {
-            // Fallback: cannot reliably parse
             return null;
         }
 
