@@ -4,6 +4,7 @@ package com.example.cloudfour.storeservice.domain.store.entity;
 import com.example.cloudfour.modulecommon.entity.BaseEntity;
 import com.example.cloudfour.storeservice.domain.menu.entity.Menu;
 import com.example.cloudfour.storeservice.domain.region.entity.Region;
+import com.example.cloudfour.storeservice.domain.review.entity.Review;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -86,6 +87,10 @@ public class Store extends BaseEntity {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "store", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Menu> menus = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "store", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<Review> reviews = new ArrayList<>();
 
     public void setStoreCategory(StoreCategory storeCategory) {
         this.storeCategory = storeCategory;

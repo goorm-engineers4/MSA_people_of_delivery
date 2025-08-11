@@ -1,0 +1,79 @@
+package com.example.cloudfour.storeservice.domain.review.entity;
+
+import com.example.cloudfour.modulecommon.entity.BaseEntity;
+import com.example.cloudfour.storeservice.domain.review.dto.ReviewRequestDTO;
+import com.example.cloudfour.storeservice.domain.review.exception.ReviewErrorCode;
+import com.example.cloudfour.storeservice.domain.review.exception.ReviewException;
+import com.example.cloudfour.storeservice.domain.store.entity.Store;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.AccessLevel;
+
+import java.util.UUID;
+
+@Entity
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "p_review")
+public class Review extends BaseEntity {
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+    @Column(nullable = false)
+    private Integer score;
+
+    @Column(nullable = false)
+    private String content;
+
+    @Lob
+    private String pictureUrl;
+
+    @Column(name = "userId" ,nullable = false)
+    private UUID user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "storeId", nullable = false)
+    private Store store;
+
+    @Column(nullable = false)
+    private boolean userIsDeleted = false;
+
+    @Column(nullable = false)
+    private boolean storeIsDeleted = false;
+
+    public static class ReviewBuilder{
+        private ReviewBuilder id(UUID id){
+            throw new ReviewException(ReviewErrorCode.CREATE_FAILED);
+        }
+    }
+
+    public void setUser(UUID user){
+        this.user = user;
+    }
+
+    public void setStore(Store store){
+        this.store = store;
+        store.getReviews().add(this);
+
+    }
+
+    public void update(ReviewRequestDTO.ReviewUpdateRequestDTO reviewUpdateRequestDTO){
+        this.score = reviewUpdateRequestDTO.getReviewCommonRequestDTO().getScore();
+        this.content = reviewUpdateRequestDTO.getReviewCommonRequestDTO().getContent();
+        this.pictureUrl = reviewUpdateRequestDTO.getReviewCommonRequestDTO().getPictureUrl();
+    }
+}
