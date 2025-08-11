@@ -4,7 +4,6 @@ import com.example.cloudfour.storeservice.domain.store.controller.StoreCommonRes
 import com.example.cloudfour.storeservice.domain.store.dto.StoreRequestDTO;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreResponseDTO;
 import com.example.cloudfour.storeservice.domain.store.entity.Store;
-import com.example.modulecommon.entity.BaseEntity;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,8 +28,8 @@ public class StoreConverter {
 
     public static StoreResponseDTO.StoreCreateResponseDTO toStoreCreateResponseDTO(Store store) {
         return StoreResponseDTO.StoreCreateResponseDTO.builder()
-                .storeCommonsBaseResponseDTO(toStoreCommonsBaseResponseDTO(store))
                 .storeCommonMainResponseDTO(toStoreCommonMainResponseDTO(store))
+                .storeCommonsBaseResponseDTO(toStoreCommonBaseResponseDTO(store))
                 .createdAt(store.getCreatedAt())
                 .createdBy(store.getOwnerId())
                 .build();
@@ -38,6 +37,7 @@ public class StoreConverter {
 
     public static StoreResponseDTO.StoreUpdateResponseDTO toStoreUpdateResponseDTO(Store store){
         return StoreResponseDTO.StoreUpdateResponseDTO.builder()
+                .storeCommonsBaseResponseDTO(toStoreCommonBaseResponseDTO(store))
                 .category(store.getStoreCategory().getCategory())
                 .updatedAt(store.getUpdatedAt())
                 .build();
@@ -45,8 +45,8 @@ public class StoreConverter {
 
     public static StoreResponseDTO.StoreListResponseDTO toStoreListResponseDTO(Store store) {
         return StoreResponseDTO.StoreListResponseDTO.builder()
-                .storeCommonsBaseResponseDTO(toStoreCommonsBaseResponseDTO(store))
                 .storeCommonOptionResponseDTO(toStoreCommonOptionResponseDTO(store))
+                .storeCommonsBaseResponseDTO(toStoreCommonBaseResponseDTO(store))
                 .createdAt(store.getCreatedAt())
                 .build();
     }
@@ -61,21 +61,12 @@ public class StoreConverter {
                 .build();
     }
 
-
     public static StoreResponseDTO.StoreDetailResponseDTO toStoreDetailResponseDTO(Store store) {
         return StoreResponseDTO.StoreDetailResponseDTO.builder()
-                .storeCommonsBaseResponseDTO(toStoreCommonsBaseResponseDTO(store))
+                .userId(store.getOwnerId())
                 .storeCommonMainResponseDTO(toStoreCommonMainResponseDTO(store))
                 .storeCommonOptionResponseDTO(toStoreCommonOptionResponseDTO(store))
-                .build();
-    }
-
-    public static StoreCommonResponseDTO.StoreCommonsBaseResponseDTO toStoreCommonsBaseResponseDTO(Store store) {
-        return StoreCommonResponseDTO.StoreCommonsBaseResponseDTO.builder()
-                .storeId(store.getId())
-                .name(store.getName())
-                .address(store.getAddress())
-                .storePicture(store.getStorePicture())
+                .storeCommonsBaseResponseDTO(toStoreCommonBaseResponseDTO(store))
                 .build();
     }
 
@@ -99,4 +90,12 @@ public class StoreConverter {
                 .build();
     }
 
+    public static StoreCommonResponseDTO.StoreCommonsBaseResponseDTO toStoreCommonBaseResponseDTO(Store store){
+        return StoreCommonResponseDTO.StoreCommonsBaseResponseDTO.builder()
+                .storeId(store.getId())
+                .name(store.getName())
+                .address(store.getAddress())
+                .storePicture(store.getStorePicture())
+                .build();
+    }
 }

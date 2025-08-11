@@ -1,10 +1,11 @@
 package com.example.cloudfour.storeservice.domain.store.controller;
 
+import com.example.cloudfour.modulecommon.apiPayLoad.CustomResponse;
+import com.example.cloudfour.storeservice.config.GatewayPrincipal;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreRequestDTO;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreResponseDTO;
 import com.example.cloudfour.storeservice.domain.store.service.command.StoreCommandService;
 import com.example.cloudfour.storeservice.domain.store.service.query.StoreQueryService;
-import com.example.modulecommon.apiPayLoad.CustomResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,20 +34,14 @@ public class StoreController {
 
     private final StoreCommandService storeCommandService;
     private final StoreQueryService storeQueryService;
-
-    private UUID getUserIdFromJwt(Jwt jwt) {
-        String userId = jwt.getClaimAsString("userId");
-        if (userId == null || userId.isBlank()) userId = jwt.getSubject();
-        return UUID.fromString(userId);
-    }
-
+    
     @PostMapping("")
+    @Operation(summary = "가게 등록", description = "가게를 등록합니다.")
     public CustomResponse<StoreResponseDTO.StoreCreateResponseDTO> createStore(
             @RequestBody StoreRequestDTO.StoreCreateRequestDTO dto,
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticationPrincipal GatewayPrincipal user
     ) {
-        UUID userId = getUserIdFromJwt(jwt);
-        return CustomResponse.onSuccess(HttpStatus.CREATED, storeCommandService.createStore(dto, userId));
+        return CustomResponse.onSuccess(HttpStatus.CREATED, storeCommandService.createStore(dto, user.userId()));
     }
 
     @GetMapping("")
@@ -59,10 +53,9 @@ public class StoreController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
             @RequestParam(name = "size", defaultValue = "10") Integer size,
             @RequestParam(name = "keyword", required = false) String keyword,
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticationPrincipal GatewayPrincipal user
     ) {
-        UUID userId = getUserIdFromJwt(jwt);
-        StoreResponseDTO.StoreCursorListResponseDTO response = storeQueryService.getAllStores(cursor, size,keyword, userId);
+        StoreResponseDTO.StoreCursorListResponseDTO response = storeQueryService.getAllStores(cursor, size,keyword, user.userId());
         return CustomResponse.onSuccess(HttpStatus.OK, response);
     }
 
@@ -70,10 +63,9 @@ public class StoreController {
     @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세 정보를 조회합니다.")
     public CustomResponse<StoreResponseDTO.StoreDetailResponseDTO> getStoreDetail(
             @PathVariable UUID storeId,
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticationPrincipal GatewayPrincipal user
     ) {
-        UUID userId = getUserIdFromJwt(jwt);
-        return CustomResponse.onSuccess(HttpStatus.OK, storeQueryService.getStoreById(storeId,userId));
+        return CustomResponse.onSuccess(HttpStatus.OK, storeQueryService.getStoreById(storeId,user.userId()));
     }
 
     @PatchMapping("/{storeId}")
@@ -81,20 +73,18 @@ public class StoreController {
     public CustomResponse<StoreResponseDTO.StoreUpdateResponseDTO> updateStore(
             @PathVariable UUID storeId,
             @RequestBody StoreRequestDTO.StoreUpdateRequestDTO dto,
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticationPrincipal GatewayPrincipal user
     ) {
-        UUID userId = getUserIdFromJwt(jwt);
-        return CustomResponse.onSuccess(HttpStatus.OK, storeCommandService.updateStore(storeId, dto, userId));
+        return CustomResponse.onSuccess(HttpStatus.OK, storeCommandService.updateStore(storeId, dto, user.userId()));
     }
 
     @PatchMapping("/{storeId}/deleted")
     @Operation(summary = "가게 삭제", description = "본인의 가게를 삭제합니다.")
     public CustomResponse<String> deleteStore(
             @PathVariable UUID storeId,
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticationPrincipal GatewayPrincipal user
     ) {
-        UUID userId = getUserIdFromJwt(jwt);
-        storeCommandService.deleteStore(storeId, userId);
+        storeCommandService.deleteStore(storeId, user.userId());
         return CustomResponse.onSuccess(HttpStatus.OK, "가게 삭제 완료");
     }
 
@@ -107,11 +97,10 @@ public class StoreController {
             @RequestParam(name = "cursor", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
             @RequestParam(name = "size", defaultValue = "10") Integer size,
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticationPrincipal GatewayPrincipal user
     ) {
-        UUID userId = getUserIdFromJwt(jwt);
         StoreResponseDTO.StoreCursorListResponseDTO response =
-                storeQueryService.getStoresByCategory(categoryId, cursor, size, userId);
+                storeQueryService.getStoresByCategory(categoryId, cursor, size, user.userId());
         return CustomResponse.onSuccess(HttpStatus.OK, response);
     }
 

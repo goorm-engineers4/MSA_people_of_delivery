@@ -1,9 +1,9 @@
 package com.example.cloudfour.storeservice.domain.store.entity;
 
 
+import com.example.cloudfour.modulecommon.entity.BaseEntity;
 import com.example.cloudfour.storeservice.domain.menu.entity.Menu;
 import com.example.cloudfour.storeservice.domain.region.entity.Region;
-import com.example.modulecommon.entity.BaseEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,7 +31,7 @@ import java.util.UUID;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "p_store")
-public class Store extends BaseEntity{
+public class Store extends BaseEntity {
 
     @Id
     @GeneratedValue
@@ -80,6 +80,8 @@ public class Store extends BaseEntity{
     @Column(nullable = false, name = "owner_id")
     private UUID ownerId;
 
+    @Column(nullable = false)
+    private boolean userIsDeleted = false;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "store", cascade = CascadeType.ALL)
     @Builder.Default

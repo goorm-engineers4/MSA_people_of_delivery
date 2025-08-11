@@ -1,12 +1,13 @@
 package com.example.cloudfour.storeservice.domain.menu.exception;
 
+import com.example.cloudfour.modulecommon.apiPayLoad.code.BaseErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @AllArgsConstructor
 @Getter
-public enum MenuOptionErrorCode {
+public enum MenuOptionErrorCode implements BaseErrorCode {
     CREATE_FAILED(HttpStatus.BAD_REQUEST, "MENUOPTION400_1", "메뉴 옵션 정보를 생성할 수 없습니다."),
     UPDATE_FAILED(HttpStatus.BAD_REQUEST, "MENUOPTION400_2", "메뉴 옵션 정보를 수정할 수 없습니다."),
     DELETE_FAILED(HttpStatus.BAD_REQUEST, "MENUOPTION400_3", "메뉴 옵션 정보를 삭제할 수 없습니다."),

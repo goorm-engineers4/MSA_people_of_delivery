@@ -2,7 +2,6 @@ package com.example.cloudfour.storeservice.domain.store.dto;
 
 import com.example.cloudfour.storeservice.domain.store.controller.StoreCommonResponseDTO;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
@@ -41,7 +40,7 @@ public class StoreResponseDTO {
     }
 
     @Getter
-    @Builder
+    @SuperBuilder
     public static class StoreCursorListResponseDTO {
         private List<StoreListResponseDTO> storeList;
         private LocalDateTime nextCursor;
@@ -57,8 +56,8 @@ public class StoreResponseDTO {
     @Getter
     @SuperBuilder
     public static class StoreDetailResponseDTO extends StoreBaseResponseDTO {
+        UUID userId;
         StoreCommonResponseDTO.StoreCommonMainResponseDTO storeCommonMainResponseDTO;
         StoreCommonResponseDTO.StoreCommonOptionResponseDTO storeCommonOptionResponseDTO;
     }
-
 }

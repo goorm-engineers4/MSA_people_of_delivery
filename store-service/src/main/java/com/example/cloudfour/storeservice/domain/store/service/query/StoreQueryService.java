@@ -7,6 +7,7 @@ import com.example.cloudfour.storeservice.domain.store.exception.StoreErrorCode;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreException;
 import com.example.cloudfour.storeservice.domain.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StoreQueryService {
 
     private final StoreRepository storeRepository;

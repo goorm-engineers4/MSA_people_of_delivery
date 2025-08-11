@@ -2,11 +2,13 @@ package com.example.cloudfour.storeservice.domain.region.service;
 
 import com.example.cloudfour.storeservice.domain.region.entity.Region;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class RegionService {
 

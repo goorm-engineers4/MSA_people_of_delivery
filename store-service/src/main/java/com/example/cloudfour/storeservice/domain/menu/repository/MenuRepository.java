@@ -12,42 +12,42 @@ import java.util.List;
 import java.util.UUID;
 
 public interface MenuRepository extends JpaRepository<Menu, UUID> {
-    @Query("SELECT m FROM Menu m WHERE m.store.id = :storeId AND m.store.isDeleted = false AND m.store.user.isDeleted = false ORDER BY m.createdAt DESC")
+    @Query("SELECT m FROM Menu m WHERE m.store.id = :storeId AND m.store.isDeleted = false AND m.store.userIsDeleted = false ORDER BY m.createdAt DESC")
     List<Menu> findByStoreIdAndDeletedFalseOrderByCreatedAtDesc(@Param("storeId") UUID storeId);
 
-    @Query("SELECT m FROM Menu m WHERE m.store.id = :storeId AND m.store.isDeleted = false AND m.store.user.isDeleted = false AND m.createdAt < :cursor ORDER BY m.createdAt DESC")
+    @Query("SELECT m FROM Menu m WHERE m.store.id = :storeId AND m.store.isDeleted = false AND m.store.userIsDeleted = false AND m.createdAt < :cursor ORDER BY m.createdAt DESC")
     Slice<Menu> findByStoreIdAndDeletedFalseAndCreatedAtBefore(@Param("storeId") UUID storeId, @Param("cursor") LocalDateTime cursor, Pageable pageable);
 
-    @Query("SELECT m FROM Menu m WHERE m.store.id = :storeId AND m.store.isDeleted = false AND m.store.user.isDeleted = false AND m.menuCategory.id =:menuCategoryId AND m.createdAt < :cursor ORDER BY m.createdAt DESC")
+    @Query("SELECT m FROM Menu m WHERE m.store.id = :storeId AND m.store.isDeleted = false AND m.store.userIsDeleted = false AND m.menuCategory.id =:menuCategoryId AND m.createdAt < :cursor ORDER BY m.createdAt DESC")
     Slice<Menu> findByStoreIdAndMenuCategoryIdAndDeletedFalseAndCreatedAtBefore(@Param("storeId") UUID storeId, @Param("menuCategoryId") UUID menuCategoryId ,@Param("cursor") LocalDateTime cursor, Pageable pageable);
 
-    @Query("SELECT COUNT(m) > 0 FROM Menu m WHERE m.name = :name AND m.store.id = :storeId AND m.store.isDeleted = false AND m.store.user.isDeleted = false")
+    @Query("SELECT COUNT(m) > 0 FROM Menu m WHERE m.name = :name AND m.store.id = :storeId AND m.store.isDeleted = false AND m.store.userIsDeleted = false")
     boolean existsByNameAndStoreId(@Param("name") String name, @Param("storeId") UUID storeId);
 
-    @Query("SELECT m FROM Menu m " +
-            "LEFT JOIN OrderItem oi ON m.id = oi.menu.id " +
-            "WHERE m.store.isDeleted = false AND m.store.user.isDeleted = false " +
-            "GROUP BY m.id " +
-            "ORDER BY COUNT(oi.id) DESC, m.createdAt DESC")
-    List<Menu> findTopMenusByOrderCount(Pageable pageable);
-
-    @Query("SELECT m FROM Menu m " +
-            "LEFT JOIN OrderItem oi ON m.id = oi.menu.id " +
-            "LEFT JOIN oi.order o " +
-            "WHERE m.store.isDeleted = false AND m.store.user.isDeleted = false " +
-            "AND o.createdAt BETWEEN :startTime AND :endTime " +
-            "GROUP BY m.id " +
-            "ORDER BY COUNT(oi.id) DESC, m.createdAt DESC")
-    List<Menu> findTopMenusByTimeRange(@Param("startTime") LocalDateTime startTime,
-                                       @Param("endTime") LocalDateTime endTime,
-                                       Pageable pageable);
-
-    @Query("SELECT m FROM Menu m " +
-            "LEFT JOIN OrderItem oi ON m.id = oi.menu.id " +
-            "WHERE m.store.isDeleted = false AND m.store.user.isDeleted = false " +
-            "AND m.store.region.si = :si " +
-            "AND m.store.region.gu = :gu " +
-            "GROUP BY m.id " +
-            "ORDER BY COUNT(oi.id) DESC, m.createdAt DESC")
-    List<Menu> findTopMenusByRegion(@Param("si") String si, @Param("gu") String gu, Pageable pageable);
+//    @Query("SELECT m FROM Menu m " +
+//            "LEFT JOIN OrderItem oi ON m.id = oi.menu.id " +
+//            "WHERE m.store.isDeleted = false AND m.store.userIsDeleted = false " +
+//            "GROUP BY m.id " +
+//            "ORDER BY COUNT(oi.id) DESC, m.createdAt DESC")
+//    List<Menu> findTopMenusByOrderCount(Pageable pageable);
+//
+//    @Query("SELECT m FROM Menu m " +
+//            "LEFT JOIN OrderItem oi ON m.id = oi.menu.id " +
+//            "LEFT JOIN oi.order o " +
+//            "WHERE m.store.isDeleted = false AND m.store.userIsDeleted = false " +
+//            "AND o.createdAt BETWEEN :startTime AND :endTime " +
+//            "GROUP BY m.id " +
+//            "ORDER BY COUNT(oi.id) DESC, m.createdAt DESC")
+//    List<Menu> findTopMenusByTimeRange(@Param("startTime") LocalDateTime startTime,
+//                                       @Param("endTime") LocalDateTime endTime,
+//                                       Pageable pageable);
+//
+//    @Query("SELECT m FROM Menu m " +
+//            "LEFT JOIN OrderItem oi ON m.id = oi.menu.id " +
+//            "WHERE m.store.isDeleted = false AND m.store.userIsDeleted = false " +
+//            "AND m.store.region.siDo = :si " +
+//            "AND m.store.region.siGunGu = :gu " +
+//            "GROUP BY m.id " +
+//            "ORDER BY COUNT(oi.id) DESC, m.createdAt DESC")
+//    List<Menu> findTopMenusByRegion(@Param("si") String si, @Param("gu") String gu, Pageable pageable);
 }

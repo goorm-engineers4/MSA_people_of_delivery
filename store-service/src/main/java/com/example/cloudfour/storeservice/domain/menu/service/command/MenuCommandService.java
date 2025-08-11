@@ -34,6 +34,7 @@ public class MenuCommandService {
     private final StoreRepository storeRepository;
     private final MenuCategoryRepository menuCategoryRepository;
     private final MenuOptionRepository menuOptionRepository;
+
     public MenuResponseDTO.MenuDetailResponseDTO createMenu(
             MenuRequestDTO.MenuCreateRequestDTO requestDTO,
             UUID storeId,
