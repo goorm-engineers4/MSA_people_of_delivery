@@ -18,6 +18,7 @@ public class WeatherMenuResponseDTO {
    private List<String> alternativeRestaurants;
    private String reasoning;
    private String weatherAdvice;
+   private String todayWeatherSummary;
    private Boolean success;
    private String errorMessage;
    private String weatherDescKo;

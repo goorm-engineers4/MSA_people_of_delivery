@@ -1,8 +1,17 @@
 package com.example.cloudfour.aiservice.entity;
 
 import com.example.cloudfour.aiservice.global.entity.BaseEntity;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
@@ -17,12 +26,10 @@ public class AiLog extends BaseEntity {
     @GeneratedValue
     private UUID id;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String question;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String result;
 
     @Column(name = "success")

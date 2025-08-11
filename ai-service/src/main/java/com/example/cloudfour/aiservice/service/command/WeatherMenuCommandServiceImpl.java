@@ -10,6 +10,7 @@ import com.example.cloudfour.aiservice.entity.AiLog;
 import com.example.cloudfour.aiservice.exception.AiLogErrorCode;
 import com.example.cloudfour.aiservice.exception.AiLogException;
 import com.example.cloudfour.aiservice.repository.AiLogRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -164,9 +165,19 @@ public class WeatherMenuCommandServiceImpl {
         String requestType = "WEATHER_MENU";
         return geminiClient.generateContent(prompt)
                 .map(this::parseWeatherMenuResponse)
-                .map(response -> {
-                    saveAiLog(prompt, response.getRecommendedMenu(), true, null, requestType);
-                    return response;
+                .doOnNext(response -> {
+                    try {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        objectMapper.enable(com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT);
+                        String resultJson = objectMapper.writeValueAsString(response);
+                        log.info("AI 로그 저장 시도 - prompt 길이: {}, result 길이: {}", 
+                                prompt != null ? prompt.length() : 0, 
+                                resultJson != null ? resultJson.length() : 0);
+                        saveAiLog(prompt, resultJson, true, null, requestType);
+                    } catch (Exception e) {
+                        log.error("AI 응답 JSON 변환 실패: {}", e.getMessage());
+                        saveAiLog(prompt, "AI 응답 JSON 변환 실패: " + e.getMessage(), false, e.getMessage(), requestType);
+                    }
                 })
                 .onErrorResume(error -> {
                     log.error("날씨 기반 메뉴 추천 실패: {}", error.getMessage());
@@ -174,7 +185,15 @@ public class WeatherMenuCommandServiceImpl {
                             .success(false)
                             .errorMessage("날씨 기반 메뉴 추천에 실패했습니다: " + error.getMessage())
                             .build();
-                    saveAiLog(prompt, error.getMessage(), false, error.getMessage(), requestType);
+                    String resultJson;
+                    try {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        objectMapper.enable(com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT);
+                        resultJson = objectMapper.writeValueAsString(errorResponse);
+                    } catch (Exception e) {
+                        resultJson = "AI 응답 JSON 변환 실패: " + e.getMessage();
+                    }
+                    saveAiLog(prompt, resultJson, false, error.getMessage(), requestType);
                     return Mono.just(errorResponse);
                 });
     }
@@ -209,6 +228,7 @@ public class WeatherMenuCommandServiceImpl {
         prompt.append("대안 메뉴: (예: 비빔국수)\n");
         prompt.append("대안 가게: (예: 할머니국수 (종로))\n");
         prompt.append("날씨 조언: (예: 오늘처럼 맑은 날에는 시원한 콩국수로 더위를 식혀보세요!)\n");
+        prompt.append("오늘 날씨 요약: (예: 서울 오늘은 맑음, 기온 25°C, 습도 60%, 바람 약함, 체감온도 27°C로 쾌적한 날씨입니다.)\n");
         return prompt.toString();
     }
 
@@ -232,6 +252,7 @@ public class WeatherMenuCommandServiceImpl {
         String alternativeMenus = "";
         String alternativeRestaurants = "";
         String weatherAdvice = "";
+        String todayWeatherSummary = "";
         
         for (String line : lines) {
             if (line.contains("추천 메뉴:")) {
@@ -248,11 +269,16 @@ public class WeatherMenuCommandServiceImpl {
                 alternativeRestaurants = line.replaceAll("^.*?[:.]\\s*", "").trim();
             } else if (line.contains("날씨 조언:")) {
                 weatherAdvice = line.replaceAll("^.*?[:.]\\s*", "").trim();
+            } else if (line.contains("오늘 날씨 요약:")) {
+                todayWeatherSummary = line.replaceAll("^.*?[:.]\\s*", "").trim();
             }
         }
         
         List<String> alternativeMenuList = Arrays.asList(alternativeMenus.split(","));
         List<String> alternativeRestaurantList = Arrays.asList(alternativeRestaurants.split(","));
+        
+        log.info("AI 응답 파싱 결과 - recommendedMenu: '{}', restaurantName: '{}'", 
+                recommendedMenu, restaurantName);
         
         return WeatherMenuResponseDTO.builder()
                 .recommendedMenu(recommendedMenu)
@@ -262,12 +288,26 @@ public class WeatherMenuCommandServiceImpl {
                 .alternativeMenus(alternativeMenuList)
                 .alternativeRestaurants(alternativeRestaurantList)
                 .weatherAdvice(weatherAdvice)
+                .todayWeatherSummary(todayWeatherSummary)
                 .success(true)
                 .build();
     }
     
     private void saveAiLog(String question, String result, Boolean success, String errorMessage, String requestType) {
         try {
+            log.info("AI 로그 저장 시작 - question 길이: {}, result 길이: {}, success: {}, requestType: {}", 
+                    question != null ? question.length() : 0,
+                    result != null ? result.length() : 0,
+                    success,
+                    requestType);
+            
+            if (question != null && question.length() > 100) {
+                log.info("Question (첫 100자): {}", question.substring(0, 100) + "...");
+            }
+            if (result != null && result.length() > 100) {
+                log.info("Result (첫 100자): {}", result.substring(0, 100) + "...");
+            }
+            
             AiLog aiLog = AiLog.builder()
                     .question(question)
                     .result(result)
@@ -277,7 +317,10 @@ public class WeatherMenuCommandServiceImpl {
                     .build();
             
             aiLogRepository.save(aiLog);
-            log.info("AI 로그 저장 완료: {}", aiLog.getId());
+            log.info("AI 로그 저장 완료: ID={}, question 길이={}, result 길이={}", 
+                    aiLog.getId(), 
+                    aiLog.getQuestion() != null ? aiLog.getQuestion().length() : 0,
+                    aiLog.getResult() != null ? aiLog.getResult().length() : 0);
         } catch (Exception e) {
             log.error("AI 로그 저장 실패: {}", e.getMessage());
             throw new AiLogException(AiLogErrorCode.CREATE_FAILED);
