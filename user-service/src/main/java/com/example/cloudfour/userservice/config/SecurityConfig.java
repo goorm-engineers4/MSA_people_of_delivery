@@ -24,7 +24,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/",
+                                "/auth/**",
+                                "/oauth2/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/api/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new GatewayAuthHeaderFilter(), UsernamePasswordAuthenticationFilter.class)
