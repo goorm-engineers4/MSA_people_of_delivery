@@ -62,7 +62,7 @@ public class JwtUtil {
 
     public String createRefreshToken(String userId, String role) {
         long now = System.currentTimeMillis();
-        long exp = now + (props.getExpiration() * 1000L * 24 * 7); // 7 days
+        long exp = now + (props.getExpiration() * 1000L * 24 * 7);
         Key key = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
                 .setSubject(userId)

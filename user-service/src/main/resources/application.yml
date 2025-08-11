@@ -1,5 +1,5 @@
 server:
-  port: 8013
+  port: 8014
 
 eureka:
   instance:
@@ -31,6 +31,13 @@ spring:
   cloud:
     config:
       enabled: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      url: jdbc:redis://localhost:6379/redis
+      password: 1234
 
   mail:
     host: smtp.gmail.com
