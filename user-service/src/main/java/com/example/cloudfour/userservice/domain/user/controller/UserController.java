@@ -1,11 +1,11 @@
 package com.example.cloudfour.userservice.domain.user.controller;
 
+import com.example.cloudfour.modulecommon.apiPayLoad.CustomResponse;
 import com.example.cloudfour.userservice.domain.user.dto.UserRequestDTO;
 import com.example.cloudfour.userservice.domain.user.dto.UserResponseDTO;
 import com.example.cloudfour.userservice.domain.user.service.UserAddressService;
 import com.example.cloudfour.userservice.domain.user.service.UserService;
 import com.example.cloudfour.userservice.security.GatewayPrincipal;
-import com.example.modulecommon.apiPayLoad.CustomResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
