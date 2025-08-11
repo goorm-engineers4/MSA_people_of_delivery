@@ -1,9 +1,9 @@
 services:
-  postgres:
+  postgres-cart:
     image: postgres:latest
-    container_name: sample-postgres
+    container_name: cart-postgres
     ports:
-      - 5432:5432
+      - 5434:5432
     environment:
       - POSTGRES_DB=${LOCAL_DB}
       - POSTGRES_USER=${LOCAL_DB_USERNAME}

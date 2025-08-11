@@ -1,42 +1,12 @@
 server:
-  port: 8019
+  port: 8013
 
 spring:
   application:
-    name: sample-project
-
-  config:
-    import: optional:configserver:http://localhost:8888
-
-  eureka:
-    client:
-      enabled: false
-
-  datasource:
-    url: ${LOCAL_DB_URL}
-    driver-class-name: org.postgresql.Driver
-    username: ${LOCAL_DB_USERNAME}
-    password: ${LOCAL_DB_PASSWORD}
-
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-    auth-code-expiration-millis: 1800000
+    name: store-service
 
   jpa:
-    hibernate.ddl-auto: update
+    hibernate.ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -52,34 +22,13 @@ spring:
         serviceUrl:
           defaultZone: http://localhost:8761/eureka/
 
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET_ID}
-            scope: [ openid, profile, email ]
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            client-name: Google
-        provider:
-          google:
-            authorization-uri: https://accounts.google.com/o/oauth2/auth
-            token-uri: https://oauth2.googleapis.com/token
-            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
-            user-name-attribute: sub
 
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: 9000000
-  refresh-secret: ${JWT_REFRESH_SECRET}
-  refresh-expiration: 604800000
-
-
-toss:
-  secret-key: ${TOSS_SECRET}
-  client-key: ${TOSS_CLIENT}
-  base-url: https://api.tosspayments.com
-  confirm-endpoint: /confirm
-  success-url: http://localhost:8080/api/v1/payments/success
-  fail-url: http://localhost:8080/api/v1/payments/fail
+  datasource:
+    url: ${LOCAL_DB_URL}
+    driver-class-name: org.postgresql.Driver
+    #    driver-class-name: org.h2.Driver # 테스트용
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
+  cloud:
+    config:
+      enabled: false
