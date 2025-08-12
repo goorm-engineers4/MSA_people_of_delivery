@@ -32,7 +32,7 @@ public class ReviewController {
     private final ReviewCommandServiceImpl reviewCommandService;
     private final ReviewQueryServiceImpl reviewQueryService;
 
-    @PostMapping("/")
+    @PostMapping("/{storeId}")
     @Operation(summary = "리뷰 생성", description = "리뷰를 생성합니다. 리뷰 생성에 사용되는 API입니다.")
     public CustomResponse<ReviewResponseDTO.ReviewCreateResponseDTO> createReview(
         @RequestBody ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO,
@@ -56,7 +56,6 @@ public class ReviewController {
     @PatchMapping("/{reviewId}/canceled")
     @Operation(summary = "리뷰 삭제", description = "리뷰를 삭제합니다. 리뷰 삭제에 사용되는 API입니다.")
     public CustomResponse<String> deleteReview(
-            @RequestBody ReviewRequestDTO.ReviewUpdateRequestDTO reviewRequestDTO,
             @PathVariable("reviewId") UUID reviewId,
             @AuthenticationPrincipal GatewayPrincipal user
     ){
@@ -79,8 +78,9 @@ public class ReviewController {
     @Parameter(name = "cursor", description = "데이터가 시작하는 부분을 표시합니다")
     @Parameter(name = "size", description = "size만큼 데이터를 가져옵니다.")
     public CustomResponse<ReviewResponseDTO.ReviewUserListResponseDTO> getUserReviews(
-            @AuthenticationPrincipal GatewayPrincipal user
-            , @RequestParam(name = "cursor") LocalDateTime cursor, @RequestParam(name = "size") Integer size
+            @AuthenticationPrincipal GatewayPrincipal user,
+            @RequestParam(name = "cursor", required = false) LocalDateTime cursor,
+            @RequestParam(name = "size", defaultValue = "10") Integer size
     ){
         ReviewResponseDTO.ReviewUserListResponseDTO review = reviewQueryService.getReviewListByUser(cursor,size,user);
         return CustomResponse.onSuccess(HttpStatus.OK, review);
@@ -92,8 +92,9 @@ public class ReviewController {
     @Parameter(name = "size", description = "size만큼 데이터를 가져옵니다.")
     public CustomResponse<ReviewResponseDTO.ReviewStoreListResponseDTO> getStoreReviews(
             @PathVariable("storeId") UUID storeId,
-            @AuthenticationPrincipal GatewayPrincipal user
-            , @RequestParam(name = "cursor") LocalDateTime cursor, @RequestParam(name = "size") Integer size
+            @AuthenticationPrincipal GatewayPrincipal user,
+            @RequestParam(name = "cursor", required = false) LocalDateTime cursor,
+            @RequestParam(name = "size", defaultValue = "10") Integer size
     ){
         ReviewResponseDTO.ReviewStoreListResponseDTO review = reviewQueryService.getReviewListByStore(storeId,cursor,size,user);
         return CustomResponse.onSuccess(HttpStatus.OK, review);

@@ -10,7 +10,7 @@ public class ReviewCommonResponseDTO {
     @Getter
     public static class ReviewCommonCrudResponseDTO{
         UUID userId;
-        Integer score;
+        Float score;
         String content;
         String pictureUrl;
     }
@@ -19,7 +19,7 @@ public class ReviewCommonResponseDTO {
     @Builder
     public static class ReviewCommonGetResponseDTO{
         UUID reviewId;
-        Integer score;
+        Float score;
         String content;
         String pictureUrl;
     }
