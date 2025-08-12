@@ -28,7 +28,7 @@ public class AuthFilter extends AbstractGatewayFilterFactory<AuthFilter.Config> 
         return (exchange, chain) -> {
             var request = exchange.getRequest();
 
-            String bearer = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+            String bearer = request.getHeaders().getFirst("Authorization");
             String access = (StringUtils.hasText(bearer) && bearer.startsWith("Bearer "))
                     ? bearer.substring(7)
                     : request.getHeaders().getFirst("Access");
@@ -49,7 +49,7 @@ public class AuthFilter extends AbstractGatewayFilterFactory<AuthFilter.Config> 
                     .header("X-User-Role", role != null ? role : "")
                     .build();
 
-            return chain.filter(exchange);
+            return chain.filter(exchange.mutate().request(mutated).build());
         };
     }
 }
