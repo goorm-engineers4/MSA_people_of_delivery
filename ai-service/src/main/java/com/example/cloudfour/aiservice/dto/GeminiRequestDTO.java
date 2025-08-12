@@ -1,30 +1,23 @@
 package com.example.cloudfour.aiservice.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+
 import java.util.List;
 
-@Data
+@Getter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class GeminiRequestDTO {
     private List<Content> contents;
-    
-    @Data
+
+    @Getter
     @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class Content {
         private List<Part> parts;
     }
-    
-    @Data
+
+    @Getter
     @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class Part {
         private String text;
     }

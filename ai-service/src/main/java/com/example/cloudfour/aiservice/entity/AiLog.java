@@ -1,24 +1,20 @@
 package com.example.cloudfour.aiservice.entity;
 
+import com.example.cloudfour.aiservice.exception.AiLogErrorCode;
+import com.example.cloudfour.aiservice.exception.AiLogException;
 import com.example.cloudfour.aiservice.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "p_ailog")
 public class AiLog extends BaseEntity {
@@ -35,9 +31,15 @@ public class AiLog extends BaseEntity {
     @Column(name = "success")
     private Boolean success;
 
-    @Column(name = "error_message")
+    @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
 
     @Column(name = "request_type")
     private String requestType;
+
+    public static class AiLogBuilder{
+        private AiLogBuilder id(UUID id) {
+            throw new AiLogException(AiLogErrorCode.CREATE_FAILED);
+        }
+    }
 }

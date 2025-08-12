@@ -1,14 +1,10 @@
 package com.example.cloudfour.aiservice.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-@Data
+@Getter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class RestaurantDescriptionResponseDTO {
     private boolean success;
     private String errorMessage;

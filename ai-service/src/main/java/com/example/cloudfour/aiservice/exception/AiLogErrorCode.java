@@ -1,10 +1,8 @@
 package com.example.cloudfour.aiservice.exception;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-@AllArgsConstructor
 @Getter
 public enum AiLogErrorCode {
     CREATE_FAILED(HttpStatus.BAD_REQUEST, "AILOG400_1", "AI 로그 정보를 생성할 수 없습니다."),
@@ -18,4 +16,10 @@ public enum AiLogErrorCode {
     private final HttpStatus status;
     private final String code;
     private final String message;
+
+    AiLogErrorCode(HttpStatus status, String code, String message) {
+        this.status = status;
+        this.code = code;
+        this.message = message;
+    }
 }

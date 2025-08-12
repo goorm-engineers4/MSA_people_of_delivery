@@ -8,10 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
-import lombok.Data;
 import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 @Slf4j
 @Component
@@ -76,10 +73,7 @@ public class WeatherClient {
         }
     }
     
-    @Data
     @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class WeatherData {
         private String weather;
         private String temperature;
@@ -88,5 +82,74 @@ public class WeatherClient {
         private Double feelsLike;
         private Double windSpeed;
         private Double rain1h;
+
+        public WeatherData() {}
+
+        public WeatherData(String weather, String temperature, String humidity, Integer code, 
+                          Double feelsLike, Double windSpeed, Double rain1h) {
+            this.weather = weather;
+            this.temperature = temperature;
+            this.humidity = humidity;
+            this.code = code;
+            this.feelsLike = feelsLike;
+            this.windSpeed = windSpeed;
+            this.rain1h = rain1h;
+        }
+
+        public String getWeather() {
+            return weather;
+        }
+
+        public String getTemperature() {
+            return temperature;
+        }
+
+        public String getHumidity() {
+            return humidity;
+        }
+
+        public Integer getCode() {
+            return code;
+        }
+
+        public Double getFeelsLike() {
+            return feelsLike;
+        }
+
+        public Double getWindSpeed() {
+            return windSpeed;
+        }
+
+        public Double getRain1h() {
+            return rain1h;
+        }
+
+        public void setWeather(String weather) {
+            this.weather = weather;
+        }
+
+        public void setTemperature(String temperature) {
+            this.temperature = temperature;
+        }
+
+        public void setHumidity(String humidity) {
+            this.humidity = humidity;
+        }
+
+        public void setCode(Integer code) {
+            this.code = code;
+        }
+
+        public void setFeelsLike(Double feelsLike) {
+            this.feelsLike = feelsLike;
+        }
+
+        public void setWindSpeed(Double windSpeed) {
+            this.windSpeed = windSpeed;
+        }
+
+        public void setRain1h(Double rain1h) {
+            this.rain1h = rain1h;
+        }
     }
 }

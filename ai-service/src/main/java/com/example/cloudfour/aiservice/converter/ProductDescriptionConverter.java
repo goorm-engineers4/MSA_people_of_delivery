@@ -15,4 +15,16 @@ public class ProductDescriptionConverter {
                 .suggestedTags(suggestedTags)
                 .build();
     }
+
+    public static ProductDescriptionResponseDTO toSuccessResponse(String generatedDescription, 
+            String marketingCopy, String keyFeatures, String suggestedTags) {
+        return toProductDescriptionResponseDTO(true, null, generatedDescription, marketingCopy, keyFeatures, suggestedTags);
+    }
+
+    public static ProductDescriptionResponseDTO toErrorResponse(String errorMessage) {
+        return ProductDescriptionResponseDTO.builder()
+                .success(false)
+                .errorMessage(errorMessage)
+                .build();
+    }
 }

@@ -1,15 +1,11 @@
 package com.example.cloudfour.aiservice.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 import java.util.List;
 
-@Data
+@Getter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class WeatherMenuResponseDTO {
    private String recommendedMenu;
    private String restaurantName;

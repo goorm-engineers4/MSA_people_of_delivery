@@ -18,4 +18,17 @@ public class RestaurantDescriptionConverter {
                 .businessHighlights(businessHighlights)
                 .build();
     }
+
+    public static RestaurantDescriptionResponseDTO toSuccessResponse(String generatedDescription, 
+            String welcomeMessage, String atmosphereDescription, String recommendedDishes, String suggestedTags) {
+        return toRestaurantDescriptionResponseDTO(true, null, generatedDescription, welcomeMessage, 
+                atmosphereDescription, recommendedDishes, suggestedTags, null, null);
+    }
+
+    public static RestaurantDescriptionResponseDTO toErrorResponse(String errorMessage) {
+        return RestaurantDescriptionResponseDTO.builder()
+                .success(false)
+                .errorMessage(errorMessage)
+                .build();
+    }
 }
