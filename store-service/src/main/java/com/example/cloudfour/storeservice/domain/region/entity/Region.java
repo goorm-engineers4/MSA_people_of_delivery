@@ -1,5 +1,7 @@
 package com.example.cloudfour.storeservice.domain.region.entity;
 
+import com.example.cloudfour.storeservice.domain.region.exception.RegionErrorCode;
+import com.example.cloudfour.storeservice.domain.region.exception.RegionException;
 import com.example.cloudfour.storeservice.domain.store.entity.Store;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -46,8 +48,7 @@ public class Region {
 
     public static class RegionBuilder{
         private RegionBuilder id(UUID id){
-            throw new UnsupportedOperationException("id 수정 불가");
+            throw new RegionException(RegionErrorCode.CREATE_FAILED);
         }
     }
-
 }

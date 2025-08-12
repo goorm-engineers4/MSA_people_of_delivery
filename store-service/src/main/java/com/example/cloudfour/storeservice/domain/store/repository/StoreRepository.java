@@ -25,4 +25,6 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
             "or s.storeCategory.category ilike concat('%', :keyword, '%'))" +
             "and s.createdAt < :cursor ORDER BY s.createdAt DESC")
     Slice<Store> findAllByKeyWord(@Param("keyword") String keyword, LocalDateTime cursor, Pageable pageable);
+
+    void deleteAllByCreatedAtBefore(LocalDateTime createdAtBefore);
 }

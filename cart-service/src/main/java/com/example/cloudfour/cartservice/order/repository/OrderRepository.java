@@ -23,4 +23,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     @Query("select count(o) > 0 from Order o where o.id =:OrderId and o.user =:UserId and o.userIsDeleted = false and o.isDeleted = false")
     boolean existsByOrderIdAndUserId(@Param("OrderId") UUID orderId, @Param("UserId") UUID userId);
+
+    void deleteAllByCreatedAtBefore(LocalDateTime createdAtBefore);
 }
