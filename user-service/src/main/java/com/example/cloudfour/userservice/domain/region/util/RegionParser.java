@@ -10,7 +10,7 @@ public final class RegionParser {
     private static final List<String> GU_SUFFIX = List.of("구","군","시");
     private static final List<String> DONG_SUFFIX = List.of("동","읍","면","리");
 
-    private static final Pattern APT_BLOCK = Pattern.compile("^\\d+(동|호)$"); // 101동, 1203호
+    private static final Pattern APT_BLOCK = Pattern.compile("^\\d+(동|호)$");
 
     private RegionParser() {}
 
@@ -56,7 +56,6 @@ public final class RegionParser {
             }
         }
 
-        // 세종 보정: 구가 없다면 "세종시"를 부여
         if (si != null && gu == null && si.contains("세종")) {
             gu = "세종시";
         }
