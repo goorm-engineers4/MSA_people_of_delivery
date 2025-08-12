@@ -45,7 +45,7 @@ public class UserAddressService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserAddressException(UserAddressErrorCode.NOT_FOUND));
 
-        Region region = regionService.resolveOrCreateByAddress(req.address());
+        Region region = regionService.getOrCreateFromAddress(req.address());
 
         UserAddress ua = UserConverter.toUserAddress(req.address(), user, region);
 

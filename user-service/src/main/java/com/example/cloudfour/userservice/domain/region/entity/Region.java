@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,31 +25,36 @@ import java.util.UUID;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
-@Table(name = "p_region")
+@Table(
+        name = "p_region",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_region_sgd",
+                columnNames = {"siDo","siGunGu","eupMyeonDong"}
+        )
+)
 public class Region {
     @Id
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false)
-    private String si;
+    @Column(nullable = false, length = 20)
+    private String siDo;
 
-    @Column(nullable = false)
-    private String gu;
+    @Column(nullable = false, length = 20)
+    private String siGunGu;
 
-    @Column(nullable = false)
-    private String dong;
+    @Column(nullable = false, length = 50)
+    private String eupMyeonDong;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "region", cascade = CascadeType.ALL)
-    @Builder.Default
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "region")
     private List<UserAddress> addresses = new ArrayList<>();
 
-    public static class RegionBuilder{
-        private RegionBuilder id(UUID id){
-            throw new RegionException(RegionErrorCode.CREATE_FAILED);
-        }
+    public static Region ofRaw(String siDo, String siGunGu, String eupMyeonDong) {
+        Region r = new Region();
+        r.siDo = siDo;
+        r.siGunGu = siGunGu;
+        r.eupMyeonDong = eupMyeonDong;
+        return r;
     }
 
 }
