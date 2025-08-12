@@ -7,16 +7,21 @@ import jakarta.validation.constraints.Size;
 
 public class AuthRequestDTO {
 
-    public record RegisterRequestDto(
+    public record RegisterRequestDTO(
             @Email @NotBlank String email,
             @NotBlank @Size(min=2, max=20) String nickname,
             @NotBlank @Size(min=8, max=64) String password,
             @NotBlank String number
     ) {}
 
-    public record LoginRequestDto(
+    public record LoginRequestDTO(
             @Email @NotBlank String email,
             @NotBlank @Size(min=8, max=64) String password
+    ) {}
+
+    public record RefreshTokenRequestDTO(
+            @Email @NotBlank String email,
+            @NotBlank String refreshToken
     ) {}
 
     public record PasswordChangeDto(
@@ -24,17 +29,20 @@ public class AuthRequestDTO {
             @NotBlank @Size(min = 8, max = 64) String newPassword
     ) {}
 
+    public record EmailCodeRequestDTO(
+            @Email @NotBlank String email
+    ) {}
 
     public record EmailVerifyRequestDTO(
             @Email @NotBlank String email,
             @NotBlank @Size(min=6, max=6) String code
     ) {}
 
-    public record EmailChangeStartRequest(
+    public record EmailChangeStartRequestDTO(
             @Email @NotBlank String newEmail
     ) {}
 
-    public record EmailChangeVerifyRequest(
+    public record EmailChangeVerifyRequestDTO(
             @Email @NotBlank String newEmail,
             @NotBlank @Size(min=6, max=6) String code
     ) {}

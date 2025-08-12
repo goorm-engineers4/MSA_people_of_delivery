@@ -7,7 +7,6 @@ import lombok.Getter;
 import java.util.UUID;
 
 public class AuthResponseDTO {
-
     @Getter
     @Builder
     @AllArgsConstructor
@@ -20,9 +19,16 @@ public class AuthResponseDTO {
     @Getter
     @Builder
     @AllArgsConstructor
-    public static class AuthLoginResponseDTO {
-        private UUID userId;
-        private String role;
-        private boolean emailVerified;
+    public static class AuthTokenResponseDTO {
+        private String accessToken;
+        private String refreshToken;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class AuthRefreshTokenResponseDTO {
+        private String accessToken;
+        private Long accessTokenExpiresIn;
     }
 }
