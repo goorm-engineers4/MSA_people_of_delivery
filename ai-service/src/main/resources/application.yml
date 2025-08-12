@@ -9,18 +9,6 @@ spring:
     driver-class-name: org.postgresql.Driver
     username: ${LOCAL_DB_USERNAME:postgres}
     password: ${LOCAL_DB_PASSWORD:1234}
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          timeout: 5000
-          starttls:
-            enable: true
   jpa:
     hibernate.ddl-auto: ${JPA_HIBERNATE_DDL_AUTO:update}
     show-sql: ${JPA_SHOW_SQL:false}
@@ -57,24 +45,7 @@ gemini:
 
 user:
   service:
-    url: http://localhost:8081
-
-jwt:
-  secret: ${JWT_SECRET:}
-  refresh-secret: ${JWT_REFRESH_SECRET:}
-  expiration: 86400000
-  refresh-expiration: 604800000
-
-# Google OAuth
-google:
-  client:
-    id: ${GOOGLE_CLIENT_ID:}
-    secret: ${GOOGLE_CLIENT_SECRET_ID:}
-
-# Toss Payments
-toss:
-  client: ${TOSS_CLIENT:}
-  secret: ${TOSS_SECRET:}
+    url: ${USER_SERVICE_URL:http://localhost:8081}
 
 logging:
   level:
