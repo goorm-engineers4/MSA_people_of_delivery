@@ -1,14 +1,10 @@
 package com.example.cloudfour.aiservice.exception;
 
-public class AiLogException extends RuntimeException {
-    private final AiLogErrorCode errorCode;
+import com.example.cloudfour.modulecommon.apiPayLoad.code.BaseErrorCode;
+import com.example.cloudfour.modulecommon.apiPayLoad.exception.CustomException;
 
-    public AiLogException(AiLogErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.errorCode = errorCode;
-    }
-
-    public AiLogErrorCode getErrorCode() {
-        return errorCode;
+public class AiLogException extends CustomException {
+    public AiLogException(BaseErrorCode errorCode) {
+        super(errorCode);
     }
 }
