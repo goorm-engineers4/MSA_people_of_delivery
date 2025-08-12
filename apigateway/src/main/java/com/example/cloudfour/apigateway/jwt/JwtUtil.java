@@ -1,10 +1,12 @@
 package com.example.cloudfour.apigateway.jwt;
 
+import ch.qos.logback.classic.Logger;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -13,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Date;
 
 @Component
 @RequiredArgsConstructor
@@ -20,8 +23,12 @@ public class JwtUtil {
     private final JwtProperties props;
 
     public boolean tokenValidation(String token) {
-        try { parseClaims(token); return true; }
-        catch (Exception e) { return false; }
+        try {
+            parseClaims(token);
+            return true; }
+        catch (Exception e) {
+            return false;
+        }
     }
 
     public String getIdFromToken(String token) {
@@ -35,7 +42,11 @@ public class JwtUtil {
 
     private Claims parseClaims(String token) {
         Key key = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     public Mono<Void> onError(ServerWebExchange exchange, String msg, HttpStatus status) {
@@ -48,27 +59,25 @@ public class JwtUtil {
     }
 
     public String createAccessToken(String userId, String role) {
-        long now = System.currentTimeMillis();
-        long exp = now + (props.getExpiration() * 1000L);
+        Date now = new Date();
         Key key = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
                 .setSubject(userId)
                 .claim("role", role)
-                .setIssuedAt(new java.util.Date(now))
-                .setExpiration(new java.util.Date(exp))
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + props.getExpiration()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String createRefreshToken(String userId, String role) {
-        long now = System.currentTimeMillis();
-        long exp = now + (props.getExpiration() * 1000L * 24 * 7);
-        Key key = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
+        Date now = new Date();
+        Key key = Keys.hmacShaKeyFor(props.getRefreshSecret().getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
                 .setSubject(userId)
                 .claim("role", role)
-                .setIssuedAt(new java.util.Date(now))
-                .setExpiration(new java.util.Date(exp))
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + props.getRefreshExpiration()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
