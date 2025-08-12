@@ -75,6 +75,12 @@ spring:
             - AuthPermissionFilter
             - RewritePath=/api/ai-service/(?<segment>.*),/${segment}
 
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 900000
+  refresh-secret: ${JWT_REFRESH_SECRET}
+  refresh-expiration: 604800000
+
 management:
   endpoints:
     web:
