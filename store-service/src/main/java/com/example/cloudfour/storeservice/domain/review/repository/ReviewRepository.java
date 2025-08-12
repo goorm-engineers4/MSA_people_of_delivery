@@ -19,4 +19,6 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
     @Query("select count(r) > 0 from Review r where r.id =:ReviewId and r.user =:UserId and r.userIsDeleted = false")
     boolean existsByReviewIdAndUserId(@Param("ReviewId") UUID reviewId, @Param("UserId") UUID userId);
+
+    void deleteAllByCreatedAtBefore(LocalDateTime createdAtBefore);
 }
