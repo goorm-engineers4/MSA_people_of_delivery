@@ -5,8 +5,6 @@ import com.example.cloudfour.userservice.domain.region.exception.RegionErrorCode
 import com.example.cloudfour.userservice.domain.region.exception.RegionException;
 import com.example.cloudfour.userservice.domain.region.repository.RegionRepository;
 import com.example.cloudfour.userservice.domain.region.util.RegionParser;
-import com.example.cloudfour.userservice.domain.user.exception.UserAddressErrorCode;
-import com.example.cloudfour.userservice.domain.user.exception.UserAddressException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -21,31 +19,31 @@ public class RegionService {
     public Region getOrCreateFromAddress(String fullAddress) {
         var p = RegionParser.parseOrThrow(fullAddress);
         var n = normalize(p.si(), p.gu(), p.dong());
-        return getOrCreate(n.si, n.gu, n.dong);
+        return getOrCreate(n.siDo, n.siGunGu, n.eupMyeonDong);
     }
 
     @Transactional
-    public Region getOrCreate(String si, String gu, String dong) {
-        var n = normalize(si, gu, dong);
-        return regionRepository.findBySiAndGuAndDong(n.si, n.gu, n.dong)
-                .orElseGet(() -> insertOrFind(n.si, n.gu, n.dong));
+    public Region getOrCreate(String siDo, String siGunGu, String eupMyeonDong) {
+        var n = normalize(siDo, siGunGu,eupMyeonDong);
+        return regionRepository.findBySiAndGuAndDong(n.siDo, n.siGunGu, n.eupMyeonDong)
+                .orElseGet(() -> insertOrFind(n.siDo, n.siGunGu, n.eupMyeonDong));
     }
 
-    private Region insertOrFind(String si, String gu, String dong) {
+    private Region insertOrFind(String siDo, String siGunGu, String eupMyeonDong) {
         try {
-            Region saved = regionRepository.save(Region.ofRaw(si, gu, dong));
+            Region saved = regionRepository.save(Region.ofRaw(siDo, siGunGu,eupMyeonDong));
             regionRepository.flush();
             return saved;
         } catch (DataIntegrityViolationException e) {
-            return regionRepository.findBySiAndGuAndDong(si, gu, dong)
+            return regionRepository.findBySiAndGuAndDong(siDo, siGunGu,eupMyeonDong)
                     .orElseThrow(() -> e);
         }
     }
 
-    private static record Sgd(String si, String gu, String dong) {}
+    private static record Sgd(String siDo, String siGunGu, String eupMyeonDong) {}
 
-    private static Sgd normalize(String si, String gu, String dong) {
-        return new Sgd(nn(si), nn(gu), nn(dong));
+    private static Sgd normalize(String siDo, String siGunGu, String eupMyeonDong) {
+        return new Sgd(nn(siDo), nn(siGunGu), nn(eupMyeonDong));
     }
     private static String nn(String v) {
         if (v == null) throw new RegionException(RegionErrorCode.INTERNAL_ERROR);

@@ -29,7 +29,7 @@ import java.util.UUID;
         name = "p_region",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_region_sgd",
-                columnNames = {"si","gu","dong"}
+                columnNames = {"siDo","siGunGu","eupMyeonDong"}
         )
 )
 public class Region {
@@ -37,23 +37,23 @@ public class Region {
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false)
-    private String si;
+    @Column(nullable = false, length = 20)
+    private String siDo;
 
-    @Column(nullable = false)
-    private String gu;
+    @Column(nullable = false, length = 20)
+    private String siGunGu;
 
-    @Column(nullable = false)
-    private String dong;
+    @Column(nullable = false, length = 50)
+    private String eupMyeonDong;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "region")
     private List<UserAddress> addresses = new ArrayList<>();
 
-    public static Region ofRaw(String si, String gu, String dong) {
+    public static Region ofRaw(String siDo, String siGunGu, String eupMyeonDong) {
         Region r = new Region();
-        r.si = si;
-        r.gu = gu;
-        r.dong = dong;
+        r.siDo = siDo;
+        r.siGunGu = siGunGu;
+        r.eupMyeonDong = eupMyeonDong;
         return r;
     }
 
