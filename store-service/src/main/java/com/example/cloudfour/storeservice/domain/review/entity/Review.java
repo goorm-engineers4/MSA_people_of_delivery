@@ -34,7 +34,7 @@ public class Review extends BaseEntity {
     private UUID id;
 
     @Column(nullable = false)
-    private Integer score;
+    private Float score;
 
     @Column(nullable = false)
     private String content;

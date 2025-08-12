@@ -9,7 +9,7 @@ import java.util.UUID;
 @Builder
 public class ReviewCommonRequestDTO {
     UUID storeId;
-    Integer score;
+    Float score;
     String content;
     String pictureUrl;
 }
