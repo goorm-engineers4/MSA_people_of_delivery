@@ -1,5 +1,7 @@
 package com.example.cloudfour.cartservice.cart.entity;
 
+import com.example.cloudfour.cartservice.cart.exception.CartErrorCode;
+import com.example.cloudfour.cartservice.cart.exception.CartException;
 import com.example.cloudfour.cartservice.cartitem.entity.CartItem;
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,7 +49,7 @@ public class Cart {
 
     public static class CartBuilder{
         private CartBuilder id(UUID id){
-            throw new UnsupportedOperationException("id 수정 불가");
+            throw new CartException(CartErrorCode.CREATE_FAILED);
         }
     }
 
