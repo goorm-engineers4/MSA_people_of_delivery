@@ -1,10 +1,13 @@
 package com.example.cloudfour.aiservice.exception;
 
+import com.example.cloudfour.modulecommon.apiPayLoad.code.BaseErrorCode;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public enum AiLogErrorCode {
+@AllArgsConstructor
+public enum AiLogErrorCode implements BaseErrorCode {
     CREATE_FAILED(HttpStatus.BAD_REQUEST, "AILOG400_1", "AI 로그 정보를 생성할 수 없습니다."),
     UPDATE_FAILED(HttpStatus.BAD_REQUEST, "AILOG400_2", "AI 로그 정보를 수정할 수 없습니다."),
     DELETE_FAILED(HttpStatus.BAD_REQUEST, "AILOG400_3", "AI 로그 정보를 삭제할 수 없습니다."),
@@ -16,10 +19,4 @@ public enum AiLogErrorCode {
     private final HttpStatus status;
     private final String code;
     private final String message;
-
-    AiLogErrorCode(HttpStatus status, String code, String message) {
-        this.status = status;
-        this.code = code;
-        this.message = message;
-    }
 }

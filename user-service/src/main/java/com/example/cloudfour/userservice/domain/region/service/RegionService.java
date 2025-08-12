@@ -25,7 +25,7 @@ public class RegionService {
     @Transactional
     public Region getOrCreate(String siDo, String siGunGu, String eupMyeonDong) {
         var n = normalize(siDo, siGunGu,eupMyeonDong);
-        return regionRepository.findBySiAndGuAndDong(n.siDo, n.siGunGu, n.eupMyeonDong)
+        return regionRepository.findBySiDoAndSiGunGuAndEupMyeonDong(n.siDo, n.siGunGu, n.eupMyeonDong)
                 .orElseGet(() -> insertOrFind(n.siDo, n.siGunGu, n.eupMyeonDong));
     }
 
@@ -35,7 +35,7 @@ public class RegionService {
             regionRepository.flush();
             return saved;
         } catch (DataIntegrityViolationException e) {
-            return regionRepository.findBySiAndGuAndDong(siDo, siGunGu,eupMyeonDong)
+            return regionRepository.findBySiDoAndSiGunGuAndEupMyeonDong(siDo, siGunGu,eupMyeonDong)
                     .orElseThrow(() -> e);
         }
     }

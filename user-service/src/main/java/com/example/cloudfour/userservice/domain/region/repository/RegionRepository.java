@@ -7,5 +7,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface RegionRepository extends JpaRepository<Region, UUID> {
-    Optional<Region> findBySiAndGuAndDong(String siDo, String siGunGu, String eupMyeonDong);
+    Optional<Region> findBySiDoAndSiGunGuAndEupMyeonDong(String siDo, String siGunGu, String eupMyeonDong);
 }
