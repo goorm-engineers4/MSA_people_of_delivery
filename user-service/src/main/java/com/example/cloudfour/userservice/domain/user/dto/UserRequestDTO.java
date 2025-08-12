@@ -19,15 +19,6 @@ public class UserRequestDTO {
     public record AddressRequestDTO(
             @NotBlank
             @Size(min = 2, max = 500)
-            String address,
-
-            @NotNull
-            UUID regionId
-    ) {}
-
-    public record AddressTextRequestDTO(
-            @NotBlank
-            @Size(min = 2, max = 500)
             String address
     ) {}
 

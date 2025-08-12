@@ -26,22 +26,9 @@ public class UserAddressService {
 
     private final UserRepository userRepository;
     private final UserAddressRepository userAddressRepository;
-    private final RegionRepository regionRepository;
     private final RegionService regionService;
 
-    public void addAddress(UUID userId, UserRequestDTO.AddressRequestDTO req) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserAddressException(UserAddressErrorCode.NOT_FOUND));
-
-        Region region = regionRepository.findById(req.regionId())
-                .orElseThrow(() -> new UserAddressException(UserAddressErrorCode.NOT_FOUND));
-
-        UserAddress ua = UserConverter.toUserAddress(req.address(), user, region);
-
-        userAddressRepository.save(ua);
-    }
-
-    public void addAddressByText(UUID userId, UserRequestDTO.AddressTextRequestDTO req) {
+    public UserResponseDTO.AddressResponseDTO addAddress(UUID userId, UserRequestDTO.AddressRequestDTO req) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserAddressException(UserAddressErrorCode.NOT_FOUND));
 
@@ -50,6 +37,7 @@ public class UserAddressService {
         UserAddress ua = UserConverter.toUserAddress(req.address(), user, region);
 
         userAddressRepository.save(ua);
+        return UserConverter.toAddressResponseDTO(ua);
     }
 
 
@@ -59,17 +47,14 @@ public class UserAddressService {
                 .toList();
     }
 
-    public void updateAddress(UUID userId, UUID addressId, UserRequestDTO.AddressRequestDTO req) {
+    public UserResponseDTO.AddressResponseDTO updateAddress(UUID userId, UUID addressId, UserRequestDTO.AddressRequestDTO req) {
         UserAddress ua = userAddressRepository.findByIdAndUser_Id(addressId, userId)
                 .orElseThrow(() -> new UserAddressException(UserAddressErrorCode.NOT_FOUND));
 
-        ua.changeAddress(req.address());
+        Region region = regionService.getOrCreateFromAddress(req.address());
+        ua.changeAddress(req.address(), region);
 
-        if (!ua.getRegion().getId().equals(req.regionId())) {
-            Region region = regionRepository.findById(req.regionId())
-                    .orElseThrow(() -> new UserAddressException(UserAddressErrorCode.NOT_FOUND));
-            ua.setRegion(region);
-        }
+        return UserConverter.toAddressResponseDTO(ua);
     }
 
     public void deleteAddress(UUID userId, UUID addressId) {
