@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: ${SERVICE_NAME:ai-service}
+  cloud:
+    compatibility-verifier:
+      enabled: false
+  datasource:
+    url: ${LOCAL_DB_URL:jdbc:postgresql://postgres:5432/delivery}
+    driver-class-name: org.postgresql.Driver
+    username: ${LOCAL_DB_USERNAME:postgres}
+    password: ${LOCAL_DB_PASSWORD:1234}
+  jpa:
+    hibernate.ddl-auto: ${JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
+    open-in-view: false
+  hikari:
+    maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:10}
+    minimum-idle: ${HIKARI_MIN_IDLE:5}
+
+server:
+  port: ${SERVER_PORT:8087}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+weather:
+  api:
+    key: ${WEATHER_API_KEY:}
+    url: https://api.openweathermap.org/data/2.5/weather
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:}
+    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+
+user:
+  service:
+    url: ${USER_SERVICE_URL:http://localhost:8081}
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
