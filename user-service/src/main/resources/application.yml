@@ -34,10 +34,8 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      url: jdbc:redis://localhost:6379/redis
-      password: 1234
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
   mail:
     host: smtp.gmail.com

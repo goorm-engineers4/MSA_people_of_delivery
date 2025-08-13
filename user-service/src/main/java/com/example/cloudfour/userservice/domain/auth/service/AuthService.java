@@ -3,12 +3,9 @@ package com.example.cloudfour.userservice.domain.auth.service;
 import com.example.cloudfour.userservice.domain.auth.controller.AuthCommonResponseDTO;
 import com.example.cloudfour.userservice.domain.auth.converter.AuthConverter;
 import com.example.cloudfour.userservice.domain.auth.dto.AuthResponseDTO;
-import com.example.cloudfour.userservice.domain.auth.dto.RefreshDTO;
 import com.example.cloudfour.userservice.domain.auth.dto.TokenDTO;
-import com.example.cloudfour.userservice.domain.auth.entity.RefreshToken;
 import com.example.cloudfour.userservice.domain.auth.exception.AuthErrorCode;
 import com.example.cloudfour.userservice.domain.auth.exception.AuthException;
-import com.example.cloudfour.userservice.domain.auth.repository.RefreshTokenRepository;
 import com.example.cloudfour.userservice.domain.user.entity.User;
 import com.example.cloudfour.userservice.domain.user.enums.LoginType;
 import com.example.cloudfour.userservice.domain.user.enums.Role;
@@ -17,8 +14,10 @@ import com.example.cloudfour.userservice.domain.auth.dto.AuthRequestDTO;
 import com.example.cloudfour.userservice.domain.user.repository.UserRepository;
 import com.example.cloudfour.userservice.domain.auth.entity.VerificationCode;
 import com.example.cloudfour.userservice.domain.auth.repository.VerificationCodeRepository;
-import com.example.cloudfour.userservice.security.jwt.JwtProperties;
+import com.example.cloudfour.userservice.properties.JwtProperties;
+import com.example.cloudfour.userservice.security.jwt.repository.TokenRepository;
 import com.example.cloudfour.userservice.security.jwt.JwtUtil;
+import com.example.cloudfour.userservice.security.jwt.util.RedisUtil;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +42,8 @@ public class AuthService {
     private final VerificationCodeRepository verificationCodeRepository;
     private final JwtUtil jwtUtil;
     private final JwtProperties jwtProperties;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenRepository tokenRepository;
+    private final RedisUtil redisUtil;
 
     private static final int CODE_LEN = 6;
     private static final int CODE_EXP_MIN = 10;
@@ -117,11 +117,7 @@ public class AuthService {
 
         TokenDTO token = new TokenDTO("Bearer", access, refresh, jwtProperties.getExpiration());
 
-        refreshTokenRepository.save(
-                RefreshToken.builder()
-                        .email(email)
-                        .token(refresh)
-                        .build());
+        redisUtil.save(user.getEmail(), refresh);
 
         return AuthConverter.toAuthTokenResponseDTO(token);
     }
@@ -134,10 +130,10 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
-        refreshTokenRepository.deleteById(user.getEmail());
+        tokenRepository.deleteById(user.getEmail());
     }
 
-    public AuthResponseDTO.AuthRefreshTokenResponseDTO refreshAccessToken(AuthRequestDTO.RefreshTokenRequestDTO request) {
+    public AuthResponseDTO.AuthTokenResponseDTO refreshAccessToken(AuthRequestDTO.RefreshTokenRequestDTO request) {
         String refresh =  request.refreshToken();
 
         if ("null".equals(refresh) || !jwtUtil.tokenValidation(refresh)) {
@@ -145,24 +141,27 @@ public class AuthService {
         }
 
         String userId = jwtUtil.getIdFromToken(refresh);
-        String role = jwtUtil.getRoleFromToken(refresh);
-        String newAccess = jwtUtil.createAccessToken(UUID.fromString(userId), Role.valueOf(role));
 
         User user = userRepository.findByIdAndIsDeletedFalse(UUID.fromString(userId))
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
-        RefreshToken savedToken  = refreshTokenRepository.findById(user.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("저장된 Refresh Token이 없습니다."));
+        String savedRefreshToken = redisUtil.get(user.getEmail());
+        if (savedRefreshToken == null) {
+            throw new IllegalArgumentException("저장된 Refresh Token이 없습니다.");
+        }
 
-        if(!savedToken .getToken().equals(refresh)) {
+        if (!savedRefreshToken.equals(refresh)) {
             throw new IllegalArgumentException("Refresh Token이 불일치 합니다.");
         }
 
-        log.info("refresh token 재발급 성공: userId={}", userId);
+        String access  = jwtUtil.createAccessToken(user.getId(), user.getRole());
+        String newRefresh = jwtUtil.createRefreshToken(user.getId(), user.getRole());
 
-        RefreshDTO token = new RefreshDTO(newAccess, jwtUtil.getAccessTokenTtlSeconds());
+        TokenDTO token = new TokenDTO("Bearer", access, newRefresh, jwtProperties.getExpiration());
 
-        return AuthConverter.toAuthRefreshTokenResponseDTO(token);
+        redisUtil.save(user.getEmail(), newRefresh);
+
+        return AuthConverter.toAuthTokenResponseDTO(token);
     }
 
     public void changePassword(UUID userId, AuthRequestDTO.PasswordChangeDto request) {

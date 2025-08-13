@@ -1,4 +1,4 @@
-package com.example.cloudfour.userservice.security.jwt;
+package com.example.cloudfour.userservice.properties;
 
 import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
