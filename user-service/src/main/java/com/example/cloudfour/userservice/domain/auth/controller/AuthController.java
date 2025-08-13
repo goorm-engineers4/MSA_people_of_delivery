@@ -66,8 +66,8 @@ public class AuthController {
 
     @PostMapping("/refresh")
     @Operation(summary = "token 재발급", description = "토큰을 재발급합니다.")
-    public CustomResponse<AuthResponseDTO.AuthRefreshTokenResponseDTO> refresh(@RequestBody AuthRequestDTO.RefreshTokenRequestDTO request) {
-        AuthResponseDTO.AuthRefreshTokenResponseDTO result = authService.refreshAccessToken(request);
+    public CustomResponse<AuthResponseDTO.AuthTokenResponseDTO> refresh(@RequestBody AuthRequestDTO.RefreshTokenRequestDTO request) {
+        AuthResponseDTO.AuthTokenResponseDTO result = authService.refreshAccessToken(request);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 

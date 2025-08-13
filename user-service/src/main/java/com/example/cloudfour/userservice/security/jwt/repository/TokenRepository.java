@@ -1,0 +1,9 @@
+package com.example.cloudfour.userservice.security.jwt.repository;
+
+import com.example.cloudfour.userservice.security.jwt.entity.Token;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface TokenRepository extends CrudRepository<Token, String> {
+}

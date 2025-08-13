@@ -1,6 +1,7 @@
-package com.example.cloudfour.userservice.security.jwt;
+package com.example.cloudfour.userservice.security.jwt.util;
 
 import com.example.cloudfour.userservice.domain.user.enums.Role;
+import com.example.cloudfour.userservice.properties.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
