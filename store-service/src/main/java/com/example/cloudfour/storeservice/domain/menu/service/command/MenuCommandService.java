@@ -40,6 +40,10 @@ public class MenuCommandService {
             UUID storeId,
             UUID userId
     ) {
+        if(userId==null){
+            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
         Store store = storeRepository.findByIdAndIsDeletedFalse(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
 
