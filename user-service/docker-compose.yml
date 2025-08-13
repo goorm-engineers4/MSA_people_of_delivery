@@ -8,9 +8,8 @@ services:
       - POSTGRES_DB=${LOCAL_DB}
       - POSTGRES_USER=${LOCAL_DB_USERNAME}
       - POSTGRES_PASSWORD=${LOCAL_DB_PASSWORD}
-
   redis:
     image: redis:latest
     container_name: sample-redis
     ports:
-      - 6379:6379
+      - "6379:6379"
