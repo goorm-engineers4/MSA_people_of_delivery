@@ -1,5 +1,8 @@
 package com.example.cloudfour.storeservice.domain.store.service.command;
 
+import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.storeservice.domain.menu.exception.MenuErrorCode;
+import com.example.cloudfour.storeservice.domain.menu.exception.MenuException;
 import com.example.cloudfour.storeservice.domain.region.entity.Region;
 import com.example.cloudfour.storeservice.domain.region.service.RegionService;
 import com.example.cloudfour.storeservice.domain.region.repository.RegionRepository;
@@ -31,8 +34,13 @@ public class StoreCommandService {
 
     public StoreResponseDTO.StoreCreateResponseDTO createStore(
             StoreRequestDTO.StoreCreateRequestDTO dto,
-            UUID userId
+            GatewayPrincipal user
     ) {
+
+        if(user==null){
+            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
         if (storeRepository.existsByName(dto.getStoreCommonRequestDTO().getName())) {
             throw new StoreException(StoreErrorCode.ALREADY_ADD);
         }
@@ -50,7 +58,7 @@ public class StoreCommandService {
         Store store = StoreConverter.toStore(dto);
         store.setStoreCategory(category);
         store.setRegion(region);
-        store.setOwnerId(userId);
+        store.setOwnerId(user.userId());
 
         storeRepository.save(store);
         return StoreConverter.toStoreCreateResponseDTO(store);
@@ -59,12 +67,12 @@ public class StoreCommandService {
     public StoreResponseDTO.StoreUpdateResponseDTO updateStore(
             UUID storeId,
             StoreRequestDTO.StoreUpdateRequestDTO dto,
-            UUID userId
+            GatewayPrincipal user
     ) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
 
-        if (!store.getOwnerId().equals(userId)) {
+        if (!store.getOwnerId().equals(user.userId())) {
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
 
@@ -87,11 +95,11 @@ public class StoreCommandService {
     }
 
     
-    public void deleteStore(UUID storeId, UUID userId) {
+    public void deleteStore(UUID storeId, GatewayPrincipal user) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
 
-        if (!store.getOwnerId().equals(userId)) {
+        if (!store.getOwnerId().equals(user.userId())) {
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
 
