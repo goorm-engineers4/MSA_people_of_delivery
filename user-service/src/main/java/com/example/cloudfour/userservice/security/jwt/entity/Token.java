@@ -1,6 +1,5 @@
 package com.example.cloudfour.userservice.security.jwt.entity;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
