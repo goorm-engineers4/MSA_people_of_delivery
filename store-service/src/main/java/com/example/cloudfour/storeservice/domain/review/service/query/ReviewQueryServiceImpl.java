@@ -2,8 +2,6 @@ package com.example.cloudfour.storeservice.domain.review.service.query;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
 import com.example.cloudfour.storeservice.domain.commondto.UserResponseDTO;
-import com.example.cloudfour.storeservice.domain.menu.exception.MenuErrorCode;
-import com.example.cloudfour.storeservice.domain.menu.exception.MenuException;
 import com.example.cloudfour.storeservice.domain.review.converter.ReviewConverter;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewResponseDTO;
 import com.example.cloudfour.storeservice.domain.review.entity.Review;
@@ -38,7 +36,7 @@ public class ReviewQueryServiceImpl{
 
     public ReviewResponseDTO.ReviewDetailResponseDTO getReviewById(UUID reviewId, GatewayPrincipal user) {
         if(user==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
         UserResponseDTO findUser = restTemplate.getForObject("http://localhost:8080/api/users/me", UserResponseDTO.class);
         Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->new ReviewException(ReviewErrorCode.NOT_FOUND));
@@ -48,7 +46,7 @@ public class ReviewQueryServiceImpl{
     public ReviewResponseDTO.ReviewStoreListResponseDTO getReviewListByStore(UUID storeId, LocalDateTime cursor, Integer size, GatewayPrincipal user) {
         storeRepository.findById(storeId).orElseThrow(()->new StoreException(StoreErrorCode.NOT_FOUND));
         if(user==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
         if(cursor==null){
             cursor = first_cursor;
@@ -71,7 +69,7 @@ public class ReviewQueryServiceImpl{
 
     public ReviewResponseDTO.ReviewUserListResponseDTO getReviewListByUser(LocalDateTime cursor, Integer size, GatewayPrincipal user) {
         if(user==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
         if(cursor==null){
             cursor = first_cursor;

@@ -1,8 +1,6 @@
 package com.example.cloudfour.storeservice.domain.review.service.command;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
-import com.example.cloudfour.storeservice.domain.menu.exception.MenuErrorCode;
-import com.example.cloudfour.storeservice.domain.menu.exception.MenuException;
 import com.example.cloudfour.storeservice.domain.review.converter.ReviewConverter;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewRequestDTO;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewResponseDTO;
@@ -31,7 +29,7 @@ public class ReviewCommandServiceImpl{
 
     public ReviewResponseDTO.ReviewCreateResponseDTO createReview(ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO, GatewayPrincipal user) {
         if(user==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
         Store findStore = storeRepository.findById(reviewCreateRequestDTO.getReviewCommonRequestDTO().getStoreId()).orElseThrow(()->new StoreException(StoreErrorCode.NOT_FOUND));
         Review review = ReviewConverter.toReview(reviewCreateRequestDTO);

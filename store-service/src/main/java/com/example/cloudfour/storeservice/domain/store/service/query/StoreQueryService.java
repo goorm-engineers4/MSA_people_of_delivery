@@ -1,8 +1,6 @@
 package com.example.cloudfour.storeservice.domain.store.service.query;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
-import com.example.cloudfour.storeservice.domain.menu.exception.MenuErrorCode;
-import com.example.cloudfour.storeservice.domain.menu.exception.MenuException;
 import com.example.cloudfour.storeservice.domain.store.converter.StoreConverter;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreResponseDTO;
 import com.example.cloudfour.storeservice.domain.store.entity.Store;
@@ -31,9 +29,8 @@ public class StoreQueryService {
             LocalDateTime cursor, int size, String keyword,GatewayPrincipal user
     ) {
         if(user==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+            throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
-
         String siDo = "서울특별시";
         String siGunGu = "종로구";
         String eupMyeongDong = "사직동";
@@ -64,7 +61,7 @@ public class StoreQueryService {
             UUID categoryId, LocalDateTime cursor, int size,GatewayPrincipal user
     ) {
         if(user==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+            throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
         LocalDateTime baseTime = (cursor != null) ? cursor : LocalDateTime.now();
         Pageable pageable = PageRequest.of(0, size);
@@ -83,7 +80,7 @@ public class StoreQueryService {
 
     public StoreResponseDTO.StoreDetailResponseDTO getStoreById(UUID storeId,GatewayPrincipal user) {
         if(user==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+            throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));

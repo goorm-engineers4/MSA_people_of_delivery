@@ -1,8 +1,6 @@
 package com.example.cloudfour.storeservice.domain.store.service.command;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
-import com.example.cloudfour.storeservice.domain.menu.exception.MenuErrorCode;
-import com.example.cloudfour.storeservice.domain.menu.exception.MenuException;
 import com.example.cloudfour.storeservice.domain.region.entity.Region;
 import com.example.cloudfour.storeservice.domain.region.service.RegionService;
 import com.example.cloudfour.storeservice.domain.region.repository.RegionRepository;
@@ -38,7 +36,7 @@ public class StoreCommandService {
     ) {
 
         if(user==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+            throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
 
         if (storeRepository.existsByName(dto.getStoreCommonRequestDTO().getName())) {
