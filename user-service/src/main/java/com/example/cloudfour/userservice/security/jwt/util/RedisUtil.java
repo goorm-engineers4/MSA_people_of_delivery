@@ -12,4 +12,12 @@ public class RedisUtil {
     public void save(String key, String value){
         redisTemplate.opsForValue().set(key, value);
     }
+
+    public String get(String key) {
+        return redisTemplate.opsForValue().get(key);
+    }
+
+    public void delete(String key) {
+        redisTemplate.delete(key);
+    }
 }

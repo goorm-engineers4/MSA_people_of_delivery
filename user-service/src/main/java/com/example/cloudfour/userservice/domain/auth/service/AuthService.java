@@ -4,7 +4,6 @@ import com.example.cloudfour.userservice.domain.auth.controller.AuthCommonRespon
 import com.example.cloudfour.userservice.domain.auth.converter.AuthConverter;
 import com.example.cloudfour.userservice.domain.auth.dto.AuthResponseDTO;
 import com.example.cloudfour.userservice.domain.auth.dto.TokenDTO;
-import com.example.cloudfour.userservice.domain.auth.entity.RefreshToken;
 import com.example.cloudfour.userservice.domain.auth.exception.AuthErrorCode;
 import com.example.cloudfour.userservice.domain.auth.exception.AuthException;
 import com.example.cloudfour.userservice.domain.user.entity.User;
@@ -16,8 +15,7 @@ import com.example.cloudfour.userservice.domain.user.repository.UserRepository;
 import com.example.cloudfour.userservice.domain.auth.entity.VerificationCode;
 import com.example.cloudfour.userservice.domain.auth.repository.VerificationCodeRepository;
 import com.example.cloudfour.userservice.properties.JwtProperties;
-import com.example.cloudfour.userservice.security.jwt.util.JwtUtil;
-import com.example.cloudfour.userservice.security.jwt.entity.Token;
+import com.example.cloudfour.userservice.security.jwt.JwtUtil;
 import com.example.cloudfour.userservice.security.jwt.repository.TokenRepository;
 import com.example.cloudfour.userservice.security.jwt.util.RedisUtil;
 import jakarta.mail.MessagingException;
@@ -147,10 +145,12 @@ public class AuthService {
         User user = userRepository.findByIdAndIsDeletedFalse(UUID.fromString(userId))
                 .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND));
 
-        Token savedToken = tokenRepository.findById(user.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("저장된 Refresh Token이 없습니다."));
+        String savedRefreshToken = redisUtil.get(user.getEmail());
+        if (savedRefreshToken == null) {
+            throw new IllegalArgumentException("저장된 Refresh Token이 없습니다.");
+        }
 
-        if(!savedToken.getRefreshToken().equals(refresh)) {
+        if (!savedRefreshToken.equals(refresh)) {
             throw new IllegalArgumentException("Refresh Token이 불일치 합니다.");
         }
 
