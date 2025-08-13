@@ -60,7 +60,8 @@ public class UserAddress {
         region.getAddresses().add(this);
     }
 
-    public void changeAddress(String address) {
+    public void changeAddress(String address, Region region) {
         this.address = address;
+        this.region = region;
     }
 }

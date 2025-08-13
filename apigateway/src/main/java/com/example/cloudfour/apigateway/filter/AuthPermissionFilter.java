@@ -28,7 +28,7 @@ public class AuthPermissionFilter extends AbstractGatewayFilterFactory<AuthPermi
         return (exchange, chain) -> {
             var req = exchange.getRequest();
 
-            String bearer = req.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+            String bearer = req.getHeaders().getFirst("Authorization");
             String access = (StringUtils.hasText(bearer) && bearer.startsWith("Bearer "))
                     ? bearer.substring(7)
                     : req.getHeaders().getFirst("Access");
@@ -43,6 +43,7 @@ public class AuthPermissionFilter extends AbstractGatewayFilterFactory<AuthPermi
             var mutated = req.mutate()
                     .header("Auth", "true")
                     .header("Account-Value", jwtUtil.getIdFromToken(access))
+                    .header("X-User-Role", jwtUtil.getRoleFromToken(access))
                     .build();
 
             return chain.filter(exchange.mutate().request(mutated).build());

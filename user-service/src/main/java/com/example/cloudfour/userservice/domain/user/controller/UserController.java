@@ -25,7 +25,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 @Tag(name = "User", description = "유저 API by 모시은")
 public class UserController {
     private final UserService userService;
@@ -39,7 +39,7 @@ public class UserController {
 
     @PatchMapping("/me")
     @Operation(summary = "내 정보 수정", description = "내 계정의 상세 정보를 수정합니다.")
-    public CustomResponse<Void> updateMyInfo(@AuthenticationPrincipal GatewayPrincipal user,
+    public CustomResponse<UserResponseDTO.MeResponseDTO> updateMyInfo(@AuthenticationPrincipal GatewayPrincipal user,
                                              @Valid @RequestBody UserRequestDTO.UserUpdateRequestDTO request) {
         userService.updateProfile(user.userId(), request.nickname(), request.number());
         return CustomResponse.onSuccess(null);
@@ -54,18 +54,10 @@ public class UserController {
 
     @PostMapping("/addresses")
     @Operation(summary = "내 주소 등록", description = "내 주소를 등록합니다.")
-    public CustomResponse<Void> addAddress(@Valid @RequestBody UserRequestDTO.AddressRequestDTO request,
-                                           @AuthenticationPrincipal GatewayPrincipal userDetails) {
-        addressService.addAddress(userDetails.userId(), request);
-        return CustomResponse.onSuccess(HttpStatus.CREATED, null);
-    }
-
-    @PostMapping("/addresses/by-text")
-    @Operation(summary = "내 주소 등록(텍스트)", description = "전체 주소 문자열을 파싱해 시/구/동을 자동 등록합니다.")
-    public CustomResponse<Void> addAddressByText(@Valid @RequestBody UserRequestDTO.AddressTextRequestDTO request,
-                                                 @AuthenticationPrincipal GatewayPrincipal userDetails) {
-        addressService.addAddressByText(userDetails.userId(), request);
-        return CustomResponse.onSuccess(HttpStatus.CREATED, null);
+    public CustomResponse<UserResponseDTO.AddressResponseDTO> addAddress(@Valid @RequestBody UserRequestDTO.AddressRequestDTO request,
+                                                                         @AuthenticationPrincipal GatewayPrincipal userDetails) {
+        UserResponseDTO.AddressResponseDTO address = addressService.addAddress(userDetails.userId(), request);
+        return CustomResponse.onSuccess(HttpStatus.CREATED, address);
     }
 
     @GetMapping("/addresses")
@@ -78,11 +70,11 @@ public class UserController {
 
     @PatchMapping("/addresses/{addressId}")
     @Operation(summary = "내 주소 수정", description = "내 주소를 수정합니다.")
-    public CustomResponse<Void> updateAddress(@PathVariable UUID addressId,
+    public CustomResponse<UserResponseDTO.AddressResponseDTO> updateAddress(@PathVariable UUID addressId,
                                               @Valid @RequestBody UserRequestDTO.AddressRequestDTO request,
                                               @AuthenticationPrincipal GatewayPrincipal user) {
-        addressService.updateAddress(user.userId(), addressId, request);
-        return CustomResponse.onSuccess(null);
+        UserResponseDTO.AddressResponseDTO address = addressService.updateAddress(user.userId(), addressId, request);
+        return CustomResponse.onSuccess(HttpStatus.OK, address);
     }
 
     @PatchMapping("/addresses/delete/{addressId}")
