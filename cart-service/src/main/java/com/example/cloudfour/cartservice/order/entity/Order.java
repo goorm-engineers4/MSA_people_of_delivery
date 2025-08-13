@@ -45,6 +45,7 @@ public class Order extends BaseEntity {
     private OrderStatus status;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean userIsDeleted = false;
 
     @Column(name = "userId", nullable = false)
