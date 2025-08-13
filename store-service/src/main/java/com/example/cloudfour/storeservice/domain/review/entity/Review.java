@@ -50,9 +50,11 @@ public class Review extends BaseEntity {
     private Store store;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean userIsDeleted = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean storeIsDeleted = false;
 
     public static class ReviewBuilder{

@@ -35,9 +35,11 @@ public class Cart {
     private UUID user;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean userIsDeleted = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean storeIsDeleted = false;
 
     @Column(name = "storeId" ,nullable = false)
