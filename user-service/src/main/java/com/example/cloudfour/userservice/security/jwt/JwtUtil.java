@@ -1,4 +1,4 @@
-package com.example.cloudfour.userservice.security.jwt.util;
+package com.example.cloudfour.userservice.security.jwt;
 
 import com.example.cloudfour.userservice.domain.user.enums.Role;
 import com.example.cloudfour.userservice.properties.JwtProperties;

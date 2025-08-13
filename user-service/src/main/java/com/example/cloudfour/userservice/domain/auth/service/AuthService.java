@@ -16,7 +16,7 @@ import com.example.cloudfour.userservice.domain.auth.entity.VerificationCode;
 import com.example.cloudfour.userservice.domain.auth.repository.VerificationCodeRepository;
 import com.example.cloudfour.userservice.properties.JwtProperties;
 import com.example.cloudfour.userservice.security.jwt.repository.TokenRepository;
-import com.example.cloudfour.userservice.security.jwt.util.JwtUtil;
+import com.example.cloudfour.userservice.security.jwt.JwtUtil;
 import com.example.cloudfour.userservice.security.jwt.util.RedisUtil;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
