@@ -62,6 +62,8 @@ public class JwtUtil {
         Date now = new Date();
         Key key = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
+                .setIssuer(props.getIssuer())
+                .setAudience(props.getAudience())
                 .setSubject(userId)
                 .claim("role", role)
                 .setIssuedAt(now)
@@ -74,6 +76,8 @@ public class JwtUtil {
         Date now = new Date();
         Key key = Keys.hmacShaKeyFor(props.getRefreshSecret().getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
+                .setIssuer(props.getIssuer())
+                .setAudience(props.getAudience())
                 .setSubject(userId)
                 .claim("role", role)
                 .setIssuedAt(now)
