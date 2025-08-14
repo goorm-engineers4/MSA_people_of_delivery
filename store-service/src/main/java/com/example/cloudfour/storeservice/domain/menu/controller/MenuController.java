@@ -44,7 +44,6 @@ public class MenuController {
             @RequestBody MenuRequestDTO.MenuCreateRequestDTO requestDTO,
             @AuthenticationPrincipal GatewayPrincipal user) {
 
-        
         MenuResponseDTO.MenuDetailResponseDTO result = menuCommandService.createMenu(requestDTO, storeId, user.userId());
         return CustomResponse.onSuccess(HttpStatus.CREATED, result);
     }
@@ -52,10 +51,9 @@ public class MenuController {
     @GetMapping("/{menuId}/detail")
     @Operation(summary = "메뉴 상세 조회", description = "메뉴의 상세 정보를 조회합니다.")
     public CustomResponse<MenuResponseDTO.MenuDetailResponseDTO> getMenuDetail(
-            @PathVariable("menuId") UUID menuId,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @PathVariable("menuId") UUID menuId,@AuthenticationPrincipal GatewayPrincipal user) {
 
-        MenuResponseDTO.MenuDetailResponseDTO result = menuQueryService.getMenuDetail(menuId, user.userId());
+        MenuResponseDTO.MenuDetailResponseDTO result = menuQueryService.getMenuDetail(menuId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 
@@ -68,10 +66,11 @@ public class MenuController {
             @RequestParam(name = "cursor", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
             @RequestParam(name = "size", defaultValue = "10") Integer size,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @AuthenticationPrincipal GatewayPrincipal user
+        ) {
 
         MenuResponseDTO.MenuStoreListResponseDTO result =
-                menuQueryService.getMenusByStoreWithCursor(storeId, cursor, size, user.userId());
+                menuQueryService.getMenusByStoreWithCursor(storeId, cursor, size,user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 
@@ -83,10 +82,11 @@ public class MenuController {
             @RequestParam(name = "cursor", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
             @RequestParam(name = "size", defaultValue = "10") Integer size,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @AuthenticationPrincipal GatewayPrincipal user
+            ) {
 
         MenuResponseDTO.MenuStoreListResponseDTO result =
-                menuQueryService.getMenusByStoreWithCategory(storeId, categoryId, cursor, size, user.userId());
+                menuQueryService.getMenusByStoreWithCategory(storeId, categoryId, cursor, size,user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 
@@ -155,22 +155,22 @@ public class MenuController {
     @GetMapping("/{menuId}/options")
     @Operation(summary = "메뉴별 옵션 목록 조회", description = "특정 메뉴의 모든 옵션을 조회합니다.")
     public CustomResponse<MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO> getMenuOptions(
-            @PathVariable("menuId") UUID menuId,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @PathVariable("menuId") UUID menuId,@AuthenticationPrincipal GatewayPrincipal user
+            ) {
 
         MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO result =
-                menuQueryService.getMenuOptionsByMenu(menuId, user.userId());
+                menuQueryService.getMenuOptionsByMenu(menuId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 
     @GetMapping("/options/{optionId}/detail")
     @Operation(summary = "메뉴 옵션 상세 조회", description = "메뉴 옵션의 상세 정보를 조회합니다.")
     public CustomResponse<MenuOptionResponseDTO.MenuOptionDetailResponseDTO> getMenuOptionDetail(
-            @PathVariable("optionId") UUID optionId,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @PathVariable("optionId") UUID optionId,@AuthenticationPrincipal GatewayPrincipal user
+            ) {
 
         MenuOptionResponseDTO.MenuOptionDetailResponseDTO result =
-                menuQueryService.getMenuOptionDetail(optionId, user.userId());
+                menuQueryService.getMenuOptionDetail(optionId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 

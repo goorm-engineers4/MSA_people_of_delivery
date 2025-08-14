@@ -28,6 +28,9 @@ public class ReviewCommandServiceImpl{
     private final ReviewRepository reviewRepository;
 
     public ReviewResponseDTO.ReviewCreateResponseDTO createReview(ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO, GatewayPrincipal user) {
+        if(user==null){
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
+        }
         Store findStore = storeRepository.findById(reviewCreateRequestDTO.getReviewCommonRequestDTO().getStoreId()).orElseThrow(()->new StoreException(StoreErrorCode.NOT_FOUND));
         Review review = ReviewConverter.toReview(reviewCreateRequestDTO);
         review.setUser(user.userId());
