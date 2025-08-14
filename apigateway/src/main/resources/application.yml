@@ -80,6 +80,8 @@ jwt:
   expiration: 900000
   refresh-secret: ${JWT_REFRESH_SECRET}
   refresh-expiration: 604800000
+  issuer: https://api.people-of-delivery.com
+  audience: people-of-delivery
 
 management:
   endpoints:
