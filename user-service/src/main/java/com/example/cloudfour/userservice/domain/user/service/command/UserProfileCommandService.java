@@ -1,39 +1,27 @@
-package com.example.cloudfour.userservice.domain.user.service;
+package com.example.cloudfour.userservice.domain.user.service.command;
 
-
-import com.example.cloudfour.userservice.domain.user.converter.UserConverter;
-import com.example.cloudfour.userservice.domain.user.dto.UserResponseDTO;
 import com.example.cloudfour.userservice.domain.user.entity.User;
-import com.example.cloudfour.userservice.domain.user.repository.UserRepository;
 import com.example.cloudfour.userservice.domain.user.exception.UserErrorCode;
 import com.example.cloudfour.userservice.domain.user.exception.UserException;
-import jakarta.transaction.Transactional;
+import com.example.cloudfour.userservice.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
-public class UserService {
+public class UserProfileCommandService {
 
     private final UserRepository userRepository;
-
-    public UserResponseDTO.MeResponseDTO getMyInfo(UUID userId) {
-        User u = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode.NOT_FOUND));
-        var dto = UserConverter.toMeResponseDTO(u);
-        log.info("내 정보 조회: userId={}", userId);
-        return dto;
-    }
 
     @Transactional
     public void updateProfile(UUID userId, String nickname, String number) {
         User u = userRepository.findByIdAndIsDeletedFalse(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
 
         if (nickname != null && !nickname.isBlank() && !nickname.equals(u.getNickname())) {
             u.changeNickname(nickname);
@@ -48,10 +36,8 @@ public class UserService {
     @Transactional
     public void deleteAccount(UUID userId) {
         User u = userRepository.findByIdAndIsDeletedFalse(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
         u.softDelete();
         log.info("회원 탈퇴 처리: userId={}", userId);
     }
 }
-
-
