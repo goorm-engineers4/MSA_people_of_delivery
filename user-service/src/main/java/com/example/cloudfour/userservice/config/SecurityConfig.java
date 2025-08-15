@@ -1,43 +1,43 @@
 package com.example.cloudfour.userservice.config;
 
-import com.example.cloudfour.userservice.security.GatewayAuthHeaderFilter;
-import lombok.RequiredArgsConstructor;
+import com.example.cloudfour.modulecommon.filter.JwtClaimsAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-@EnableMethodSecurity
+
 @Configuration
-@RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    JwtClaimsAuthFilter jwtClaimsAuthFilter() {
+        return new JwtClaimsAuthFilter();
+    }
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/",
-                                "/auth/**",
-                                "/oauth2/**",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/api/**").permitAll()
+                        .requestMatchers("/internal/**", "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/users/**", "/profile/**").authenticated()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new GatewayAuthHeaderFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtClaimsAuthFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

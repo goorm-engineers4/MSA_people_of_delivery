@@ -2,7 +2,6 @@ package com.example.cloudfour.userservice.domain.user.entity;
 
 
 import com.example.cloudfour.modulecommon.entity.BaseEntity;
-import com.example.cloudfour.userservice.domain.user.enums.LoginType;
 import com.example.cloudfour.userservice.domain.user.enums.Role;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -53,10 +52,6 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private LoginType loginType;
 
     @Column(nullable = false)
     @Builder.Default
