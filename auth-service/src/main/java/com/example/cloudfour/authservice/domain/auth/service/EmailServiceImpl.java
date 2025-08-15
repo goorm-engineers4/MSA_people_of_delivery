@@ -1,4 +1,4 @@
-package com.example.cloudfour.userservice.domain.auth.service;
+package com.example.cloudfour.authservice.domain.auth.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

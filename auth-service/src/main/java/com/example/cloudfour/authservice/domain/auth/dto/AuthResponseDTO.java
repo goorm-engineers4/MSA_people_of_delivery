@@ -1,4 +1,4 @@
-package com.example.cloudfour.userservice.domain.auth.dto;
+package com.example.cloudfour.authservice.domain.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +14,7 @@ public class AuthResponseDTO {
         private UUID userId;
         private String email;
         private String nickname;
+        private String role;
     }
 
     @Getter

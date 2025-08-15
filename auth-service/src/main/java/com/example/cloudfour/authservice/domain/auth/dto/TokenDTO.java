@@ -1,5 +1,4 @@
-package com.example.cloudfour.userservice.domain.auth.dto;
-
+package com.example.cloudfour.authservice.domain.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
