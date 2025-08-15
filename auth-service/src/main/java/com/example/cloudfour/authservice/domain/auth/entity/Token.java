@@ -1,4 +1,4 @@
-package com.example.cloudfour.userservice.security.jwt.entity;
+package com.example.cloudfour.authservice.domain.auth.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

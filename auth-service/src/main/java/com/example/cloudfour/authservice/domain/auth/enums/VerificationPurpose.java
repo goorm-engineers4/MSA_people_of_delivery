@@ -1,4 +1,4 @@
-package com.example.cloudfour.userservice.domain.auth.enums;
+package com.example.cloudfour.authservice.domain.auth.enums;
 
 public enum VerificationPurpose {
     EMAIL_VERIFY,

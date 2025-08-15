@@ -1,7 +1,7 @@
-package com.example.cloudfour.userservice.domain.auth.repository;
+package com.example.cloudfour.authservice.domain.auth.repository;
 
-import com.example.cloudfour.userservice.domain.auth.enums.VerificationPurpose;
-import com.example.cloudfour.userservice.domain.auth.entity.VerificationCode;
+import com.example.cloudfour.authservice.domain.auth.entity.VerificationCode;
+import com.example.cloudfour.authservice.domain.auth.enums.VerificationPurpose;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
