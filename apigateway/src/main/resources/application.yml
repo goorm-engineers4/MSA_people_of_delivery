@@ -15,74 +15,65 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      default-filters: # cors설정 : 헤더 중복 에러 해결
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
-      routes:
-        - id: user-service-public
-          uri: lb://user-service
-          predicates:
-            - Path=/api/user-service/auth/**,/api/user-service/oauth2/**,/api/user-service/docs/**,/api/user-service/actuator/**
-          filters:
-            - AuthFilter
-            - RewritePath=/api/user-service/(?<segment>.*),/${segment}
+      server:
+        webflux:
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+          routes:
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/auth-service/**
+              filters:
+                - RewritePath=/api/auth-service/(?<segment>.*),/${segment}
 
-        - id: user-service-protected
-          uri: lb://user-service
-          predicates:
-            - Path=/api/user-service/**
-          filters:
-            - AuthPermissionFilter
-            - RewritePath=/api/user-service/(?<segment>.*),/${segment}
+            - id: user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/api/user-service/**
+              filters:
+                - AuthFilter
+                - RewritePath=/api/user-service/(?<segment>.*),/${segment}
 
-        - id: store-service
-          uri: lb://store-service
-          predicates:
-            - Path=/api/store-service/**
-          filters:
-            - AuthFilter
-            - RewritePath=/api/store-service/(?<segment>.*),/${segment}
+            - id: store-service
+              uri: lb://store-service
+              predicates:
+                - Path=/api/store-service/**
+              filters:
+                - AuthFilter
+                - RewritePath=/api/store-service/(?<segment>.*),/${segment}
 
-        - id: order-service
-          uri: lb://order-service
-          predicates:
-            - Path=/api/order-service/**
-          filters:
-            - AuthPermissionFilter
-            - RewritePath=/api/order-service/(?<segment>.*),/${segment}
+            - id: order-service
+              uri: lb://order-service
+              predicates:
+                - Path=/api/order-service/**
+              filters:
+                - AuthFilter
+                - RewritePath=/api/order-service/(?<segment>.*),/${segment}
 
-        - id: payment-service-public
-          uri: lb://payment-service
-          predicates:
-            - Path=/api/payment-service/webhook/**,/api/payment-service/docs/**
-          filters:
-            - AuthFilter
-            - RewritePath=/api/payment-service/(?<segment>.*),/${segment}
+            - id: payment-service
+              uri: lb://payment-service
+              predicates:
+                - Path=/api/payment-service/**
+              filters:
+                - AuthFilter
+                - RewritePath=/api/payment-service/(?<segment>.*),/${segment}
 
-        - id: payment-service
-          uri: lb://payment-service
-          predicates:
-            - Path=/api/payment-service/**
-          filters:
-            - AuthPermissionFilter
-            - RewritePath=/api/payment-service/(?<segment>.*),/${segment}
-
-
-        - id: ai-service
-          uri: lb://ai-service
-          predicates:
-            - Path=/api/ai-service/**
-          filters:
-            - AuthPermissionFilter
-            - RewritePath=/api/ai-service/(?<segment>.*),/${segment}
-
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: 900000
-  refresh-secret: ${JWT_REFRESH_SECRET}
-  refresh-expiration: 604800000
+            - id: ai-service
+              uri: lb://ai-service
+              predicates:
+                - Path=/api/ai-service/**
+              filters:
+                - AuthFilter
+                - RewritePath=/api/ai-service/(?<segment>.*),/${segment}
 
 management:
   endpoints:
     web:
       exposure:
         include: "*"
+
+jwt:
+  jwk-set-uri: http://localhost:8080/api/auth-service/.well-known/jwks.json
+  issuer: http://auth-service
+  audience: app
