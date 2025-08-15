@@ -1,6 +1,6 @@
-package com.example.cloudfour.userservice.config;
+package com.example.cloudfour.authservice.config;
 
-import com.example.cloudfour.userservice.domain.auth.service.EmailServiceImpl;
+import com.example.cloudfour.authservice.domain.auth.service.EmailServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
