@@ -1,5 +1,4 @@
-package com.example.cloudfour.userservice.domain.auth.dto;
-
+package com.example.cloudfour.authservice.domain.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -11,6 +10,7 @@ public class AuthRequestDTO {
             @Email @NotBlank String email,
             @NotBlank @Size(min=2, max=20) String nickname,
             @NotBlank @Size(min=8, max=64) String password,
+            @NotBlank String role,
             @NotBlank String number
     ) {}
 
