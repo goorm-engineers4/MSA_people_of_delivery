@@ -1,6 +1,6 @@
-package com.example.cloudfour.userservice.config;
+package com.example.cloudfour.authservice.config;
 
-import com.example.cloudfour.userservice.properties.RedisProperties;
+import com.example.cloudfour.authservice.properties.RedisProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

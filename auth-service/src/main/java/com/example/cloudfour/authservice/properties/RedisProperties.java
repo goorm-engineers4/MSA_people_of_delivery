@@ -1,4 +1,4 @@
-package com.example.cloudfour.userservice.properties;
+package com.example.cloudfour.authservice.properties;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;

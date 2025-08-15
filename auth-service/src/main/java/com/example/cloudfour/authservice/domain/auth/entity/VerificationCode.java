@@ -1,6 +1,6 @@
-package com.example.cloudfour.userservice.domain.auth.entity;
+package com.example.cloudfour.authservice.domain.auth.entity;
 
-import com.example.cloudfour.userservice.domain.auth.enums.VerificationPurpose;
+import com.example.cloudfour.authservice.domain.auth.enums.VerificationPurpose;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,9 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
 import java.time.LocalDateTime;
-
 
 @Entity
 @Getter

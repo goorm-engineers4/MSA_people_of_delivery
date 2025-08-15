@@ -1,4 +1,4 @@
-package com.example.cloudfour.userservice.domain.auth.entity;
+package com.example.cloudfour.authservice.domain.auth.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

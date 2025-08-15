@@ -1,4 +1,4 @@
-package com.example.cloudfour.userservice.security.jwt.util;
+package com.example.cloudfour.authservice.util;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
