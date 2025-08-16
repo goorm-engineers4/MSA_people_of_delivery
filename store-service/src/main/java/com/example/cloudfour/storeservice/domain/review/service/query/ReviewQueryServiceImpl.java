@@ -35,6 +35,9 @@ public class ReviewQueryServiceImpl{
     private static final LocalDateTime first_cursor = LocalDateTime.now().plusDays(1);
 
     public ReviewResponseDTO.ReviewDetailResponseDTO getReviewById(UUID reviewId, GatewayPrincipal user) {
+        if(user==null){
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
+        }
         UserResponseDTO findUser = restTemplate.getForObject("http://localhost:8080/api/users/me", UserResponseDTO.class);
         Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->new ReviewException(ReviewErrorCode.NOT_FOUND));
         return ReviewConverter.toReviewDetailResponseDTO(findReview, findUser.getNickname());
@@ -42,6 +45,9 @@ public class ReviewQueryServiceImpl{
 
     public ReviewResponseDTO.ReviewStoreListResponseDTO getReviewListByStore(UUID storeId, LocalDateTime cursor, Integer size, GatewayPrincipal user) {
         storeRepository.findById(storeId).orElseThrow(()->new StoreException(StoreErrorCode.NOT_FOUND));
+        if(user==null){
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
+        }
         if(cursor==null){
             cursor = first_cursor;
         }
@@ -62,6 +68,9 @@ public class ReviewQueryServiceImpl{
     }
 
     public ReviewResponseDTO.ReviewUserListResponseDTO getReviewListByUser(LocalDateTime cursor, Integer size, GatewayPrincipal user) {
+        if(user==null){
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
+        }
         if(cursor==null){
             cursor = first_cursor;
         }

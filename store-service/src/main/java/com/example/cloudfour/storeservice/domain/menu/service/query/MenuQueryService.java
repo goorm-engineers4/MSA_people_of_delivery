@@ -1,5 +1,6 @@
 package com.example.cloudfour.storeservice.domain.menu.service.query;
 
+import com.example.cloudfour.storeservice.config.GatewayPrincipal;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuConverter;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuOptionConverter;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuResponseDTO;
@@ -44,10 +45,13 @@ public class MenuQueryService {
     private static final LocalDateTime FIRST_CURSOR = LocalDateTime.now().plusDays(1);
 
     public MenuResponseDTO.MenuStoreListResponseDTO getMenusByStoreWithCursor(
-            UUID storeId, LocalDateTime cursor, Integer size, UUID userId
+            UUID storeId, LocalDateTime cursor, Integer size, GatewayPrincipal user
     ) {
-        storeRepository.findByIdAndIsDeletedFalse(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
+        storeRepository.findByIdAndIsDeletedFalse(storeId).orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
+
+        if(user==null){
+            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+        }
 
         if (cursor == null) cursor = FIRST_CURSOR;
 
@@ -73,12 +77,16 @@ public class MenuQueryService {
     }
 
     public MenuResponseDTO.MenuStoreListResponseDTO getMenusByStoreWithCategory(
-            UUID storeId, UUID categoryId, LocalDateTime cursor, Integer size, UUID userId
+            UUID storeId, UUID categoryId, LocalDateTime cursor, Integer size ,GatewayPrincipal user
     ) {
         storeRepository.findByIdAndIsDeletedFalse(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
         menuCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new MenuCategoryException(MenuCategoryErrorCode.NOT_FOUND));
+
+        if(user==null){
+            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+        }
 
         if (cursor == null) cursor = FIRST_CURSOR;
 
@@ -129,7 +137,10 @@ public class MenuQueryService {
 //                .toList();
 //    }
 
-    public MenuResponseDTO.MenuDetailResponseDTO getMenuDetail(UUID menuId, UUID userId) {
+    public MenuResponseDTO.MenuDetailResponseDTO getMenuDetail(UUID menuId,GatewayPrincipal user) {
+        if(user==null){
+            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+        }
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
 
@@ -141,7 +152,10 @@ public class MenuQueryService {
         return MenuConverter.toMenuDetail2ResponseDTO(menu, optionDTOs);
     }
 
-    public MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO getMenuOptionsByMenu(UUID menuId, UUID userId) {
+    public MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO getMenuOptionsByMenu(UUID menuId,GatewayPrincipal user) {
+        if(user==null){
+            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+        }
         menuRepository.findById(menuId)
                 .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
 
@@ -155,7 +169,10 @@ public class MenuQueryService {
                 .build();
     }
 
-    public MenuOptionResponseDTO.MenuOptionDetailResponseDTO getMenuOptionDetail(UUID optionId, UUID userId) {
+    public MenuOptionResponseDTO.MenuOptionDetailResponseDTO getMenuOptionDetail(UUID optionId,GatewayPrincipal user) {
+        if(user==null){
+            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+        }
         var menuOption = menuOptionRepository.findByIdWithMenu(optionId)
                 .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
 

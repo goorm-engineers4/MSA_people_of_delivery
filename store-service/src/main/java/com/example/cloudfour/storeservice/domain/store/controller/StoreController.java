@@ -41,7 +41,7 @@ public class StoreController {
             @RequestBody StoreRequestDTO.StoreCreateRequestDTO dto,
             @AuthenticationPrincipal GatewayPrincipal user
     ) {
-        return CustomResponse.onSuccess(HttpStatus.CREATED, storeCommandService.createStore(dto, user.userId()));
+        return CustomResponse.onSuccess(HttpStatus.CREATED, storeCommandService.createStore(dto, user));
     }
 
     @GetMapping("")
@@ -55,17 +55,16 @@ public class StoreController {
             @RequestParam(name = "keyword", required = false) String keyword,
             @AuthenticationPrincipal GatewayPrincipal user
     ) {
-        StoreResponseDTO.StoreCursorListResponseDTO response = storeQueryService.getAllStores(cursor, size,keyword, user.userId());
+        StoreResponseDTO.StoreCursorListResponseDTO response = storeQueryService.getAllStores(cursor, size,keyword,user);
         return CustomResponse.onSuccess(HttpStatus.OK, response);
     }
 
     @GetMapping("/{storeId}")
     @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세 정보를 조회합니다.")
     public CustomResponse<StoreResponseDTO.StoreDetailResponseDTO> getStoreDetail(
-            @PathVariable UUID storeId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @PathVariable UUID storeId,@AuthenticationPrincipal GatewayPrincipal user
     ) {
-        return CustomResponse.onSuccess(HttpStatus.OK, storeQueryService.getStoreById(storeId,user.userId()));
+        return CustomResponse.onSuccess(HttpStatus.OK, storeQueryService.getStoreById(storeId,user));
     }
 
     @PatchMapping("/{storeId}")
@@ -75,7 +74,7 @@ public class StoreController {
             @RequestBody StoreRequestDTO.StoreUpdateRequestDTO dto,
             @AuthenticationPrincipal GatewayPrincipal user
     ) {
-        return CustomResponse.onSuccess(HttpStatus.OK, storeCommandService.updateStore(storeId, dto, user.userId()));
+        return CustomResponse.onSuccess(HttpStatus.OK, storeCommandService.updateStore(storeId, dto, user));
     }
 
     @PatchMapping("/{storeId}/deleted")
@@ -84,7 +83,7 @@ public class StoreController {
             @PathVariable UUID storeId,
             @AuthenticationPrincipal GatewayPrincipal user
     ) {
-        storeCommandService.deleteStore(storeId, user.userId());
+        storeCommandService.deleteStore(storeId, user);
         return CustomResponse.onSuccess(HttpStatus.OK, "가게 삭제 완료");
     }
 
@@ -100,7 +99,7 @@ public class StoreController {
             @AuthenticationPrincipal GatewayPrincipal user
     ) {
         StoreResponseDTO.StoreCursorListResponseDTO response =
-                storeQueryService.getStoresByCategory(categoryId, cursor, size, user.userId());
+                storeQueryService.getStoresByCategory(categoryId, cursor, size,user);
         return CustomResponse.onSuccess(HttpStatus.OK, response);
     }
 
