@@ -29,15 +29,17 @@ public class StoreQueryService {
             LocalDateTime cursor, int size, String keyword,GatewayPrincipal user
     ) {
         if(user==null){
+            log.warn("가게 목록 조회 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
+        log.info("가게 검색 목록 조회 권한 확인 성공");
         String siDo = "서울특별시";
-        String siGunGu = "종로구";
-        String eupMyeongDong = "사직동";
+        String siGunGu = "서초구";
+        String eupMyeongDong = "양재동";
         if(user.userId()==null){
             siDo = "서울특별시";
-            siGunGu = "종로구";
-            eupMyeongDong = "사직동";
+            siGunGu = "서초구";
+            eupMyeongDong = "양재동";
         }
         //else{
             //userid를 통해 userRegion 정보 가져오기, 시군구 정보 입력해서 storeRegion이랑 비교
@@ -53,7 +55,7 @@ public class StoreQueryService {
         LocalDateTime nextCursor = storeSlice.hasNext() && !storeList.isEmpty()
                 ? storeList.get(storeList.size() - 1).getCreatedAt()
                 : null;
-
+        log.info("가게 검색 목록 조회 성공");
         return StoreConverter.toStoreCursorListResponseDTO(storeList, nextCursor);
 
     }
@@ -61,8 +63,10 @@ public class StoreQueryService {
             UUID categoryId, LocalDateTime cursor, int size,GatewayPrincipal user
     ) {
         if(user==null){
+            log.warn("카테고리 별 가게 목록 조회 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
+        log.info("가게 카테고리 별 목록 조회 확인 성공");
         LocalDateTime baseTime = (cursor != null) ? cursor : LocalDateTime.now();
         Pageable pageable = PageRequest.of(0, size);
         Slice<Store> storeSlice = storeRepository.findAllByCategoryAndCursor(categoryId, baseTime, pageable);
@@ -74,16 +78,22 @@ public class StoreQueryService {
         LocalDateTime nextCursor = storeSlice.hasNext() && !storeList.isEmpty()
                 ? storeList.get(storeList.size() - 1).getCreatedAt()
                 : null;
-
+        log.info("가게 카테고리 별 목록 조회 성공");
         return StoreResponseDTO.StoreCursorListResponseDTO.of(storeList, nextCursor);
     }
 
     public StoreResponseDTO.StoreDetailResponseDTO getStoreById(UUID storeId,GatewayPrincipal user) {
         if(user==null){
+            log.warn("가게 상세 조회 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
+        log.info("가게 상세 조회 권한 확인 성공");
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 가게");
+                    return new StoreException(StoreErrorCode.NOT_FOUND);
+                });
+        log.info("가게 상제 조회 성공");
         return StoreConverter.toStoreDetailResponseDTO(store);
     }
 }

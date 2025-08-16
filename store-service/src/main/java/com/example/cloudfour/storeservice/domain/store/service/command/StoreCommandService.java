@@ -2,6 +2,8 @@ package com.example.cloudfour.storeservice.domain.store.service.command;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
 import com.example.cloudfour.storeservice.domain.region.entity.Region;
+import com.example.cloudfour.storeservice.domain.region.exception.RegionErrorCode;
+import com.example.cloudfour.storeservice.domain.region.exception.RegionException;
 import com.example.cloudfour.storeservice.domain.region.service.RegionService;
 import com.example.cloudfour.storeservice.domain.region.repository.RegionRepository;
 import com.example.cloudfour.storeservice.domain.store.converter.StoreCategoryConverter;
@@ -36,13 +38,16 @@ public class StoreCommandService {
     ) {
 
         if(user==null){
+            log.warn("가게 생성 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
 
         if (storeRepository.existsByName(dto.getStoreCommonRequestDTO().getName())) {
+            log.warn("이미 존재하는 가게 이름");
             throw new StoreException(StoreErrorCode.ALREADY_ADD);
         }
 
+        log.info("가게 저장 권한 확인 성공");
         StoreCategory category = storeCategoryRepository
                 .findByCategory(dto.getStoreCommonRequestDTO().getCategory())
                 .orElseGet(() -> storeCategoryRepository.save(
@@ -51,7 +56,10 @@ public class StoreCommandService {
 
         UUID regionId = regionService.parseAndSaveRegion(dto.getStoreCommonRequestDTO().getAddress());
         Region region = regionRepository.findById(regionId)
-                .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 지역");
+                    return new RegionException(RegionErrorCode.NOT_FOUND);
+                });
 
         Store store = StoreConverter.toStore(dto);
         store.setStoreCategory(category);
@@ -59,6 +67,7 @@ public class StoreCommandService {
         store.setOwnerId(user.userId());
 
         storeRepository.save(store);
+        log.info("가게 저장 성공");
         return StoreConverter.toStoreCreateResponseDTO(store);
     }
 
@@ -68,16 +77,21 @@ public class StoreCommandService {
             GatewayPrincipal user
     ) {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
+                .orElseThrow(() ->{
+                    log.warn("존재하지 않는 가게");
+                    return new StoreException(StoreErrorCode.NOT_FOUND);
+                });
 
-        if (!store.getOwnerId().equals(user.userId())) {
+        if (user == null || !store.getOwnerId().equals(user.userId())) {
+            log.warn("가게 수정 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
 
         if (dto.getStoreCommonRequestDTO().getName() != null && storeRepository.existsByName(dto.getStoreCommonRequestDTO().getName())) {
+            log.warn("이미 존재하는 가게 이름");
             throw new StoreException(StoreErrorCode.ALREADY_ADD);
         }
-
+        log.info("가게 수정 권한 확인 성공");
         if (dto.getStoreCommonRequestDTO().getCategory() != null) {
             StoreCategory category = storeCategoryRepository
                     .findByCategory(dto.getStoreCommonRequestDTO().getCategory())
@@ -89,19 +103,25 @@ public class StoreCommandService {
 
         store.update(dto.getStoreCommonRequestDTO().getName(), dto.getStoreCommonRequestDTO().getAddress());
         storeRepository.save(store);
+        log.info("가게 수정 성공");
         return StoreConverter.toStoreUpdateResponseDTO(store);
     }
 
     
     public void deleteStore(UUID storeId, GatewayPrincipal user) {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 가게");
+                    return new StoreException(StoreErrorCode.NOT_FOUND);
+                });
 
-        if (!store.getOwnerId().equals(user.userId())) {
+        if (user==null || !store.getOwnerId().equals(user.userId())) {
+            log.warn("가게 삭제 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
-
+        log.info("가게 삭제 권한 확인 성공");
         store.softDelete();
         storeRepository.save(store);
+        log.info("가게 삭제 성공");
     }
 }
