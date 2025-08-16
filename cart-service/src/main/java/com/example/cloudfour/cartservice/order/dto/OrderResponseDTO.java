@@ -4,6 +4,7 @@ import com.example.cloudfour.cartservice.order.controller.OrderCommonResponseDTO
 import com.example.cloudfour.cartservice.order.enums.OrderStatus;
 import com.example.cloudfour.cartservice.order.enums.OrderType;
 import com.example.cloudfour.cartservice.order.enums.ReceiptType;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,6 +16,7 @@ public class OrderResponseDTO {
     @Getter
     @Builder
     public static class OrderCreateResponseDTO {
+        @JsonUnwrapped
         OrderCommonResponseDTO orderCommonResponseDTO;
     }
 
@@ -26,6 +28,7 @@ public class OrderResponseDTO {
         ReceiptType receiptType;
         String address;
         String request;
+        @JsonUnwrapped
         OrderCommonResponseDTO orderCommonResponseDTO;
         List<OrderItemResponseDTO.OrderItemListResponseDTO> items;
     }
@@ -34,6 +37,7 @@ public class OrderResponseDTO {
     @Builder
     public static class OrderUserResponseDTO {
         String storeName;
+        @JsonUnwrapped
         OrderCommonResponseDTO orderCommonResponseDTO;
     }
 
@@ -51,6 +55,7 @@ public class OrderResponseDTO {
         String userName;
         OrderType orderType;
         ReceiptType receiptType;
+        @JsonUnwrapped
         OrderCommonResponseDTO orderCommonResponseDTO;
     }
 

@@ -1,6 +1,7 @@
 package com.example.cloudfour.storeservice.domain.store.dto;
 
 import com.example.cloudfour.storeservice.domain.store.controller.StoreCommonRequestDTO;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,8 +11,8 @@ public class StoreRequestDTO {
     @Getter
     @Builder
     public static class StoreCreateRequestDTO {
+        @JsonUnwrapped
         StoreCommonRequestDTO storeCommonRequestDTO;
-
         private String storePicture;
         private String phone;
         private String content;
@@ -24,6 +25,7 @@ public class StoreRequestDTO {
     @Getter
     @Builder
     public static class StoreUpdateRequestDTO {
+        @JsonUnwrapped
         StoreCommonRequestDTO storeCommonRequestDTO;
     }
 }

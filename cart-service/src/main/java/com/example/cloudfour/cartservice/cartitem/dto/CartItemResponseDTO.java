@@ -1,6 +1,7 @@
 package com.example.cloudfour.cartservice.cartitem.dto;
 
 import com.example.cloudfour.cartservice.cartitem.controller.CartItemCommonResponseDTO;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,6 +11,7 @@ public class CartItemResponseDTO {
     @Getter
     @Builder
     public static class CartItemAddResponseDTO {
+        @JsonUnwrapped
         CartItemCommonResponseDTO cartItemCommonResponseDTO;
         UUID menuId;
     }
@@ -17,6 +19,7 @@ public class CartItemResponseDTO {
     @Getter
     @Builder
     public static class CartItemListResponseDTO {
+        @JsonUnwrapped
         CartItemCommonResponseDTO cartItemCommonResponseDTO;
         UUID menuId;
     }
@@ -24,6 +27,7 @@ public class CartItemResponseDTO {
     @Getter
     @Builder
     public static class CartItemUpdateResponseDTO {
+        @JsonUnwrapped
         CartItemCommonResponseDTO cartItemCommonResponseDTO;
     }
 }
