@@ -13,7 +13,9 @@ public class MenuOptionConverter {
 
     public static MenuOptionResponseDTO.MenuOptionSimpleResponseDTO toMenuOptionSimpleResponseDTO(MenuOption option) {
         return MenuOptionResponseDTO.MenuOptionSimpleResponseDTO.builder()
-                .menuOptionCommonResponseDTO(toMenuOptionCommonResponseDTO(option))
+                .menuOptionId(option.getId())
+                .additionalPrice(option.getAdditionalPrice())
+                .optionName(option.getOptionName())
                 .build();
     }
 
