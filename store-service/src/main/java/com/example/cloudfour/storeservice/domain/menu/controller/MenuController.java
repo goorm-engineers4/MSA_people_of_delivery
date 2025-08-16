@@ -44,7 +44,7 @@ public class MenuController {
             @RequestBody MenuRequestDTO.MenuCreateRequestDTO requestDTO,
             @AuthenticationPrincipal GatewayPrincipal user) {
 
-        MenuResponseDTO.MenuDetailResponseDTO result = menuCommandService.createMenu(requestDTO, storeId, user.userId());
+        MenuResponseDTO.MenuDetailResponseDTO result = menuCommandService.createMenu(requestDTO, storeId, user);
         return CustomResponse.onSuccess(HttpStatus.CREATED, result);
     }
 
@@ -126,7 +126,7 @@ public class MenuController {
             @PathVariable("menuId") UUID menuId,
             @AuthenticationPrincipal GatewayPrincipal user) {
 
-        MenuResponseDTO.MenuDetailResponseDTO result = menuCommandService.updateMenu(menuId, requestDTO, user.userId());
+        MenuResponseDTO.MenuDetailResponseDTO result = menuCommandService.updateMenu(menuId, requestDTO, user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 
@@ -136,19 +136,19 @@ public class MenuController {
             @PathVariable("menuId") UUID menuId,
             @AuthenticationPrincipal GatewayPrincipal user) {
 
-        menuCommandService.deleteMenu(menuId, user.userId());
+        menuCommandService.deleteMenu(menuId, user);
         return CustomResponse.onSuccess(HttpStatus.OK, "메뉴 삭제 완료");
     }
 
     @PostMapping("/{menuId}/options")
     @Operation(summary = "메뉴 옵션 생성", description = "특정 메뉴에 새로운 옵션을 추가합니다.")
-    public CustomResponse<MenuOptionResponseDTO.MenuOptionDetailResponseDTO> createMenuOption(
+    public CustomResponse<MenuOptionResponseDTO.MenuOptionSimpleResponseDTO> createMenuOption(
             @PathVariable("menuId") UUID menuId,
             @RequestBody MenuRequestDTO.MenuOptionCreateRequestDTO requestDTO,
             @AuthenticationPrincipal GatewayPrincipal user) {
 
-        MenuOptionResponseDTO.MenuOptionDetailResponseDTO result =
-                menuCommandService.createMenuOption(requestDTO, user.userId(), menuId);
+        MenuOptionResponseDTO.MenuOptionSimpleResponseDTO result =
+                menuCommandService.createMenuOption(requestDTO, user, menuId);
         return CustomResponse.onSuccess(HttpStatus.CREATED, result);
     }
 
@@ -165,24 +165,24 @@ public class MenuController {
 
     @GetMapping("/options/{optionId}/detail")
     @Operation(summary = "메뉴 옵션 상세 조회", description = "메뉴 옵션의 상세 정보를 조회합니다.")
-    public CustomResponse<MenuOptionResponseDTO.MenuOptionDetailResponseDTO> getMenuOptionDetail(
+    public CustomResponse<MenuOptionResponseDTO.MenuOptionSimpleResponseDTO> getMenuOptionDetail(
             @PathVariable("optionId") UUID optionId,@AuthenticationPrincipal GatewayPrincipal user
             ) {
 
-        MenuOptionResponseDTO.MenuOptionDetailResponseDTO result =
+        MenuOptionResponseDTO.MenuOptionSimpleResponseDTO result =
                 menuQueryService.getMenuOptionDetail(optionId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 
     @PatchMapping("/options/{optionId}")
     @Operation(summary = "메뉴 옵션 수정", description = "메뉴 옵션의 정보를 수정합니다.")
-    public CustomResponse<MenuOptionResponseDTO.MenuOptionDetailResponseDTO> updateMenuOption(
+    public CustomResponse<MenuOptionResponseDTO.MenuOptionSimpleResponseDTO> updateMenuOption(
             @PathVariable("optionId") UUID optionId,
             @RequestBody MenuRequestDTO.MenuOptionUpdateRequestDTO requestDTO,
             @AuthenticationPrincipal GatewayPrincipal user) {
 
-        MenuOptionResponseDTO.MenuOptionDetailResponseDTO result =
-                menuCommandService.updateMenuOption(optionId, requestDTO, user.userId());
+        MenuOptionResponseDTO.MenuOptionSimpleResponseDTO result =
+                menuCommandService.updateMenuOption(optionId, requestDTO, user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 
@@ -192,7 +192,7 @@ public class MenuController {
             @PathVariable("optionId") UUID optionId,
             @AuthenticationPrincipal GatewayPrincipal user) {
 
-        menuCommandService.deleteMenuOption(optionId, user.userId());
+        menuCommandService.deleteMenuOption(optionId, user);
         return CustomResponse.onSuccess(HttpStatus.OK, "메뉴 옵션 삭제 완료");
     }
 }
