@@ -14,7 +14,7 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     @Query("select r from Review r where r.isDeleted = false and r.user =:UserId and r.userIsDeleted = false and r.createdAt <:cursor order by r.createdAt desc")
     Slice<Review> findAllByUserId(@Param("UserId") UUID userId, LocalDateTime cursor, Pageable pageable);
 
-    @Query("select r from Review r where r.isDeleted = false and r.store =:StoreId and r.storeIsDeleted = false and r.createdAt <:cursor order by r.createdAt desc")
+    @Query("select r from Review r where r.isDeleted = false and r.store.id =:StoreId and r.storeIsDeleted = false and r.createdAt <:cursor order by r.createdAt desc")
     Slice<Review> findAllByStoreId(@Param("StoreId") UUID storeId, LocalDateTime cursor, Pageable pageable);
 
     @Query("select count(r) > 0 from Review r where r.id =:ReviewId and r.user =:UserId and r.userIsDeleted = false")
