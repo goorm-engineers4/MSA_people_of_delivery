@@ -53,9 +53,3 @@ spring:
           timeout: 5000
           writetimeout: 5000
     auth-code-expiration-millis: 1800000
-
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: 900000
-  refresh-secret: ${JWT_REFRESH_SECRET}
-  refresh-expiration: 604800000

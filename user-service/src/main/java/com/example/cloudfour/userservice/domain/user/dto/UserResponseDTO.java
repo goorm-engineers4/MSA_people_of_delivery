@@ -1,6 +1,5 @@
 package com.example.cloudfour.userservice.domain.user.dto;
 
-import com.example.cloudfour.userservice.domain.user.enums.LoginType;
 import com.example.cloudfour.userservice.domain.user.enums.Role;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +17,6 @@ public class UserResponseDTO {
         String nickname;
         String number;
         Role role;
-        LoginType loginType;
     }
 
     @Getter

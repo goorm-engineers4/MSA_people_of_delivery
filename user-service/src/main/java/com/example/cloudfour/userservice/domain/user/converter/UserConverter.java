@@ -16,7 +16,6 @@ public class UserConverter {
                 .nickname(user.getNickname())
                 .number(user.getNumber())
                 .role(user.getRole())
-                .loginType(user.getLoginType())
                 .build();
     }
 
