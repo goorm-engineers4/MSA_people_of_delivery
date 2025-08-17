@@ -10,6 +10,8 @@ import com.example.cloudfour.storeservice.domain.menu.exception.MenuCategoryErro
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuCategoryException;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuException;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuErrorCode;
+import com.example.cloudfour.storeservice.domain.menu.exception.MenuOptionErrorCode;
+import com.example.cloudfour.storeservice.domain.menu.exception.MenuOptionException;
 import com.example.cloudfour.storeservice.domain.menu.repository.MenuCategoryRepository;
 import com.example.cloudfour.storeservice.domain.menu.repository.MenuRepository;
 import com.example.cloudfour.storeservice.domain.menu.repository.MenuOptionRepository;
@@ -47,19 +49,26 @@ public class MenuQueryService {
     public MenuResponseDTO.MenuStoreListResponseDTO getMenusByStoreWithCursor(
             UUID storeId, LocalDateTime cursor, Integer size, GatewayPrincipal user
     ) {
-        storeRepository.findByIdAndIsDeletedFalse(storeId).orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
+        storeRepository.findByIdAndIsDeletedFalse(storeId).orElseThrow(() -> {
+            log.warn("존재하지 않는 가게");
+            return new StoreException(StoreErrorCode.NOT_FOUND);
+        });
 
         if(user==null){
+            log.warn("가게 메뉴 조회 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
-
+        log.info("가게 메뉴 목록 조회 권한 확인 성공");
         if (cursor == null) cursor = FIRST_CURSOR;
 
         Pageable pageable = PageRequest.of(0, size);
         Slice<Menu> menuSlice =
                 menuRepository.findByStoreIdAndDeletedFalseAndCreatedAtBefore(storeId, cursor, pageable);
 
-        if (menuSlice.isEmpty()) throw new MenuException(MenuErrorCode.NOT_FOUND);
+        if (menuSlice.isEmpty()){
+            log.warn("가게 메뉴 없음");
+            throw new MenuException(MenuErrorCode.NOT_FOUND);
+        }
 
         List<MenuResponseDTO.MenuListResponseDTO> menus = menuSlice.getContent().stream()
                 .map(MenuConverter::toMenuListResponseDTO)
@@ -69,6 +78,7 @@ public class MenuQueryService {
                 ? menuSlice.getContent().getLast().getCreatedAt()
                 : null;
 
+        log.info("가게 별 메뉴 목록 조회 성공");
         return MenuResponseDTO.MenuStoreListResponseDTO.builder()
                 .menus(menus)
                 .hasNext(menuSlice.hasNext())
@@ -80,14 +90,22 @@ public class MenuQueryService {
             UUID storeId, UUID categoryId, LocalDateTime cursor, Integer size ,GatewayPrincipal user
     ) {
         storeRepository.findByIdAndIsDeletedFalse(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 가게");
+                    return new StoreException(StoreErrorCode.NOT_FOUND);
+                });
         menuCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new MenuCategoryException(MenuCategoryErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 메뉴 카테고리");
+                    return new MenuCategoryException(MenuCategoryErrorCode.NOT_FOUND);
+                });
 
         if(user==null){
+            log.warn("가게, 카테고리 별 메뉴 목록 조회 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
 
+        log.info("가게, 카테고리 별 메뉴 목록 조회 권한 확인 성공");
         if (cursor == null) cursor = FIRST_CURSOR;
 
         Pageable pageable = PageRequest.of(0, size);
@@ -95,7 +113,10 @@ public class MenuQueryService {
                 menuRepository.findByStoreIdAndMenuCategoryIdAndDeletedFalseAndCreatedAtBefore(
                         storeId, categoryId, cursor, pageable);
 
-        if (menuSlice.isEmpty()) throw new MenuException(MenuErrorCode.NOT_FOUND);
+        if (menuSlice.isEmpty()) {
+            log.warn("가게 메뉴 없음");
+            throw new MenuException(MenuErrorCode.NOT_FOUND);
+        }
 
         List<MenuResponseDTO.MenuListResponseDTO> menus = menuSlice.getContent().stream()
                 .map(MenuConverter::toMenuListResponseDTO)
@@ -104,7 +125,7 @@ public class MenuQueryService {
         LocalDateTime nextCursor = (menuSlice.hasNext() && !menuSlice.isEmpty())
                 ? menuSlice.getContent().getLast().getCreatedAt()
                 : null;
-
+        log.info("가게, 카테고리 별 메뉴 목록 조회 성공");
         return MenuResponseDTO.MenuStoreListResponseDTO.builder()
                 .menus(menus)
                 .hasNext(menuSlice.hasNext())
@@ -139,43 +160,59 @@ public class MenuQueryService {
 
     public MenuResponseDTO.MenuDetailResponseDTO getMenuDetail(UUID menuId,GatewayPrincipal user) {
         if(user==null){
+            log.warn("메뉴 상세 조회 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
         Menu menu = menuRepository.findById(menuId)
-                .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
-
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 메뉴");
+                    return new MenuException(MenuErrorCode.NOT_FOUND);
+                });
+        log.info("메뉴 상세 조회 권한 확인 성공");
         var optionDTOs = menuOptionRepository.findByMenuIdOrderByAdditionalPrice(menuId)
                 .stream()
                 .map(MenuConverter::toMenuOptionDTO)
                 .toList();
 
+        log.info("메뉴 상세 조회 완료");
         return MenuConverter.toMenuDetail2ResponseDTO(menu, optionDTOs);
     }
 
     public MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO getMenuOptionsByMenu(UUID menuId,GatewayPrincipal user) {
         if(user==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+            log.warn("메뉴 별 메뉴 옵션 조회 권한 없음");
+            throw new MenuOptionException(MenuOptionErrorCode.UNAUTHORIZED_ACCESS);
         }
         menuRepository.findById(menuId)
-                .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 메뉴");
+                    return new MenuException(MenuErrorCode.NOT_FOUND);
+                });
+
+        log.info("메뉴 별 메뉴 옵션 조회 권한 확인 성공");
 
         var options = menuOptionRepository.findByMenuIdOrderByAdditionalPrice(menuId)
                 .stream()
                 .map(MenuOptionConverter::toMenuOptionSimpleResponseDTO)
                 .toList();
-
+        log.info("메뉴 별 메뉴 옵션 조회 완료");
         return MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO.builder()
                 .options(options)
                 .build();
     }
 
-    public MenuOptionResponseDTO.MenuOptionDetailResponseDTO getMenuOptionDetail(UUID optionId,GatewayPrincipal user) {
+    public MenuOptionResponseDTO.MenuOptionSimpleResponseDTO getMenuOptionDetail(UUID optionId,GatewayPrincipal user) {
         if(user==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+            log.warn("메뉴 옵션 상세 조회 권한 없음");
+            throw new MenuOptionException(MenuOptionErrorCode.UNAUTHORIZED_ACCESS);
         }
+        log.info("메뉴 옵션 상세 조회 권한 확인 성공");
         var menuOption = menuOptionRepository.findByIdWithMenu(optionId)
-                .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
-
-        return MenuOptionConverter.toMenuOptionDetailResponseDTO(menuOption);
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 메뉴 옵션");
+                    return new MenuOptionException(MenuOptionErrorCode.NOT_FOUND);
+                });
+        log.info("메뉴 옵션 상세 조회 완료");
+        return MenuOptionConverter.toMenuOptionSimpleResponseDTO(menuOption);
     }
 }

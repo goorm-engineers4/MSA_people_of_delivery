@@ -23,38 +23,61 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class ReviewCommandServiceImpl{
+public class ReviewCommandService {
     private final StoreRepository storeRepository;
     private final ReviewRepository reviewRepository;
 
     public ReviewResponseDTO.ReviewCreateResponseDTO createReview(ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO, GatewayPrincipal user) {
         if(user==null){
+            log.warn("리뷰 생성 권한 없음");
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
-        Store findStore = storeRepository.findById(reviewCreateRequestDTO.getReviewCommonRequestDTO().getStoreId()).orElseThrow(()->new StoreException(StoreErrorCode.NOT_FOUND));
+        log.info("리뷰 생성 권한 확인 성공");
+        Store findStore = storeRepository.findById(reviewCreateRequestDTO.getReviewCommonRequestDTO().getStoreId())
+                .orElseThrow(()->{
+                    log.warn("존재하지 않는 가게");
+            return new StoreException(StoreErrorCode.NOT_FOUND);
+        });
         Review review = ReviewConverter.toReview(reviewCreateRequestDTO);
         review.setUser(user.userId());
         review.setStore(findStore);
         reviewRepository.save(review);
+        log.info("리뷰 생성 성공");
         return ReviewConverter.toReviewCreateResponseDTO(review);
     }
 
     public void deleteReview(UUID reviewId, GatewayPrincipal user) {
-        Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->new ReviewException(ReviewErrorCode.NOT_FOUND));
-        if(!reviewRepository.existsByReviewIdAndUserId(reviewId, user.userId())) {
+        Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->{
+            log.warn("존재하지 않는 리뷰");
+            return new ReviewException(ReviewErrorCode.NOT_FOUND);
+        });
+        if(user == null || !reviewRepository.existsByReviewIdAndUserId(reviewId, user.userId())) {
+            log.warn("리뷰 삭제 권한 없음");
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
+        log.info("리뷰 삭제 권한 확인 성공");
         findReview.softDelete();
+        log.info("리뷰 삭제 성공");
     }
 
     public ReviewResponseDTO.ReviewUpdateResponseDTO updateReview(ReviewRequestDTO.ReviewUpdateRequestDTO reviewUpdateRequestDTO, UUID reviewId, GatewayPrincipal user) {
-        Store findStore = storeRepository.findById(reviewUpdateRequestDTO.getReviewCommonRequestDTO().getStoreId()).orElseThrow(()->new StoreException(StoreErrorCode.NOT_FOUND));
-        Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->new ReviewException(ReviewErrorCode.NOT_FOUND));
-        if(!reviewRepository.existsByReviewIdAndUserId(reviewId, user.userId())) {
+        Store findStore = storeRepository.findById(reviewUpdateRequestDTO.getReviewCommonRequestDTO().getStoreId()).
+                orElseThrow(()->{
+                    log.warn("존재하지 않는 가게");
+                    return new StoreException(StoreErrorCode.NOT_FOUND);
+                });
+        Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->{
+                log.warn("존재하지 않는 리뷰");
+                return new ReviewException(ReviewErrorCode.NOT_FOUND);
+        });
+        if(user == null || !reviewRepository.existsByReviewIdAndUserId(reviewId, user.userId())) {
+            log.warn("리뷰 수정 권한 없음");
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
+        log.info("리뷰 수정 권한 확인 성공");
         findReview.update(reviewUpdateRequestDTO);
         findReview.setStore(findStore);
+        log.info("리뷰 수정 성공");
         return ReviewConverter.toReviewUpdateResponseDTO(findReview);
     }
 }

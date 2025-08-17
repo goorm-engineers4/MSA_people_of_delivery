@@ -33,7 +33,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class OrderCommandServiceImpl {
+public class OrderCommandService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
@@ -42,17 +42,22 @@ public class OrderCommandServiceImpl {
 
 
     public OrderResponseDTO.OrderCreateResponseDTO createOrder(OrderRequestDTO.OrderCreateRequestDTO orderCreateRequestDTO, UUID cartId, GatewayPrincipal user) {
-        Cart cart = cartRepository.findById(cartId).orElseThrow(()->new CartException(CartErrorCode.NOT_FOUND));
-        if(!cartRepository.existsByUserAndCart(user.userId(), cartId)){
+        Cart cart = cartRepository.findById(cartId).orElseThrow(()->{
+            log.warn("존재하지 않는 장바구니");
+            return new CartException(CartErrorCode.NOT_FOUND);
+        });
+        if(user == null || !cartRepository.existsByUserAndCart(user.userId(), cartId)){
+            log.warn("주문 생성 권한 없음");
             throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
         }
         UserAddressResponseDTO userAddress = restTemplate.getForObject("http://user-service/api/users/{userId}",UserAddressResponseDTO.class, user.userId());
         UUID findStore = restTemplate.getForObject("http://store-service/api/stores/{storeId}", UUID.class,cart.getStore());
         List<CartItem> cartItems = cartItemRepository.findAllByCartId(cartId,user.userId());
         if(cartItems.isEmpty()) {
+            log.warn("존재하지 않는 장바구니 아이템");
             throw new CartItemException(CartErrorCode.NOT_FOUND);
         }
-        log.info("주문 생성 권한 확인");
+        log.info("주문 생성 권한 확인 성공");
         Integer totalPrice = 0;
         for (CartItem cartItem : cartItems) {
             totalPrice += cartItem.getPrice();
@@ -71,11 +76,15 @@ public class OrderCommandServiceImpl {
     }
 
     public OrderResponseDTO.OrderUpdateResponseDTO updateOrder(OrderRequestDTO.OrderUpdateRequestDTO orderUpdateRequestDTO, UUID orderId, GatewayPrincipal user) {
-        if(!orderRepository.existsByOrderIdAndUserId(orderId, user.userId())) {
+        if(user == null || !orderRepository.existsByOrderIdAndUserId(orderId, user.userId())) {
+            log.warn("주문 수정 권한 없음");
             throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
         }
-        Order order = orderRepository.findById(orderId).orElseThrow(()->new OrderException(OrderErrorCode.NOT_FOUND));
-        log.info("주문 수정 권한 확인");
+        Order order = orderRepository.findById(orderId).orElseThrow(()->{
+            log.warn("존재하지 않는 주문");
+            return new OrderException(OrderErrorCode.NOT_FOUND);
+        });
+        log.info("주문 수정 권한 확인 성공");
         OrderStatus prev_orderStatus = order.getStatus();
         order.updateOrderStatus(orderUpdateRequestDTO.getNewStatus());
         orderRepository.save(order);
@@ -84,10 +93,14 @@ public class OrderCommandServiceImpl {
     }
 
     public void deleteOrder(UUID orderId, GatewayPrincipal user) {
-        if(!orderRepository.existsByOrderIdAndUserId(orderId, user.userId())) {
+        if(user == null || !orderRepository.existsByOrderIdAndUserId(orderId, user.userId())) {
+            log.warn("주문 삭제 권한 없음");
             throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
         }
-        Order order = orderRepository.findById(orderId).orElseThrow(()->new OrderException(OrderErrorCode.NOT_FOUND));
+        Order order = orderRepository.findById(orderId).orElseThrow(()->{
+            log.warn("존재하지 않는 주문");
+            return new OrderException(OrderErrorCode.NOT_FOUND);
+        });
         log.info("주문 삭제 권한 확인");
         order.softDelete();
         log.info("주문 삭제 완료");

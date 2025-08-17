@@ -31,18 +31,22 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OrderQueryServiceImpl {
+public class OrderQueryService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private static final LocalDateTime first_cursor = LocalDateTime.now().plusDays(1);
     private final RestTemplate restTemplate;
 
     public OrderResponseDTO.OrderDetailResponseDTO getOrderById(UUID orderId , GatewayPrincipal user) {
-        Order order = orderRepository.findById(orderId).orElseThrow(()->new OrderException(OrderErrorCode.NOT_FOUND));
-        if(!orderRepository.existsByOrderIdAndUserId(orderId, user.userId())) {
+        Order order = orderRepository.findById(orderId).orElseThrow(()->{
+            log.warn("존재하지 않는 주문");
+            return new OrderException(OrderErrorCode.NOT_FOUND);
+        });
+        if(user == null || !orderRepository.existsByOrderIdAndUserId(orderId, user.userId())) {
+            log.warn("주문 조회 권한 없음");
             throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
         }
-        log.info("주문 조회 권한 확인");
+        log.info("주문 조회 권한 확인 성공");
         List<OrderItem> orderItems =  orderItemRepository.findByOrderId(orderId);
         List<OrderItemResponseDTO.OrderItemListResponseDTO> orderItemDTOS =
                 orderItems.stream().map(orderItem -> {
@@ -58,11 +62,15 @@ public class OrderQueryServiceImpl {
     }
 
     public OrderItemResponseDTO.OrderItemListResponseDTO getOrderItemById(UUID orderItemId, GatewayPrincipal user){
-        OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(()->new OrderException(OrderErrorCode.NOT_FOUND));
-        if(orderItemRepository.existsByUserId(orderItem.getId(),user.userId())){
+        OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(()->{
+            log.warn("존재하지 않는 주문 아이템");
+            return new OrderItemException(OrderItemErrorCode.NOT_FOUND);
+        });
+        if(user == null || orderItemRepository.existsByUserId(orderItem.getId(),user.userId())){
+            log.warn("주문 아이템 조회 권한 없음");
             throw new OrderItemException(OrderItemErrorCode.UNAUTHORIZED_ACCESS);
         }
-        log.info("주문 아이템 조회 권한 확인");
+        log.info("주문 아이템 조회 권한 확인 성공");
         MenuOptionResponseDTO menuOptionDTO = restTemplate.getForObject(
                 "http://menu-service/api/menus/options/{optionId}/detail",
                 MenuOptionResponseDTO.class,
@@ -73,15 +81,20 @@ public class OrderQueryServiceImpl {
     }
 
     public OrderResponseDTO.OrderUserListResponseDTO getOrderListByUser(GatewayPrincipal user, LocalDateTime cursor, Integer size) {
+        if(user == null){
+            log.warn("사용자 주문 목록 조회 권한 없음");
+            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
+        }
+        log.info("사용자 주문 목록 조회 권한 확인 성공");
         if(cursor == null) {
             cursor = first_cursor;
         }
         Pageable pageable = PageRequest.of(0, size);
         Slice<Order> orders = orderRepository.findAllByUserId(user.userId(),cursor,pageable);
         if(orders.isEmpty()) {
+            log.warn("존재하지 않는 주문");
             throw new OrderException(OrderErrorCode.NOT_FOUND);
         }
-        log.info("사용자 주문 목록 조회 권한 확인");
         List<Order> orderList = orders.toList();
         List<OrderResponseDTO.OrderUserResponseDTO> orderUserResponseDTOS = orderList.stream().map(order->{
             StoreResponseDTO store = restTemplate.getForObject("http://store-service/api/stores/{storeId}", StoreResponseDTO.class, order.getStore());
@@ -97,7 +110,8 @@ public class OrderQueryServiceImpl {
 
     public OrderResponseDTO.OrderStoreListResponseDTO getOrderListByStore(UUID storeId, LocalDateTime cursor, Integer size, GatewayPrincipal user) {
         StoreResponseDTO store = restTemplate.getForObject("http://store-service/api/stores/{storeId}", StoreResponseDTO.class, storeId);
-        if(store.getUserId() != user.userId()) {
+        if(user == null || store.getUserId() != user.userId()) {
+            log.info("가게 주문 목록 조회 권한 없음");
             throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
         }
         if(cursor == null) {
@@ -108,7 +122,7 @@ public class OrderQueryServiceImpl {
         if(orders.isEmpty()) {
             throw new OrderException(OrderErrorCode.NOT_FOUND);
         }
-        log.info("가게 주문 목록 조회 권한 확인");
+        log.info("가게 주문 목록 조회 권한 확인 성공");
         List<Order> orderList = orders.toList();
         List<OrderResponseDTO.OrderStoreResponseDTO> orderStoreResponseDTOS = orderList.stream().map(order->{
             UserResponseDTO findUser = restTemplate.getForObject("http://user-service/api/users/{userId}",UserResponseDTO.class,order.getUser());

@@ -1,5 +1,6 @@
 package com.example.cloudfour.storeservice.domain.menu.service.command;
 
+import com.example.cloudfour.storeservice.config.GatewayPrincipal;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuConverter;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuOptionConverter;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuRequestDTO;
@@ -10,6 +11,8 @@ import com.example.cloudfour.storeservice.domain.menu.entity.MenuCategory;
 import com.example.cloudfour.storeservice.domain.menu.entity.MenuOption;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuException;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuErrorCode;
+import com.example.cloudfour.storeservice.domain.menu.exception.MenuOptionErrorCode;
+import com.example.cloudfour.storeservice.domain.menu.exception.MenuOptionException;
 import com.example.cloudfour.storeservice.domain.menu.repository.MenuCategoryRepository;
 import com.example.cloudfour.storeservice.domain.menu.repository.MenuRepository;
 import com.example.cloudfour.storeservice.domain.menu.repository.MenuOptionRepository;
@@ -38,25 +41,27 @@ public class MenuCommandService {
     public MenuResponseDTO.MenuDetailResponseDTO createMenu(
             MenuRequestDTO.MenuCreateRequestDTO requestDTO,
             UUID storeId,
-            UUID userId
+            GatewayPrincipal user
     ) {
-        if(userId==null){
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
-        }
-
         Store store = storeRepository.findByIdAndIsDeletedFalse(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 가게");
+                    return new StoreException(StoreErrorCode.NOT_FOUND);
+                });
 
-        if (!store.getOwnerId().equals(userId)) {
+        if (user == null || !store.getOwnerId().equals(user.userId())) {
+            log.warn("메뉴 생성 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
 
+        log.info("메뉴 생성 권한 확인 성공");
         MenuCategory menuCategory = menuCategoryRepository.findByCategory(requestDTO.getMenuCommonMainRequestDTO().getCategory())
                 .orElseGet(() -> menuCategoryRepository.save(
                         MenuCategory.builder().category(requestDTO.getMenuCommonMainRequestDTO().getCategory()).build()
                 ));
 
         if (menuRepository.existsByNameAndStoreId(requestDTO.getMenuCommonMainRequestDTO().getName(), store.getId())) {
+            log.warn("이미 존재하지 않는 메뉴");
             throw new MenuException(MenuErrorCode.ALREADY_ADD);
         }
 
@@ -66,6 +71,7 @@ public class MenuCommandService {
 
 
         Menu savedMenu = menuRepository.save(menu);
+        log.info("메뉴 생성 완료");
         return MenuConverter.toMenuDetail1ResponseDTO(savedMenu);
 
     }
@@ -74,15 +80,19 @@ public class MenuCommandService {
     public MenuResponseDTO.MenuDetailResponseDTO updateMenu(
             UUID menuId,
             MenuRequestDTO.MenuUpdateRequestDTO requestDTO,
-            UUID userId
+            GatewayPrincipal user
     ) {
         Menu menu = menuRepository.findById(menuId)
-                .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 메뉴");
+                    return new MenuException(MenuErrorCode.NOT_FOUND);
+                });
 
-        if (!menu.getStore().getOwnerId().equals(userId)) {
+        if (user == null || !menu.getStore().getOwnerId().equals(user.userId())) {
+            log.warn("메뉴 수정 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
-
+        log.info("메뉴 수정 권한 확인 성공");
         MenuCategory menuCategory = menuCategoryRepository.findByCategory(requestDTO.getMenuCommonMainRequestDTO().getCategory())
                 .orElseGet(() -> menuCategoryRepository.save(
                         MenuCategory.builder()
@@ -101,80 +111,102 @@ public class MenuCommandService {
         menu.setMenuCategory(menuCategory);
 
         Menu updatedMenu = menuRepository.save(menu);
+        log.info("메뉴 수정 성공");
         return MenuConverter.toMenuDetail1ResponseDTO(updatedMenu);
 
     }
 
     
-    public void deleteMenu(UUID menuId, UUID userId) {
+    public void deleteMenu(UUID menuId, GatewayPrincipal user) {
         Menu menu = menuRepository.findById(menuId)
-                .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 메뉴");
+                    return new MenuException(MenuErrorCode.NOT_FOUND);
+                });
 
-        if (!menu.getStore().getOwnerId().equals(userId)) {
+        if (user == null || !menu.getStore().getOwnerId().equals(user.userId())) {
+            log.warn("메뉴 삭제 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
-
+        log.info("메뉴 삭제 권한 성공");
         menuRepository.delete(menu);
         log.info("메뉴 ID: {}가 삭제되었습니다.", menuId);
     }
 
-    public MenuOptionResponseDTO.MenuOptionDetailResponseDTO createMenuOption(
+    public MenuOptionResponseDTO.MenuOptionSimpleResponseDTO createMenuOption(
             MenuRequestDTO.MenuOptionCreateRequestDTO requestDTO,
-            UUID userId, UUID menuId
+            GatewayPrincipal user, UUID menuId
     ) {
         Menu menu = menuRepository.findById(menuId)
-                .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 메뉴");
+                    return new MenuException(MenuErrorCode.NOT_FOUND);
+                });
 
-        if (!menu.getStore().getOwnerId().equals(userId)) {
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+
+        if (user == null || !menu.getStore().getOwnerId().equals(user.userId())) {
+            log.warn("메뉴 옵션 생성 권한 없음");
+            throw new MenuOptionException(MenuOptionErrorCode.UNAUTHORIZED_ACCESS);
         }
 
         if (menuOptionRepository.existsByMenuIdAndOptionName(menu.getId(), requestDTO.getMenuOptionCommonRequestDTO().getOptionName())) {
-            throw new MenuException(MenuErrorCode.ALREADY_ADD);
+            log.warn("이미 존재하는 메뉴옵션");
+            throw new MenuOptionException(MenuOptionErrorCode.ALREADY_ADD);
         }
 
+        log.info("메뉴옵션 생성 권한 확인 성공");
         MenuOption menuOption = MenuOption.builder()
                 .optionName(requestDTO.getMenuOptionCommonRequestDTO().getOptionName())
                 .additionalPrice(requestDTO.getMenuOptionCommonRequestDTO().getAdditionalPrice())
                 .build();
 
         menuOption.setMenu(menu);
-
-        return MenuOptionConverter.toMenuOptionDetailResponseDTO(menuOption);
+        menuOptionRepository.save(menuOption);
+        log.info("메뉴옵션 생성 완료");
+        return MenuOptionConverter.toMenuOptionSimpleResponseDTO(menuOption);
     }
     
-    public MenuOptionResponseDTO.MenuOptionDetailResponseDTO updateMenuOption(
+    public MenuOptionResponseDTO.MenuOptionSimpleResponseDTO updateMenuOption(
             UUID optionId,
             MenuRequestDTO.MenuOptionUpdateRequestDTO requestDTO,
-            UUID userId
+            GatewayPrincipal user
     ) {
         MenuOption menuOption = menuOptionRepository.findByIdWithMenu(optionId)
-                .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 메뉴옵션");
+                    return new MenuOptionException(MenuOptionErrorCode.NOT_FOUND);
+                });
 
-        if (!menuOption.getMenu().getStore().getOwnerId().equals(userId)) {
-            throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
+        if (user==null || !menuOption.getMenu().getStore().getOwnerId().equals(user.userId())) {
+            log.warn("메뉴 옵션 수정 권한 없음");
+            throw new MenuOptionException(MenuOptionErrorCode.UNAUTHORIZED_ACCESS);
         }
 
         if (!menuOption.getOptionName().equals(requestDTO.getMenuOptionCommonRequestDTO().getOptionName()) &&
                 menuOptionRepository.existsByMenuIdAndOptionName(menuOption.getMenu().getId(), requestDTO.getMenuOptionCommonRequestDTO().getOptionName())) {
-            throw new MenuException(MenuErrorCode.ALREADY_ADD);
+            log.warn("이미 존재하는 메뉴옵션 이름");
+            throw new MenuOptionException(MenuOptionErrorCode.ALREADY_ADD);
         }
-
+        log.info("메뉴옵션 수정 권한 확인 성공");
         menuOption.updateOptionInfo(requestDTO.getMenuOptionCommonRequestDTO().getOptionName(), requestDTO.getMenuOptionCommonRequestDTO().getAdditionalPrice());
         MenuOption savedOption = menuOptionRepository.save(menuOption);
-
-        return MenuOptionConverter.toMenuOptionDetailResponseDTO(savedOption);
+        log.info("메뉴옵션 수정 완료");
+        return MenuOptionConverter.toMenuOptionSimpleResponseDTO(savedOption);
     }
 
     
-    public void deleteMenuOption(UUID optionId, UUID userId) {
+    public void deleteMenuOption(UUID optionId, GatewayPrincipal user) {
         MenuOption menuOption = menuOptionRepository.findByIdWithMenu(optionId)
-                .orElseThrow(() -> new MenuException(MenuErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 메뉴옵션");
+                    return new MenuOptionException(MenuOptionErrorCode.NOT_FOUND);
+                });
 
-        if (!menuOption.getMenu().getStore().getOwnerId().equals(userId)) {
+        if (user == null || !menuOption.getMenu().getStore().getOwnerId().equals(user.userId())) {
+            log.warn("메뉴 옵션 삭제 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
-
+        log.info("메뉴옵션 삭제 권한 확인 성공");
         menuOptionRepository.delete(menuOption);
         log.info("메뉴 옵션 ID: {}가 삭제되었습니다.", optionId);
     }

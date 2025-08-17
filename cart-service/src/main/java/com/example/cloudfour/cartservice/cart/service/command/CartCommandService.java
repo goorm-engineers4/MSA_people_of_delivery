@@ -34,29 +34,33 @@ public class CartCommandService {
         UUID findUser =  restTemplate.getForObject("http://store-service/api/stores/{storeId}", UUID.class, cartCreateRequestDTO.getStoreId());
         boolean exists = cartRepository.existsByUserAndStore(findUser, store);
         if (exists) {
+            log.warn("이미 존재하는 장바구니");
             throw new CartException(CartErrorCode.ALREADY_ADD);
         }
-        log.info("장바구니 생성 권한 확인 완료");
+        log.info("장바구니 생성 권한 확인 완료 성공");
         Cart cart = Cart.builder()
                 .build();
         cart.setUser(findUser);
         cart.setStore(store);
         Cart savedCart = cartRepository.save(cart);
-        log.info("장바구니 생성 완료, cartId={}", savedCart.getId());
-
         MenuResponseDTO menu = restTemplate.getForEntity("http://menu-service/api/menus/{menuId}",
                 MenuResponseDTO.class, cartCreateRequestDTO.getMenuId()).getBody();
         CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO = CartItemConverter.toCartItemAddRequestDTO(cartCreateRequestDTO,menu.getPrice());
         CartItemResponseDTO.CartItemAddResponseDTO cartItemAddResponseDTO = cartItemCommandService.AddCartItem(cartItemAddRequestDTO, savedCart.getId(), user);
+        log.info("장바구니 생성 완료, cartId={}", savedCart.getId());
         return CartConverter.toCartCreateResponseDTO(savedCart,cartItemAddResponseDTO.getCartItemCommonResponseDTO().getCartItemId());
 
     }
 
     public void deleteCart(UUID cartId, GatewayPrincipal user) {
         Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new CartException(CartErrorCode.NOT_FOUND));
-        log.info("장바구니 삭제 권한 확인 완료");
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 장바구니");
+                    return new CartException(CartErrorCode.NOT_FOUND);
+                });
+        log.info("장바구니 삭제 권한 확인 성공");
         if (!cart.getUser().equals(user)) {
+            log.warn("장바구니 삭제 권한 없음");
             throw new CartException(CartErrorCode.UNAUTHORIZED_ACCESS);
         }
         cartRepository.delete(cart);

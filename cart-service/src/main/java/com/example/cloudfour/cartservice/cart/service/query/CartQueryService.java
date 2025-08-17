@@ -21,8 +21,11 @@ public class CartQueryService {
 
     public CartResponseDTO.CartDetailResponseDTO getCartListById(UUID cartId, GatewayPrincipal user) {
         Cart cart = cartRepository.findByIdAndUser(cartId, user.userId())
-                .orElseThrow(() -> new CartException(CartErrorCode.NOT_FOUND));
-        log.info("장바구니 목록 조회 권한 확인 완료");
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 장바구니");
+                    return new CartException(CartErrorCode.NOT_FOUND);
+                });
+        log.info("장바구니 목록 조회 권한 확인 성공");
         return CartConverter.toCartDetailResponseDTO(cart);
     }
 }

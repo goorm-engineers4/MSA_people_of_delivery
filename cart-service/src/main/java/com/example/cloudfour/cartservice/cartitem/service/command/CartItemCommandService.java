@@ -33,13 +33,21 @@ public class CartItemCommandService {
 
     public CartItemResponseDTO.CartItemAddResponseDTO AddCartItem(CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO, UUID cartId, GatewayPrincipal user) {
         Cart cart = cartRepository.findByIdAndUser(cartId, user.userId())
-                .orElseThrow(() -> new CartItemException(CartItemErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 장바구니");
+                    return new CartException(CartErrorCode.NOT_FOUND);
+                });
+
+        if(user==null){
+            log.warn("장바구니 아이템 추가 권한 없음");
+            throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
+        }
 
         UUID menu = restTemplate.getForObject("http://menu-service/api/menus/{menuId}/detail", UUID.class, cartItemAddRequestDTO.getMenuId());
         MenuOptionResponseDTO menuOption = restTemplate.getForObject("http://menu-service/api/menus/options/{optionId}/detail",
                 MenuOptionResponseDTO.class, cartItemAddRequestDTO.getMenuOptionId());
 
-        log.info("장바구니 아이템 추가 권한 확인");
+        log.info("장바구니 아이템 추가 권한 확인 성공");
 
         CartItem cartItem = CartItem.builder()
                 .quantity(cartItemAddRequestDTO.getQuantity())
@@ -58,9 +66,16 @@ public class CartItemCommandService {
 
     public CartItemResponseDTO.CartItemAddResponseDTO CreateCartItem(CartItemRequestDTO.CartItemCreateRequestDTO cartItemCreateRequestDTO, UUID cartId, GatewayPrincipal user) {
         Cart cart = cartRepository.findByIdAndUser(cartId, user.userId())
-                .orElseThrow(() -> new CartItemException(CartItemErrorCode.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 장바구니");
+                    return new CartException(CartErrorCode.NOT_FOUND);
+                });
 
-        log.info("장바구니 아이템 생성 권한 확인");
+        if(user==null){
+            log.warn("장바구니 아이템 생성 권한 없음");
+            throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
+        }
+        log.info("장바구니 아이템 생성 권한 확인 성공");
         MenuResponseDTO menu = restTemplate.getForObject("http://menu-service/api/menus/{menuId}/detail",
                 MenuResponseDTO.class, cartItemCreateRequestDTO.getMenuId());
         MenuOptionResponseDTO menuOption = restTemplate.getForObject("http://menu-service/api/menus/options/{optionId}/detail",
@@ -82,12 +97,16 @@ public class CartItemCommandService {
     }
 
     public CartItemResponseDTO.CartItemUpdateResponseDTO updateCartItem(CartItemRequestDTO.CartItemUpdateRequestDTO cartItemUpdateRequestDTO, UUID cartItemId, GatewayPrincipal user) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(()->new CartItemException(CartItemErrorCode.NOT_FOUND));
-        if(!cartItemRepository.existsByCartItemAndUser(cartItemId,user.userId())){
+        CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(()->{
+            log.warn("존재하지 않는 장바구니 아이템");
+            return new CartItemException(CartItemErrorCode.NOT_FOUND);
+        });
+        if(user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId,user.userId())){
+            log.warn("장바구니 아이템 수정 권한 없음");
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        log.info("장바구니 아이템 수정 권한 확인");
+        log.info("장바구니 아이템 수정 권한 확인 성공");
         MenuOptionResponseDTO menuOption = restTemplate.getForObject("http://menu-service/api/menus/options/{optionId}/detail",
                 MenuOptionResponseDTO.class, cartItemUpdateRequestDTO.getMenuOptionId());
 
@@ -108,12 +127,19 @@ public class CartItemCommandService {
     }
 
     public void deleteCartItem(UUID cartItemId, GatewayPrincipal user) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(()->new CartItemException(CartItemErrorCode.NOT_FOUND));
-        Cart cart = cartRepository.findById(cartItem.getCart().getId()).orElseThrow(()->new CartException(CartErrorCode.NOT_FOUND));
-        if(!cartItemRepository.existsByCartItemAndUser(cartItemId,user.userId())){
+        CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(()->{
+            log.warn("존재하지 않는 장바구니 아이템");
+            return new CartItemException(CartItemErrorCode.NOT_FOUND);
+        });
+        Cart cart = cartRepository.findById(cartItem.getCart().getId()).orElseThrow(()->{
+            log.warn("존재하지 않는 장바구니");
+            return new CartException(CartErrorCode.NOT_FOUND);
+        });
+        if(user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId,user.userId())){
+            log.warn("장바구니 아이템 삭제 권한 없음");
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }
-        log.info("장바구니 아이템 삭제 권한 확인");
+        log.info("장바구니 아이템 삭제 권한 확인 성공");
         cartItemRepository.delete(cartItem);
         cartItemRepository.flush();
         if(cart.getCartItems().isEmpty()){

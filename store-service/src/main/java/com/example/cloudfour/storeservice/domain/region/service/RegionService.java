@@ -16,7 +16,10 @@ public class RegionService {
 
     public UUID parseAndSaveRegion(String address) {
         String[] parts = address.trim().split("\\s+");
-        if (parts.length < 3) throw new IllegalArgumentException("주소 형식이 올바르지 않습니다: " + address);
+        if (parts.length < 3) {
+            log.warn("올바르지 않는 주소 형식");
+            throw new IllegalArgumentException("주소 형식이 올바르지 않습니다: " + address);
+        }
 
         String siDo = parts[0], siGunGu = parts[1], eupMyeonDong = parts[2];
 
