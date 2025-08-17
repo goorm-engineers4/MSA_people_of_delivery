@@ -1,6 +1,7 @@
 package com.example.cloudfour.storeservice.domain.review.dto;
 
 import com.example.cloudfour.storeservice.domain.review.controller.ReviewCommonResponseDTO;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,6 +15,7 @@ public class ReviewResponseDTO {
     public static class ReviewCreateResponseDTO{
         UUID storeId;
         UUID reviewId;
+        @JsonUnwrapped
         ReviewCommonResponseDTO.ReviewCommonCrudResponseDTO reviewCommonCrudResponseDTO;
         LocalDateTime createdAt;
         UUID createdBy;
@@ -23,6 +25,7 @@ public class ReviewResponseDTO {
     @Builder
     public static class ReviewUpdateResponseDTO{
         UUID storeId;
+        @JsonUnwrapped
         ReviewCommonResponseDTO.ReviewCommonCrudResponseDTO reviewCommonCrudResponseDTO;
         LocalDateTime updatedAt;
         UUID updatedBy;
@@ -32,6 +35,7 @@ public class ReviewResponseDTO {
     @Builder
     public static class ReviewStoreResponseDTO{
         UUID reviewId;
+        @JsonUnwrapped
         ReviewCommonResponseDTO.ReviewCommonCrudResponseDTO reviewCommonCrudResponseDTO;
         LocalDateTime createdAt;
         UUID createdBy;
@@ -48,6 +52,7 @@ public class ReviewResponseDTO {
     @Getter
     @Builder
     public static class ReviewUserResponseDTO{
+        @JsonUnwrapped
         ReviewCommonResponseDTO.ReviewCommonGetResponseDTO reviewCommonGetResponseDTO;
         LocalDateTime createdAt;
         UUID createdBy;
@@ -67,6 +72,7 @@ public class ReviewResponseDTO {
         UUID storeId;
         UUID userId;
         String nickname;
+        @JsonUnwrapped
         ReviewCommonResponseDTO.ReviewCommonGetResponseDTO reviewCommonGetResponseDTO;
         LocalDateTime createdAt;
     }

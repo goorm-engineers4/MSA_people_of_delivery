@@ -1,6 +1,7 @@
 package com.example.cloudfour.storeservice.domain.menu.dto;
 
 import com.example.cloudfour.storeservice.domain.menu.controller.MenuCommonResponseDTO;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,6 +12,7 @@ public class MenuResponseDTO {
     @Getter
     @Builder
     public static class MenuDetailResponseDTO {
+        @JsonUnwrapped
         MenuCommonResponseDTO menuCommonResponseDTO;
         private String storeName;
         private String content;
@@ -30,6 +32,7 @@ public class MenuResponseDTO {
     @Getter
     @Builder
     public static class MenuListResponseDTO {
+        @JsonUnwrapped
         MenuCommonResponseDTO menuCommonResponseDTO;
         private java.time.LocalDateTime createdAt;
     }
@@ -37,6 +40,7 @@ public class MenuResponseDTO {
     @Getter
     @Builder
     public static class MenuTopResponseDTO {
+        @JsonUnwrapped
         MenuCommonResponseDTO menuCommonResponseDTO;
         private String storeName;
     }
@@ -44,6 +48,7 @@ public class MenuResponseDTO {
     @Getter
     @Builder
     public static class MenuTimeTopResponseDTO {
+        @JsonUnwrapped
         MenuCommonResponseDTO menuCommonResponseDTO;
         private String storeName;
         private Integer orderCount;
@@ -52,6 +57,7 @@ public class MenuResponseDTO {
     @Getter
     @Builder
     public static class MenuRegionTopResponseDTO {
+        @JsonUnwrapped
         MenuCommonResponseDTO menuCommonResponseDTO;
         private String storeName;
         private String region;

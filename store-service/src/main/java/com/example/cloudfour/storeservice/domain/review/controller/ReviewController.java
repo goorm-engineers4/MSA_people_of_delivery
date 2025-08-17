@@ -4,8 +4,8 @@ import com.example.cloudfour.modulecommon.apiPayLoad.CustomResponse;
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewRequestDTO;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewResponseDTO;
-import com.example.cloudfour.storeservice.domain.review.service.command.ReviewCommandServiceImpl;
-import com.example.cloudfour.storeservice.domain.review.service.query.ReviewQueryServiceImpl;
+import com.example.cloudfour.storeservice.domain.review.service.command.ReviewCommandService;
+import com.example.cloudfour.storeservice.domain.review.service.query.ReviewQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,10 +29,10 @@ import java.util.UUID;
 @RequestMapping("/api/reviews")
 @Tag(name = "Review", description = "리뷰 API by 김준형")
 public class ReviewController {
-    private final ReviewCommandServiceImpl reviewCommandService;
-    private final ReviewQueryServiceImpl reviewQueryService;
+    private final ReviewCommandService reviewCommandService;
+    private final ReviewQueryService reviewQueryService;
 
-    @PostMapping("/{storeId}")
+    @PostMapping("")
     @Operation(summary = "리뷰 생성", description = "리뷰를 생성합니다. 리뷰 생성에 사용되는 API입니다.")
     public CustomResponse<ReviewResponseDTO.ReviewCreateResponseDTO> createReview(
         @RequestBody ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO,

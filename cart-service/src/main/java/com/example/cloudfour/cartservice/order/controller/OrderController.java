@@ -4,8 +4,8 @@ import com.example.cloudfour.cartservice.config.GatewayPrincipal;
 import com.example.cloudfour.cartservice.order.dto.OrderItemResponseDTO;
 import com.example.cloudfour.cartservice.order.dto.OrderRequestDTO;
 import com.example.cloudfour.cartservice.order.dto.OrderResponseDTO;
-import com.example.cloudfour.cartservice.order.service.command.OrderCommandServiceImpl;
-import com.example.cloudfour.cartservice.order.service.query.OrderQueryServiceImpl;
+import com.example.cloudfour.cartservice.order.service.command.OrderCommandService;
+import com.example.cloudfour.cartservice.order.service.query.OrderQueryService;
 import com.example.cloudfour.modulecommon.apiPayLoad.CustomResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,8 +30,8 @@ import java.util.UUID;
 @RequestMapping("/api/orders")
 @Tag(name = "Order", description = "주문 API by 김준형")
 public class OrderController {
-    private final OrderCommandServiceImpl orderCommandService;
-    private final OrderQueryServiceImpl orderQueryService;
+    private final OrderCommandService orderCommandService;
+    private final OrderQueryService orderQueryService;
 
     @PostMapping("/{cartId}")
     @Operation(summary = "주문 생성", description = "주문을 생성합니다. 주문 생성에 사용되는 API입니다.")

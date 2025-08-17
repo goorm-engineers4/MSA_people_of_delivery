@@ -2,6 +2,7 @@ package com.example.cloudfour.storeservice.domain.store.dto;
 
 import com.example.cloudfour.storeservice.domain.store.controller.StoreCommonResponseDTO;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
@@ -14,12 +15,14 @@ public class StoreResponseDTO {
     @Getter
     @SuperBuilder
     public static abstract class StoreBaseResponseDTO {
+        @JsonUnwrapped
         StoreCommonResponseDTO.StoreCommonsBaseResponseDTO storeCommonsBaseResponseDTO;
     }
 
     @Getter
     @SuperBuilder
     public static class StoreCreateResponseDTO extends StoreBaseResponseDTO {
+        @JsonUnwrapped
         StoreCommonResponseDTO.StoreCommonMainResponseDTO storeCommonMainResponseDTO;
         private LocalDateTime createdAt;
         private UUID createdBy;
@@ -35,6 +38,7 @@ public class StoreResponseDTO {
     @Getter
     @SuperBuilder
     public static class StoreListResponseDTO extends StoreBaseResponseDTO {
+        @JsonUnwrapped
         StoreCommonResponseDTO.StoreCommonOptionResponseDTO storeCommonOptionResponseDTO;
         private LocalDateTime createdAt;
     }
@@ -57,7 +61,9 @@ public class StoreResponseDTO {
     @SuperBuilder
     public static class StoreDetailResponseDTO extends StoreBaseResponseDTO {
         UUID userId;
+        @JsonUnwrapped
         StoreCommonResponseDTO.StoreCommonMainResponseDTO storeCommonMainResponseDTO;
+        @JsonUnwrapped
         StoreCommonResponseDTO.StoreCommonOptionResponseDTO storeCommonOptionResponseDTO;
     }
 }
