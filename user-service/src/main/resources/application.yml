@@ -24,24 +24,24 @@ spring:
         highlight_sql: true
 
   datasource:
-    url: ${LOCAL_DB_URL}
+    url: jdbc:postgresql://localhost:5432/delivery
     driver-class-name: org.postgresql.Driver
-    username: ${LOCAL_DB_USERNAME}
-    password: ${LOCAL_DB_PASSWORD}
+    username: root
+    password: 1234
   cloud:
     config:
       enabled: false
 
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
+      host: redis
+      port: 6379
 
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: rlawldbs1007@gmail.com
+    password: dmjxynzylqggjgzs
     properties:
       mail:
         smtp:
@@ -55,7 +55,7 @@ spring:
     auth-code-expiration-millis: 1800000
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ef0a8a53d91f37fe8e5d856034ba42865a9f2b517862cafbeba4fe8c510b7a31120485eaf7458f04f6a1155bfd18d2b511c094b0ed4a64fc45b6a28fd1ee071e
   expiration: 900000
-  refresh-secret: ${JWT_REFRESH_SECRET}
+  refresh-secret: 586af176583c7f690b516d62c38379d58a6852a113f23194b7761bff7af02b60d5195fadbd6a991f8a364df743fb1f74e4e16698c076fd9353987a5b1d57b8c6
   refresh-expiration: 604800000

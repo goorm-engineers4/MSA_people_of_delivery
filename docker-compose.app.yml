@@ -1,0 +1,340 @@
+networks:
+  pinpoint_net:
+    external: true
+
+volumes:
+  pg_data:
+
+services:
+  # ─────────────────────────────────────────────────────
+  # Infra: DB / Redis
+  # ─────────────────────────────────────────────────────
+  postgres:
+    image: postgres:latest
+    container_name: db
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: delivery
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - pinpoint_net
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - pinpoint_net
+
+  # ─────────────────────────────────────────────────────
+  # Discovery (Eureka)
+  # ─────────────────────────────────────────────────────
+  discovery:
+    # 이미지 또는 빌드 중 선택
+    # image: yourrepo/discovery:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: discovery
+    container_name: pod-discovery
+    ports:
+      - "8761:8761"
+    environment:
+      SERVER_PORT: 8761
+      # DB가 필요 없다면 생략
+    networks:
+      - pinpoint_net
+    depends_on:
+      - postgres
+      - redis
+
+  # ─────────────────────────────────────────────────────
+  # API Gateway
+  # ─────────────────────────────────────────────────────
+  apigateway:
+    # image: yourrepo/apigateway:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: apigateway
+    container_name: pod-apigateway
+    ports:
+      - "8081:8080"  # 게이트웨이 외부 노출 포트(내부 8080)
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_APPLICATION_JSON: |
+        {
+          "eureka": {
+            "client": {
+              "serviceUrl": {
+                "defaultZone": "http://discovery:8761/eureka/"
+              },
+              "registerWithEureka": true,
+              "fetchRegistry": true
+            }
+          }
+        }
+      # Pinpoint Agent
+      JAVA_TOOL_OPTIONS: >-
+        -javaagent:/pinpoint-agent/pinpoint-bootstrap.jar
+        -Dpinpoint.agentId=api-gateway-1
+        -Dpinpoint.applicationName=api-gateway
+        -Dprofiler.transport.grpc.collector.ip=pinpoint-collector
+        -Dprofiler.transport.grpc.agent.collector.port=9991
+        -Dprofiler.transport.grpc.stat.collector.port=9992
+        -Dprofiler.transport.grpc.span.collector.port=9993
+    volumes:
+      - ./pinpoint-agent:/pinpoint-agent:ro
+    networks:
+      - pinpoint_net
+    depends_on:
+      - discovery
+
+  # ─────────────────────────────────────────────────────
+  # Domain Services (예: user/store/cart/ai)
+  # ─────────────────────────────────────────────────────
+  module-common:
+    # image: yourrepo/user-service:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: module-common
+    container_name: pod-module
+    ports:
+      - "8011:8011"
+    environment:
+      SERVER_PORT: 8011
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/delivery
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_APPLICATION_JSON: |
+        {
+          "eureka": {
+            "client": {
+              "serviceUrl": {
+                "defaultZone": "http://discovery:8761/eureka/"
+              },
+              "registerWithEureka": true,
+              "fetchRegistry": true
+            }
+          }
+        }
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      # Pinpoint Agent
+      JAVA_TOOL_OPTIONS: >-
+        -javaagent:/pinpoint-agent/pinpoint-bootstrap.jar
+        -Dpinpoint.agentId=module-common-1
+        -Dpinpoint.applicationName=module-common
+        -Dprofiler.transport.grpc.collector.ip=pinpoint-collector
+        -Dprofiler.transport.grpc.agent.collector.port=9991
+        -Dprofiler.transport.grpc.stat.collector.port=9992
+        -Dprofiler.transport.grpc.span.collector.port=9993
+    volumes:
+      - ./pinpoint-agent:/pinpoint-agent:ro
+    networks:
+      - pinpoint_net
+    depends_on:
+      - postgres
+      - redis
+      - discovery
+
+  user-service:
+    # image: yourrepo/user-service:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: user-service
+    container_name: pod-user
+    ports:
+      - "8014:8014"
+    environment:
+      SERVER_PORT: 8014
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/delivery
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_APPLICATION_JSON: |
+        {
+          "eureka": {
+            "client": {
+              "serviceUrl": {
+                "defaultZone": "http://discovery:8761/eureka/"
+              },
+              "registerWithEureka": true,
+              "fetchRegistry": true
+            }
+          }
+        }
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      # Pinpoint Agent
+      JAVA_TOOL_OPTIONS: >-
+        -javaagent:/pinpoint-agent/pinpoint-bootstrap.jar
+        -Dpinpoint.agentId=user-service-1
+        -Dpinpoint.applicationName=user-service
+        -Dprofiler.transport.grpc.collector.ip=pinpoint-collector
+        -Dprofiler.transport.grpc.agent.collector.port=9991
+        -Dprofiler.transport.grpc.stat.collector.port=9992
+        -Dprofiler.transport.grpc.span.collector.port=9993
+    volumes:
+      - ./pinpoint-agent:/pinpoint-agent:ro
+    networks:
+      - pinpoint_net
+    depends_on:
+      - postgres
+      - redis
+      - discovery
+      - module-common
+
+  store-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: store-service
+    container_name: pod-store
+    ports:
+      - "8013:8013"
+    environment:
+      SERVER_PORT: 8013
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/delivery
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_APPLICATION_JSON: |
+        {
+          "eureka": {
+            "client": {
+              "serviceUrl": {
+                "defaultZone": "http://discovery:8761/eureka/"
+              },
+              "registerWithEureka": true,
+              "fetchRegistry": true
+            }
+          }
+        }
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      JAVA_TOOL_OPTIONS: >-
+        -javaagent:/pinpoint-agent/pinpoint-bootstrap.jar
+        -Dpinpoint.agentId=store-service-1
+        -Dpinpoint.applicationName=store-service
+        -Dprofiler.transport.grpc.collector.ip=pinpoint-collector
+        -Dprofiler.transport.grpc.agent.collector.port=9991
+        -Dprofiler.transport.grpc.stat.collector.port=9992
+        -Dprofiler.transport.grpc.span.collector.port=9993
+    volumes:
+      - ./pinpoint-agent:/pinpoint-agent:ro
+    networks:
+      - pinpoint_net
+    depends_on:
+      - postgres
+      - redis
+      - discovery
+      - module-common
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: cart-service
+    container_name: pod-cart
+    ports:
+      - "8012:8012"
+    environment:
+      SERVER_PORT: 8012
+      SPRING_PROFILES_ACTIVE: local
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/delivery
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_APPLICATION_JSON: |
+        {
+          "eureka": {
+            "client": {
+              "serviceUrl": {
+                "defaultZone": "http://discovery:8761/eureka/"
+              },
+              "registerWithEureka": true,
+              "fetchRegistry": true
+            }
+          }
+        }
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      JAVA_TOOL_OPTIONS: >-
+        -javaagent:/pinpoint-agent/pinpoint-bootstrap.jar
+        -Dpinpoint.agentId=cart-service-1
+        -Dpinpoint.applicationName=cart-service
+        -Dprofiler.transport.grpc.collector.ip=pinpoint-collector
+        -Dprofiler.transport.grpc.agent.collector.port=9991
+        -Dprofiler.transport.grpc.stat.collector.port=9992
+        -Dprofiler.transport.grpc.span.collector.port=9993
+    volumes:
+      - ./pinpoint-agent:/pinpoint-agent:ro
+    networks:
+      - pinpoint_net
+    depends_on:
+      - postgres
+      - redis
+      - discovery
+      - module-common
+
+  ai-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: ai-service
+    container_name: pod-ai
+    ports:
+      - "8015:8015"
+    environment:
+      SERVER_PORT: 8015
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/delivery
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_APPLICATION_JSON: |
+        {
+          "eureka": {
+            "client": {
+              "serviceUrl": {
+                "defaultZone": "http://discovery:8761/eureka/"
+              },
+              "registerWithEureka": true,
+              "fetchRegistry": true
+            }
+          }
+        }
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      JAVA_TOOL_OPTIONS: >-
+        -javaagent:/pinpoint-agent/pinpoint-bootstrap.jar
+        -Dpinpoint.agentId=ai-service-1
+        -Dpinpoint.applicationName=ai-service
+        -Dprofiler.transport.grpc.collector.ip=pinpoint-collector
+        -Dprofiler.transport.grpc.agent.collector.port=9991
+        -Dprofiler.transport.grpc.stat.collector.port=9992
+        -Dprofiler.transport.grpc.span.collector.port=9993
+    volumes:
+      - ./pinpoint-agent:/pinpoint-agent:ro
+    networks:
+      - pinpoint_net
+    depends_on:
+      - postgres
+      - redis
+      - discovery
+      - module-common

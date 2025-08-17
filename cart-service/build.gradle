@@ -54,3 +54,7 @@ dependencyManagement {
 }
 
 tasks.register("prepareKotlinBuildScriptModel"){}
+
+tasks.named("bootJar") {
+    archiveFileName = "app.jar"
+}

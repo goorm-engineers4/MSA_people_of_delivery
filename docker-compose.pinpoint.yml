@@ -1,0 +1,45 @@
+networks:
+  pinpoint_net:
+    external: true
+
+services:
+  pinpoint-hbase:
+    image: pinpointdocker/pinpoint-hbase:2.5.4
+    platform: linux/arm64
+    container_name: pinpoint-hbase
+    ports:
+      - "2181:2181"    # ZooKeeper
+      - "16010:16010"  # HBase Master UI
+    networks: [pinpoint_net]
+
+  pinpoint-collector:
+    image: pinpointdocker/pinpoint-collector:2.5.4-metric
+    platform: linux/arm64
+    container_name: pinpoint-collector
+    depends_on: [pinpoint-hbase]
+    ports:
+      - "9991:9991"    # gRPC agent
+      - "9992:9992"    # gRPC stat
+      - "9993:9993"    # gRPC span
+    volumes:
+      # HBase 접속 설정
+      - ./pinpoint-config/collector/hbase.properties:/pinpoint/config/hbase.properties:ro
+      # (있다면) collector 추가 속성
+      - ./pinpoint-config/collector/pinpoint-collector.properties:/pinpoint/config/pinpoint-collector.properties:ro
+    networks: [pinpoint_net]
+
+  pinpoint-web:
+    image: pinpointdocker/pinpoint-web:2.5.4-metric
+    platform: linux/arm64
+    container_name: pinpoint-web
+    depends_on: [pinpoint-collector]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./pinpoint-config/web/hbase.properties:/pinpoint/config/hbase.properties:ro
+    environment:
+      PINPOINT_COLLECTOR_IP: pinpoint-collector
+      PINPOINT_COLLECTOR_GRPC_AGENT_PORT: 9991
+      PINPOINT_COLLECTOR_GRPC_STAT_PORT: 9992
+      PINPOINT_COLLECTOR_GRPC_SPAN_PORT: 9993
+    networks: [pinpoint_net]

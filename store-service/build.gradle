@@ -82,3 +82,7 @@ tasks.register("compileQuerydsl", JavaCompile) {
     destinationDirectory = file(querydslDir)
     options.annotationProcessorPath = configurations.annotationProcessor
 }
+
+tasks.named("bootJar") {
+    archiveFileName = "app.jar"
+}
