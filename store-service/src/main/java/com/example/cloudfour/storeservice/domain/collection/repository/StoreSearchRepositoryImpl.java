@@ -24,7 +24,7 @@ import static com.example.cloudfour.storeservice.domain.collection.document.QSto
 
 @Repository
 @RequiredArgsConstructor
-public class StoreMongoQueryRepositoryImpl implements StoreMongoQueryRepository {
+public class StoreSearchRepositoryImpl implements StoreSearchRepository {
 
     private final JPAQueryFactory query;
     private final MongoTemplate mongoTemplate;

@@ -2,7 +2,7 @@ package com.example.cloudfour.storeservice.domain.menu.service.query;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
 import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
-import com.example.cloudfour.storeservice.domain.collection.repository.StoreMongoQueryRepository;
+import com.example.cloudfour.storeservice.domain.collection.repository.StoreSearchRepository;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuConverter;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuOptionConverter;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuResponseDTO;
@@ -31,7 +31,7 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class MenuQueryService {
     private final MenuCategoryRepository menuCategoryRepository;
-    private final StoreMongoQueryRepository storeMongoRepository;
+    private final StoreSearchRepository storeMongoRepository;
 
     public MenuResponseDTO.MenuStoreListResponseDTO getMenusByStoreWithCursor(
             UUID storeId, GatewayPrincipal user

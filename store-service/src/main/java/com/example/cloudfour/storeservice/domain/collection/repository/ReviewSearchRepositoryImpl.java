@@ -18,7 +18,7 @@ import static com.example.cloudfour.storeservice.domain.collection.document.QRev
 
 @Repository
 @RequiredArgsConstructor
-public class ReviewMongoQueryRepositoryImpl implements ReviewMongoQueryRepository {
+public class ReviewSearchRepositoryImpl implements ReviewSearchRepository {
 
     private final JPAQueryFactory query;
 

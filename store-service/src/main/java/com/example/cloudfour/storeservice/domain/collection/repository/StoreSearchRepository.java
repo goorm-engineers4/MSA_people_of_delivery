@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface StoreMongoQueryRepository {
+public interface StoreSearchRepository {
     Optional<StoreDocument> findStoreByStoreId(UUID storeId);
 
     Slice<StoreDocument> findAllStoreByCategoryAndCursor(UUID categoryId, LocalDateTime cursor, Pageable pageable);

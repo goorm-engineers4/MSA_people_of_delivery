@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ReviewMongoQueryRepository {
+public interface ReviewSearchRepository {
     Slice<ReviewDocument> findAllByUserId(UUID userId, LocalDateTime cursor, Pageable pageable);
 
     Slice<ReviewDocument> findAllByStoreId(UUID storeId, LocalDateTime cursor, Pageable pageable);

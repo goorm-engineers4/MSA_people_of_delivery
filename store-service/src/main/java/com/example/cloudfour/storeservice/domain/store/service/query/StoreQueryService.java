@@ -2,7 +2,7 @@ package com.example.cloudfour.storeservice.domain.store.service.query;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
 import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
-import com.example.cloudfour.storeservice.domain.collection.repository.StoreMongoQueryRepository;
+import com.example.cloudfour.storeservice.domain.collection.repository.StoreSearchRepository;
 import com.example.cloudfour.storeservice.domain.store.converter.StoreConverter;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreResponseDTO;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreErrorCode;
@@ -23,7 +23,7 @@ import java.util.UUID;
 @Slf4j
 public class StoreQueryService {
 
-    private final StoreMongoQueryRepository storeMongoRepository;
+    private final StoreSearchRepository storeMongoRepository;
 
     public StoreResponseDTO.StoreCursorListResponseDTO getAllStores(
             LocalDateTime cursor, int size, String keyword,GatewayPrincipal user

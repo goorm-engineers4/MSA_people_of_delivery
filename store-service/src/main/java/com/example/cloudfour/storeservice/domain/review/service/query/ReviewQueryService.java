@@ -2,7 +2,7 @@ package com.example.cloudfour.storeservice.domain.review.service.query;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
 import com.example.cloudfour.storeservice.domain.collection.document.ReviewDocument;
-import com.example.cloudfour.storeservice.domain.collection.repository.ReviewMongoQueryRepository;
+import com.example.cloudfour.storeservice.domain.collection.repository.ReviewSearchRepository;
 import com.example.cloudfour.storeservice.domain.commondto.UserResponseDTO;
 import com.example.cloudfour.storeservice.domain.review.converter.ReviewConverter;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewResponseDTO;
@@ -34,7 +34,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReviewQueryService {
-    private final ReviewMongoQueryRepository reviewRepository;
+    private final ReviewSearchRepository reviewRepository;
     private final StoreRepository storeRepository;
     private final RestTemplate restTemplate;
     private static final LocalDateTime first_cursor = LocalDateTime.now().plusDays(1);
