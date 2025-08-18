@@ -3,7 +3,6 @@ package com.example.cloudfour.authservice.domain.auth.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -21,20 +20,12 @@ public class EmailServiceImpl implements EmailService {
         helper.setTo(toEmail);
         helper.setSubject(title);
         helper.setText(content, true);
-        helper.setReplyTo("shieunmo@gmail.com");
+        helper.setReplyTo("rlawldbs1007@gmail.com");
         try{
             emailSender.send(message);
         } catch (RuntimeException e){
             e.printStackTrace();
             throw new RuntimeException("Unable to send email in sendEmail", e);
         }
-    }
-
-    public SimpleMailMessage createEmailForm(String toEmail, String title, String text) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject(title);
-        message.setText(text);
-        return message;
     }
 }

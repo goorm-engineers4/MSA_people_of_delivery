@@ -10,16 +10,14 @@ import com.example.cloudfour.authservice.domain.auth.dto.TokenDTO;
 import com.example.cloudfour.authservice.domain.auth.enums.VerificationPurpose;
 import com.example.cloudfour.authservice.domain.auth.exception.AuthErrorCode;
 import com.example.cloudfour.authservice.domain.auth.exception.AuthException;
-import com.example.cloudfour.authservice.domain.auth.repository.VerificationCodeRepository;
-import com.example.cloudfour.authservice.domain.auth.service.JwtService;
 import com.example.cloudfour.authservice.util.RedisUtil;
-import jakarta.mail.MessagingException;
+import com.example.cloudfour.authservice.util.VerificationCodeHasher;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
@@ -32,12 +30,18 @@ public class AuthService {
 
     private final UserClient userClient;
     private final EmailService emailService;
-    private final VerificationCodeRepository verificationCodeRepository;
     private final RedisUtil redisUtil;
     private final JwtService jwtService;
+    private final VerificationCodeHasher hasher;
 
     private static final int CODE_LEN = 6;
-    private static final int CODE_EXP_MIN = 10;
+    private static final Duration CODE_TTL = Duration.ofMinutes(10);
+    private static final Duration RESEND_TTL = Duration.ofSeconds(60);
+    private static final int MAX_TRIES = 5;
+
+    private String codeKey(String purpose, String email)   { return "email:verify:code:"   + purpose + ":" + email; }
+    private String triesKey(String purpose, String email)  { return "email:verify:tries:"  + purpose + ":" + email; }
+    private String resendKey(String purpose, String email) { return "email:verify:resend:" + purpose + ":" + email; }
 
     public AuthResponseDTO.AuthRegisterResponseDTO register(AuthRequestDTO.RegisterRequestDTO request){
         String email = request.email().toLowerCase();
@@ -137,15 +141,20 @@ public class AuthService {
     public void sendVerificationEmail(String email) {
         Objects.requireNonNull(email, "email은 null일 수 없습니다.");
         String target = email.toLowerCase();
+        String purpose = VerificationPurpose.EMAIL_VERIFY.name();
+
+        if (!redisUtil.setIfAbsent(resendKey(purpose, target), "1", RESEND_TTL)) {
+            throw new AuthException(AuthErrorCode.EMAIL_RESEND_COOLDOWN);
+        }
 
         String code = generateCode(CODE_LEN);
-        LocalDateTime expiry = LocalDateTime.now().plusMinutes(CODE_EXP_MIN);
+        String hashed = hasher.hash(code);
 
-        verificationCodeRepository.deleteByEmail(target);
-        verificationCodeRepository.save(
-                AuthConverter.toVerificationCode(target, code, expiry, VerificationPurpose.EMAIL_VERIFY)
-        );
-        log.info("이메일 인증 코드 저장: email={}, expiry={}", target, expiry);
+        if (!redisUtil.setIfAbsent(codeKey(purpose, target), hashed, CODE_TTL)) {
+            redisUtil.expire(codeKey(purpose, target), CODE_TTL);
+        } else {
+            redisUtil.delete(triesKey(purpose, target));
+        }
 
         String title = "이메일 인증 번호";
         String content = """
@@ -155,57 +164,68 @@ public class AuthService {
                 <p>* 본 메일은 자동응답 메일입니다.</p>
                 </body></html>
                 """.formatted(code);
-        try{
+        try {
             emailService.sendSimpleMessage(target, title, content);
-        }catch(RuntimeException | MessagingException e){
+        } catch (RuntimeException | jakarta.mail.MessagingException e) {
+            redisUtil.delete(codeKey(purpose, target));
+            redisUtil.delete(resendKey(purpose, target));
             throw new AuthException(AuthErrorCode.EMAIL_SEND_FAILED);
         }
+
+        log.info("이메일 인증 코드(REDIS) 저장: email={}, ttl={}s", target, CODE_TTL.toSeconds());
     }
 
     public void verifyEmailCode(AuthRequestDTO.EmailVerifyRequestDTO request) {
         String target = request.email().toLowerCase();
         Objects.requireNonNull(request.code(), "code는 null일 수 없습니다.");
+        String purpose = VerificationPurpose.EMAIL_VERIFY.name();
 
-        var vc = verificationCodeRepository
-                .findByEmailAndCodeAndPurpose(target, request.code(), VerificationPurpose.EMAIL_VERIFY)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.EMAIL_CODE_INVALID));
-
-        if (vc.isExpired()) {
-            verificationCodeRepository.delete(vc);
+        String codeKey = codeKey(purpose, target);
+        String storedHashed = redisUtil.get(codeKey);
+        if (storedHashed == null) {
             throw new AuthException(AuthErrorCode.EMAIL_CODE_EXPIRED);
+        }
+
+        long tries = redisUtil.incrWithTtl(triesKey(purpose, target), CODE_TTL);
+        if (tries > MAX_TRIES) {
+            throw new AuthException(AuthErrorCode.EMAIL_CODE_TRY_EXCEEDED);
+        }
+
+        String inputHashed = hasher.hash(request.code());
+        if (!storedHashed.equals(inputHashed)) {
+            throw new AuthException(AuthErrorCode.EMAIL_CODE_INVALID);
         }
 
         var user = userClient.byEmail(target);
         userClient.markEmailVerified(user.id());
-        verificationCodeRepository.delete(vc);
 
-        log.info("이메일 인증 완료: email={}", target);
+        redisUtil.delete(codeKey);
+        redisUtil.delete(triesKey(purpose, target));
+        redisUtil.delete(resendKey(purpose, target));
+
+        log.info("이메일 인증 완료(REDIS): email={}", target);
     }
 
     public void startEmailChange(UUID userId, String newEmail) {
         String target = newEmail.toLowerCase();
-
         var u = userClient.byId(userId);
-        if (u.email().equalsIgnoreCase(target)) {
-            throw new AuthException(AuthErrorCode.EMAIL_SAME_AS_OLD);
-        }
-        if (userClient.existsByEmailBool(target)) {
-            throw new AuthException(AuthErrorCode.EMAIL_IN_USE);
-        }
+
+        if (u.email().equalsIgnoreCase(target)) throw new AuthException(AuthErrorCode.EMAIL_SAME_AS_OLD);
+        if (userClient.existsByEmailBool(target)) throw new AuthException(AuthErrorCode.EMAIL_IN_USE);
 
         userClient.startEmailChange(userId, target);
 
-        verificationCodeRepository.deleteByEmailAndPurpose(target, VerificationPurpose.CHANGE_EMAIL);
+        String purpose = VerificationPurpose.CHANGE_EMAIL.name();
 
-        var code = generateCode(CODE_LEN);
-        verificationCodeRepository.save(
-                AuthConverter.toVerificationCode(
-                        target,
-                        code,
-                        LocalDateTime.now().plusMinutes(CODE_EXP_MIN),
-                        VerificationPurpose.CHANGE_EMAIL
-                )
-        );
+        if (!redisUtil.setIfAbsent(resendKey(purpose, target), "1", RESEND_TTL)) {
+            throw new AuthException(AuthErrorCode.EMAIL_RESEND_COOLDOWN);
+        }
+
+        String code = generateCode(CODE_LEN);
+        String hashed = hasher.hash(code);
+
+        redisUtil.setWithTtl(codeKey(purpose, target), hashed, CODE_TTL);
+        redisUtil.delete(triesKey(purpose, target));
 
         String title = "이메일 변경 인증 번호";
         String content = """
@@ -215,34 +235,44 @@ public class AuthService {
                 <p>* 본 메일은 자동응답 메일입니다.</p>
                 </body></html>
                 """.formatted(code);
-
-        try{
+        try {
             emailService.sendSimpleMessage(target, title, content);
-        }catch(RuntimeException | MessagingException e){
+        } catch (RuntimeException | jakarta.mail.MessagingException e) {
+            redisUtil.delete(codeKey(purpose, target));
+            redisUtil.delete(resendKey(purpose, target));
             throw new AuthException(AuthErrorCode.EMAIL_SEND_FAILED);
         }
     }
 
     public void verifyEmailChange(UUID userId, String newEmail, String code) {
         String target = newEmail.toLowerCase();
+        if (userClient.existsByEmailBool(target)) throw new AuthException(AuthErrorCode.EMAIL_IN_USE);
 
-        if (userClient.existsByEmailBool(target)) {
-            throw new AuthException(AuthErrorCode.EMAIL_IN_USE);
+        String purpose = VerificationPurpose.CHANGE_EMAIL.name();
+
+        String kCode = codeKey(purpose, target);
+        String storedHashed = redisUtil.get(kCode);
+        if (storedHashed == null) {
+            throw new AuthException(AuthErrorCode.EMAIL_CODE_EXPIRED);
         }
 
-        var vc = verificationCodeRepository
-                .findByEmailAndCodeAndPurpose(target, code, VerificationPurpose.CHANGE_EMAIL)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.EMAIL_CODE_INVALID));
+        long tries = redisUtil.incrWithTtl(triesKey(purpose, target), CODE_TTL);
+        if (tries > MAX_TRIES) {
+            throw new AuthException(AuthErrorCode.EMAIL_CODE_TRY_EXCEEDED);
+        }
 
-        if (vc.isExpired()) {
-            verificationCodeRepository.delete(vc);
-            throw new AuthException(AuthErrorCode.EMAIL_CODE_EXPIRED);
+        String inputHashed = hasher.hash(code);
+        if (!storedHashed.equals(inputHashed)) {
+            throw new AuthException(AuthErrorCode.EMAIL_CODE_INVALID);
         }
 
         userClient.confirmEmailChange(userId, target);
 
-        verificationCodeRepository.delete(vc);
-        log.info("이메일 변경 확정: userId={}, newEmail={}", userId, target);
+        redisUtil.delete(kCode);
+        redisUtil.delete(triesKey(purpose, target));
+        redisUtil.delete(resendKey(purpose, target));
+
+        log.info("이메일 변경 확정(REDIS): userId={}, newEmail={}", userId, target);
     }
 
     private String generateCode(int len) {

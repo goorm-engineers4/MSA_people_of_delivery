@@ -40,7 +40,7 @@ public class JwtRsConfig {
 
     @Bean
     public JWKSource<SecurityContext> jwkSource(RSAKey rsaKey) {
-        var jwkSet = new JWKSet(rsaKey); // private 포함
+        var jwkSet = new JWKSet(rsaKey);
         return (selector, ctx) -> selector.select(jwkSet);
     }
 
