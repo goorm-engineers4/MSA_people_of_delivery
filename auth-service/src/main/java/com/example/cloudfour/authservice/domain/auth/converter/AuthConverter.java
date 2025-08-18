@@ -2,7 +2,6 @@ package com.example.cloudfour.authservice.domain.auth.converter;
 
 import com.example.cloudfour.authservice.domain.auth.dto.AuthModelDTO;
 import com.example.cloudfour.authservice.domain.auth.dto.AuthResponseDTO;
-import com.example.cloudfour.authservice.domain.auth.dto.RefreshDTO;
 import com.example.cloudfour.authservice.domain.auth.dto.TokenDTO;
 
 public class AuthConverter {
