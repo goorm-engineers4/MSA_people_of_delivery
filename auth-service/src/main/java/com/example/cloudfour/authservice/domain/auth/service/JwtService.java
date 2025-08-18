@@ -1,6 +1,7 @@
 package com.example.cloudfour.authservice.domain.auth.service;
 
 import com.example.cloudfour.authservice.properties.JwtProps;
+import com.example.cloudfour.authservice.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 
@@ -24,6 +26,7 @@ public class JwtService {
     private final JwtEncoder encoder;
     private final JwtDecoder decoder;
     private final JwtProps props;
+    private final RedisUtil redisUtil;
 
     public String createAccess(UUID userId, String role) {
         return encode(userId, role, safe(props.getAccessExpSeconds()), "access");
@@ -38,7 +41,10 @@ public class JwtService {
     }
 
     public boolean isValid(String token) {
-        try { decoder.decode(token); return true; }
+        try {
+            decoder.decode(token);
+            return !redisUtil.hasKeyBlackList(token);
+        }
         catch (JwtException e) { return false; }
     }
 
@@ -46,6 +52,12 @@ public class JwtService {
     public String role(String token)    { return decode(token).getClaimAsString("role"); }
     public long accessTtlSeconds()      { return safe(props.getAccessExpSeconds()); }
     public long refreshTtlSeconds()     { return safe(props.getRefreshExpSeconds()); }
+
+    public Long getExpiration(String token) {
+        long expireAt = Objects.requireNonNull(decode(token).getExpiresAt()).toEpochMilli();
+        long now = System.currentTimeMillis();
+        return Math.max(0, expireAt - now);
+    }
 
     private String encode(UUID userId, String role, long ttlSeconds, String typ) {
         Instant iat = Instant.now();

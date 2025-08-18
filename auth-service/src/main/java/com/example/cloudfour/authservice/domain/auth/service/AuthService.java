@@ -98,7 +98,14 @@ public class AuthService {
         String userId = jwtService.userId(token);
         var user = userClient.byId(UUID.fromString(userId));
 
+        if (token == null || !jwtService.isValid(token)) {
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+        }
+
         redisUtil.delete(user.email());
+
+        Long expiration = jwtService.getExpiration(token);
+        redisUtil.setBlackList(token, "access_token", expiration);
         log.info("로그아웃: userId={}", user.id());
     }
 

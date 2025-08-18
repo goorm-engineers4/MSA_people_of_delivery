@@ -2,9 +2,11 @@ package com.example.cloudfour.authservice.util;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -21,6 +23,27 @@ public class RedisUtil {
 
     public void delete(String key) {
         redisTemplate.delete(key);
+    }
+
+    public boolean hasKey(String key) {
+        return redisTemplate.hasKey(key);
+    }
+
+    public void setBlackList(String key, String o, Long milliSeconds) {
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer(o.getClass()));
+        redisTemplate.opsForValue().set(key, o, milliSeconds, TimeUnit.MILLISECONDS);
+    }
+
+    public Object getBlackList(String key) {
+        return redisTemplate.opsForValue().get(key);
+    }
+
+    public boolean deleteBlackList(String key) {
+        return redisTemplate.delete(key);
+    }
+
+    public boolean hasKeyBlackList(String key) {
+        return redisTemplate.hasKey(key);
     }
 
     public boolean setIfAbsent(String key, String value, Duration ttl) {
