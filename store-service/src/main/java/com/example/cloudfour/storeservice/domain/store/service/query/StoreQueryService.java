@@ -1,12 +1,12 @@
 package com.example.cloudfour.storeservice.domain.store.service.query;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
+import com.example.cloudfour.storeservice.domain.collection.repository.StoreSearchRepository;
 import com.example.cloudfour.storeservice.domain.store.converter.StoreConverter;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreResponseDTO;
-import com.example.cloudfour.storeservice.domain.store.entity.Store;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreErrorCode;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreException;
-import com.example.cloudfour.storeservice.domain.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +23,7 @@ import java.util.UUID;
 @Slf4j
 public class StoreQueryService {
 
-    private final StoreRepository storeRepository;
+    private final StoreSearchRepository storeMongoRepository;
 
     public StoreResponseDTO.StoreCursorListResponseDTO getAllStores(
             LocalDateTime cursor, int size, String keyword,GatewayPrincipal user
@@ -46,7 +46,7 @@ public class StoreQueryService {
         //}
         LocalDateTime baseTime = (cursor != null) ? cursor : LocalDateTime.now();
         Pageable pageable = PageRequest.of(0, size);
-        Slice<Store> storeSlice = storeRepository.findAllByKeyWordAndRegion(keyword, baseTime, pageable,siDo,siGunGu,eupMyeongDong);
+        Slice<StoreDocument> storeSlice = storeMongoRepository.findAllStoreByKeyWordAndRegion(keyword, baseTime, pageable,siDo,siGunGu,eupMyeongDong);
 
         List<StoreResponseDTO.StoreListResponseDTO> storeList = storeSlice.getContent().stream()
                 .map(StoreConverter::toStoreListResponseDTO)
@@ -69,7 +69,7 @@ public class StoreQueryService {
         log.info("가게 카테고리 별 목록 조회 확인 성공");
         LocalDateTime baseTime = (cursor != null) ? cursor : LocalDateTime.now();
         Pageable pageable = PageRequest.of(0, size);
-        Slice<Store> storeSlice = storeRepository.findAllByCategoryAndCursor(categoryId, baseTime, pageable);
+        Slice<StoreDocument> storeSlice = storeMongoRepository.findAllStoreByCategoryAndCursor(categoryId, baseTime, pageable);
 
         List<StoreResponseDTO.StoreListResponseDTO> storeList = storeSlice.getContent().stream()
                 .map(StoreConverter::toStoreListResponseDTO)
@@ -88,7 +88,7 @@ public class StoreQueryService {
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
         log.info("가게 상세 조회 권한 확인 성공");
-        Store store = storeRepository.findById(storeId)
+        StoreDocument store = storeMongoRepository.findStoreByStoreId(storeId)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 가게");
                     return new StoreException(StoreErrorCode.NOT_FOUND);

@@ -1,10 +1,10 @@
 package com.example.cloudfour.storeservice.domain.menu.converter;
 
+import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
 import com.example.cloudfour.storeservice.domain.menu.controller.MenuCommonResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuRequestDTO;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.entity.Menu;
-import com.example.cloudfour.storeservice.domain.menu.entity.MenuOption;
 
 import java.util.List;
 
@@ -23,7 +23,6 @@ public class MenuConverter {
     public static MenuResponseDTO.MenuDetailResponseDTO toMenuDetail1ResponseDTO(Menu menu) {
         return MenuResponseDTO.MenuDetailResponseDTO.builder()
                 .menuCommonResponseDTO(toMenuCommonResponseDTO(menu))
-                .storeName(menu.getStore().getName())
                 .content(menu.getContent())
                 .createdAt(menu.getCreatedAt())
                 .updatedAt(menu.getUpdatedAt())
@@ -31,18 +30,16 @@ public class MenuConverter {
     }
 
     public static MenuResponseDTO.MenuDetailResponseDTO toMenuDetail2ResponseDTO(
-            Menu menu, List<MenuResponseDTO.MenuOptionDTO> options) {
+            StoreDocument.Menu menu, List<MenuResponseDTO.MenuOptionDTO> options) {
         return MenuResponseDTO.MenuDetailResponseDTO.builder()
-                .menuCommonResponseDTO(toMenuCommonResponseDTO(menu))
-                .storeName(menu.getStore().getName())
+                .menuCommonResponseDTO(documentToMenuCommonResponseDTO(menu))
                 .content(menu.getContent())
                 .createdAt(menu.getCreatedAt())
-                .updatedAt(menu.getUpdatedAt())
                 .menuOptions(options)
                 .build();
     }
 
-    public static MenuResponseDTO.MenuOptionDTO toMenuOptionDTO(MenuOption option) {
+    public static MenuResponseDTO.MenuOptionDTO toMenuOptionDTO(StoreDocument.MenuOption option) {
         return MenuResponseDTO.MenuOptionDTO.builder()
                 .menuOptionId(option.getId())
                 .optionName(option.getOptionName())
@@ -50,9 +47,9 @@ public class MenuConverter {
                 .build();
     }
 
-    public static MenuResponseDTO.MenuListResponseDTO toMenuListResponseDTO(Menu menu) {
+    public static MenuResponseDTO.MenuListResponseDTO toMenuListResponseDTO(StoreDocument.Menu menu) {
         return MenuResponseDTO.MenuListResponseDTO.builder()
-                .menuCommonResponseDTO(toMenuCommonResponseDTO(menu))
+                .menuCommonResponseDTO(documentToMenuCommonResponseDTO(menu))
                 .createdAt(menu.getCreatedAt())
                 .build();
     }
@@ -96,6 +93,17 @@ public class MenuConverter {
                 .menuPicture(menu.getMenuPicture())
                 .status(menu.getStatus())
                 .category(menu.getMenuCategory().getCategory())
+                .build();
+    }
+
+    public static MenuCommonResponseDTO documentToMenuCommonResponseDTO(StoreDocument.Menu menu) {
+        return MenuCommonResponseDTO.builder()
+                .menuId(menu.getId())
+                .name(menu.getName())
+                .price(menu.getPrice())
+                .menuPicture(menu.getMenuPicture())
+                .status(menu.getMenuStatus())
+                .category(menu.getMenuCategory())
                 .build();
     }
 }

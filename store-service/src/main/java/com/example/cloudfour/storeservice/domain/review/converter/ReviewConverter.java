@@ -1,5 +1,6 @@
 package com.example.cloudfour.storeservice.domain.review.converter;
 
+import com.example.cloudfour.storeservice.domain.collection.document.ReviewDocument;
 import com.example.cloudfour.storeservice.domain.review.controller.ReviewCommonResponseDTO;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewRequestDTO;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewResponseDTO;
@@ -7,6 +8,7 @@ import com.example.cloudfour.storeservice.domain.review.entity.Review;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 
 public class ReviewConverter {
     public static Review toReview(ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO){
@@ -17,22 +19,22 @@ public class ReviewConverter {
                 .build();
     }
 
-    public static ReviewResponseDTO.ReviewDetailResponseDTO toReviewDetailResponseDTO(Review review, String nickname){
+    public static ReviewResponseDTO.ReviewDetailResponseDTO toReviewDetailResponseDTO(ReviewDocument reviewDocument, String nickname){
         return ReviewResponseDTO.ReviewDetailResponseDTO.builder()
-                .storeId(review.getStore().getId())
-                .userId(review.getUser())
+                .storeId(reviewDocument.getStoreId())
+                .userId(reviewDocument.getUserId())
                 .nickname(nickname)
-                .reviewCommonGetResponseDTO(toReviewCommonGetResponseDTO(review))
-                .createdAt(review.getCreatedAt())
+                .reviewCommonGetResponseDTO(toReviewCommonGetResponseDTO(reviewDocument))
+                .createdAt(reviewDocument.getCreatedAt())
                 .build();
     }
 
-    public static ReviewResponseDTO.ReviewStoreResponseDTO toReviewStoreResponseDTO(Review review){
+    public static ReviewResponseDTO.ReviewStoreResponseDTO toReviewStoreResponseDTO(ReviewDocument reviewDocument){
         return ReviewResponseDTO.ReviewStoreResponseDTO.builder()
-                .reviewId(review.getId())
-                .reviewCommonCrudResponseDTO(toReviewCommonCrudResponseDTO(review))
-                .createdAt(review.getCreatedAt())
-                .createdBy(review.getUser())
+                .reviewId(reviewDocument.getReviewId())
+                .reviewCommonCrudResponseDTO(documentToReviewCommonCrudResponseDTO(reviewDocument))
+                .createdAt(reviewDocument.getCreatedAt())
+                .createdBy(reviewDocument.getUserId())
                 .build();
     }
 
@@ -44,11 +46,11 @@ public class ReviewConverter {
                 .build();
     }
 
-    public static ReviewResponseDTO.ReviewUserResponseDTO toReviewUserResponseDTO(Review review){
+    public static ReviewResponseDTO.ReviewUserResponseDTO toReviewUserResponseDTO(ReviewDocument reviewDocument){
         return ReviewResponseDTO.ReviewUserResponseDTO.builder()
-                .reviewCommonGetResponseDTO(toReviewCommonGetResponseDTO(review))
-                .createdAt(review.getCreatedAt())
-                .createdBy(review.getUser())
+                .reviewCommonGetResponseDTO(toReviewCommonGetResponseDTO(reviewDocument))
+                .createdAt(reviewDocument.getCreatedAt())
+                .createdBy(reviewDocument.getUserId())
                 .build();
     }
 
@@ -79,12 +81,12 @@ public class ReviewConverter {
                 .build();
     }
 
-    public static ReviewCommonResponseDTO.ReviewCommonGetResponseDTO toReviewCommonGetResponseDTO(Review review){
+    public static ReviewCommonResponseDTO.ReviewCommonGetResponseDTO toReviewCommonGetResponseDTO(ReviewDocument reviewDocument){
         return ReviewCommonResponseDTO.ReviewCommonGetResponseDTO.builder()
-                .reviewId(review.getId())
-                .score(review.getScore())
-                .content(review.getContent())
-                .pictureUrl(review.getPictureUrl())
+                .reviewId(reviewDocument.getReviewId())
+                .score(reviewDocument.getScore())
+                .content(reviewDocument.getContent())
+                .pictureUrl(reviewDocument.getPictureUrl())
                 .build();
     }
 
@@ -94,6 +96,15 @@ public class ReviewConverter {
                 .score(review.getScore())
                 .content(review.getContent())
                 .pictureUrl(review.getPictureUrl())
+                .build();
+    }
+
+    public static ReviewCommonResponseDTO.ReviewCommonCrudResponseDTO documentToReviewCommonCrudResponseDTO(ReviewDocument reviewDocument){
+        return ReviewCommonResponseDTO.ReviewCommonCrudResponseDTO.builder()
+                .userId(reviewDocument.getUserId())
+                .score(reviewDocument.getScore())
+                .content(reviewDocument.getContent())
+                .pictureUrl(reviewDocument.getPictureUrl())
                 .build();
     }
 }

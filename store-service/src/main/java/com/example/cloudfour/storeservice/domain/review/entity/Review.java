@@ -42,6 +42,8 @@ public class Review extends BaseEntity {
     @Lob
     private String pictureUrl;
 
+    private String userName;
+
     @Column(name = "userId" ,nullable = false)
     private UUID user;
 

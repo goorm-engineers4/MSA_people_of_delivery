@@ -1,5 +1,6 @@
 package com.example.cloudfour.storeservice.domain.store.converter;
 
+import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
 import com.example.cloudfour.storeservice.domain.store.controller.StoreCommonResponseDTO;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreRequestDTO;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreResponseDTO;
@@ -43,11 +44,11 @@ public class StoreConverter {
                 .build();
     }
 
-    public static StoreResponseDTO.StoreListResponseDTO toStoreListResponseDTO(Store store) {
+    public static StoreResponseDTO.StoreListResponseDTO toStoreListResponseDTO(StoreDocument storeDocument) {
         return StoreResponseDTO.StoreListResponseDTO.builder()
-                .storeCommonOptionResponseDTO(toStoreCommonOptionResponseDTO(store))
-                .storeCommonsBaseResponseDTO(toStoreCommonBaseResponseDTO(store))
-                .createdAt(store.getCreatedAt())
+                .storeCommonOptionResponseDTO(documentToStoreCommonOptionResponseDTO(storeDocument))
+                .storeCommonsBaseResponseDTO(documentToStoreCommonBaseResponseDTO(storeDocument))
+                .createdAt(storeDocument.getCreatedAt())
                 .build();
     }
 
@@ -61,22 +62,14 @@ public class StoreConverter {
                 .build();
     }
 
-    public static StoreResponseDTO.StoreDetailResponseDTO toStoreDetailResponseDTO(Store store) {
+    public static StoreResponseDTO.StoreDetailResponseDTO toStoreDetailResponseDTO(StoreDocument storeDocument) {
         return StoreResponseDTO.StoreDetailResponseDTO.builder()
-                .userId(store.getOwnerId())
-                .storeCommonMainResponseDTO(toStoreCommonMainResponseDTO(store))
-                .storeCommonOptionResponseDTO(toStoreCommonOptionResponseDTO(store))
-                .storeCommonsBaseResponseDTO(toStoreCommonBaseResponseDTO(store))
+                .userId(storeDocument.getUserId())
+                .storeCommonMainResponseDTO(documentToStoreCommonMainResponseDTO(storeDocument))
+                .storeCommonOptionResponseDTO(documentToStoreCommonOptionResponseDTO(storeDocument))
+                .storeCommonsBaseResponseDTO(documentToStoreCommonBaseResponseDTO(storeDocument))
                 .build();
     }
-
-    public static StoreCommonResponseDTO.StoreCommonOptionResponseDTO toStoreCommonOptionResponseDTO(Store store) {
-        return StoreCommonResponseDTO.StoreCommonOptionResponseDTO.builder()
-                .rating(store.getRating())
-                .reviewCount(store.getReviewCount())
-                .build();
-    }
-
 
     public static StoreCommonResponseDTO.StoreCommonMainResponseDTO toStoreCommonMainResponseDTO (Store store) {
         return StoreCommonResponseDTO.StoreCommonMainResponseDTO.builder()
@@ -96,6 +89,35 @@ public class StoreConverter {
                 .name(store.getName())
                 .address(store.getAddress())
                 .storePicture(store.getStorePicture())
+                .build();
+    }
+
+    public static StoreCommonResponseDTO.StoreCommonOptionResponseDTO documentToStoreCommonOptionResponseDTO(StoreDocument storeDocument) {
+        return StoreCommonResponseDTO.StoreCommonOptionResponseDTO.builder()
+                .rating(storeDocument.getRating())
+                .reviewCount(storeDocument.getReviewCount())
+                .build();
+    }
+
+
+    public static StoreCommonResponseDTO.StoreCommonMainResponseDTO documentToStoreCommonMainResponseDTO (StoreDocument storeDocument) {
+        return StoreCommonResponseDTO.StoreCommonMainResponseDTO.builder()
+                .phone(storeDocument.getPhone())
+                .content(storeDocument.getContent())
+                .minPrice(storeDocument.getMinPrice())
+                .deliveryTip(storeDocument.getDeliveryTip())
+                .operationHours(storeDocument.getOperationHours())
+                .closedDays(storeDocument.getClosedDays())
+                .category(storeDocument.getStoreCategory())
+                .build();
+    }
+
+    public static StoreCommonResponseDTO.StoreCommonsBaseResponseDTO documentToStoreCommonBaseResponseDTO(StoreDocument storeDocument){
+        return StoreCommonResponseDTO.StoreCommonsBaseResponseDTO.builder()
+                .storeId(storeDocument.getStoreId())
+                .name(storeDocument.getName())
+                .address(storeDocument.getAddress())
+                .storePicture(storeDocument.getPictureURL())
                 .build();
     }
 }

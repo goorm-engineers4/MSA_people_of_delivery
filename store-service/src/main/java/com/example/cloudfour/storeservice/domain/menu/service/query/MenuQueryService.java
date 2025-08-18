@@ -1,11 +1,12 @@
 package com.example.cloudfour.storeservice.domain.menu.service.query;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
+import com.example.cloudfour.storeservice.domain.collection.repository.StoreSearchRepository;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuConverter;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuOptionConverter;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuOptionResponseDTO;
-import com.example.cloudfour.storeservice.domain.menu.entity.Menu;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuCategoryErrorCode;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuCategoryException;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuException;
@@ -13,22 +14,14 @@ import com.example.cloudfour.storeservice.domain.menu.exception.MenuErrorCode;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuOptionErrorCode;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuOptionException;
 import com.example.cloudfour.storeservice.domain.menu.repository.MenuCategoryRepository;
-import com.example.cloudfour.storeservice.domain.menu.repository.MenuRepository;
-import com.example.cloudfour.storeservice.domain.menu.repository.MenuOptionRepository;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreErrorCode;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreException;
-import com.example.cloudfour.storeservice.domain.store.repository.StoreRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,19 +30,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MenuQueryService {
-
-    private final MenuRepository menuRepository;
     private final MenuCategoryRepository menuCategoryRepository;
-    private final StoreRepository storeRepository;
-    private final MenuOptionRepository menuOptionRepository;
-    private final RestTemplate restTemplate;
-
-    private static final LocalDateTime FIRST_CURSOR = LocalDateTime.now().plusDays(1);
+    private final StoreSearchRepository storeMongoRepository;
 
     public MenuResponseDTO.MenuStoreListResponseDTO getMenusByStoreWithCursor(
-            UUID storeId, LocalDateTime cursor, Integer size, GatewayPrincipal user
+            UUID storeId, GatewayPrincipal user
     ) {
-        storeRepository.findByIdAndIsDeletedFalse(storeId).orElseThrow(() -> {
+        storeMongoRepository.findStoreByStoreId(storeId).orElseThrow(() -> {
             log.warn("존재하지 않는 가게");
             return new StoreException(StoreErrorCode.NOT_FOUND);
         });
@@ -59,37 +46,28 @@ public class MenuQueryService {
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
         log.info("가게 메뉴 목록 조회 권한 확인 성공");
-        if (cursor == null) cursor = FIRST_CURSOR;
+        List<StoreDocument.Menu> menus =
+                storeMongoRepository.findMenuByStoreId(storeId);
 
-        Pageable pageable = PageRequest.of(0, size);
-        Slice<Menu> menuSlice =
-                menuRepository.findByStoreIdAndDeletedFalseAndCreatedAtBefore(storeId, cursor, pageable);
-
-        if (menuSlice.isEmpty()){
+        if (menus.isEmpty()){
             log.warn("가게 메뉴 없음");
             throw new MenuException(MenuErrorCode.NOT_FOUND);
         }
 
-        List<MenuResponseDTO.MenuListResponseDTO> menus = menuSlice.getContent().stream()
+        List<MenuResponseDTO.MenuListResponseDTO> menusDto = menus.stream()
                 .map(MenuConverter::toMenuListResponseDTO)
                 .toList();
 
-        LocalDateTime nextCursor = (menuSlice.hasNext() && !menuSlice.isEmpty())
-                ? menuSlice.getContent().getLast().getCreatedAt()
-                : null;
-
         log.info("가게 별 메뉴 목록 조회 성공");
         return MenuResponseDTO.MenuStoreListResponseDTO.builder()
-                .menus(menus)
-                .hasNext(menuSlice.hasNext())
-                .nextCursor(nextCursor)
+                .menus(menusDto)
                 .build();
     }
 
     public MenuResponseDTO.MenuStoreListResponseDTO getMenusByStoreWithCategory(
-            UUID storeId, UUID categoryId, LocalDateTime cursor, Integer size ,GatewayPrincipal user
+            UUID storeId, UUID categoryId,GatewayPrincipal user
     ) {
-        storeRepository.findByIdAndIsDeletedFalse(storeId)
+        storeMongoRepository.findStoreByStoreId(storeId)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 가게");
                     return new StoreException(StoreErrorCode.NOT_FOUND);
@@ -106,30 +84,22 @@ public class MenuQueryService {
         }
 
         log.info("가게, 카테고리 별 메뉴 목록 조회 권한 확인 성공");
-        if (cursor == null) cursor = FIRST_CURSOR;
+        List<StoreDocument.Menu> menus =
+                storeMongoRepository.findMenuByStoreIdAndMenuCategoryId(
+                        storeId, categoryId);
 
-        Pageable pageable = PageRequest.of(0, size);
-        Slice<Menu> menuSlice =
-                menuRepository.findByStoreIdAndMenuCategoryIdAndDeletedFalseAndCreatedAtBefore(
-                        storeId, categoryId, cursor, pageable);
-
-        if (menuSlice.isEmpty()) {
+        if (menus.isEmpty()) {
             log.warn("가게 메뉴 없음");
             throw new MenuException(MenuErrorCode.NOT_FOUND);
         }
 
-        List<MenuResponseDTO.MenuListResponseDTO> menus = menuSlice.getContent().stream()
+        List<MenuResponseDTO.MenuListResponseDTO> menusDto = menus.stream()
                 .map(MenuConverter::toMenuListResponseDTO)
                 .toList();
 
-        LocalDateTime nextCursor = (menuSlice.hasNext() && !menuSlice.isEmpty())
-                ? menuSlice.getContent().getLast().getCreatedAt()
-                : null;
         log.info("가게, 카테고리 별 메뉴 목록 조회 성공");
         return MenuResponseDTO.MenuStoreListResponseDTO.builder()
-                .menus(menus)
-                .hasNext(menuSlice.hasNext())
-                .nextCursor(nextCursor)
+                .menus(menusDto)
                 .build();
     }
 
@@ -163,19 +133,19 @@ public class MenuQueryService {
             log.warn("메뉴 상세 조회 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
-        Menu menu = menuRepository.findById(menuId)
+        StoreDocument.Menu storeDocument = storeMongoRepository.findMenuByMenuId(menuId)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 메뉴");
                     return new MenuException(MenuErrorCode.NOT_FOUND);
                 });
         log.info("메뉴 상세 조회 권한 확인 성공");
-        var optionDTOs = menuOptionRepository.findByMenuIdOrderByAdditionalPrice(menuId)
+        var optionDTOs = storeMongoRepository.findMenuOptionByMenuIdOrderByAdditionalPrice(menuId)
                 .stream()
                 .map(MenuConverter::toMenuOptionDTO)
                 .toList();
 
         log.info("메뉴 상세 조회 완료");
-        return MenuConverter.toMenuDetail2ResponseDTO(menu, optionDTOs);
+        return MenuConverter.toMenuDetail2ResponseDTO(storeDocument, optionDTOs);
     }
 
     public MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO getMenuOptionsByMenu(UUID menuId,GatewayPrincipal user) {
@@ -183,7 +153,7 @@ public class MenuQueryService {
             log.warn("메뉴 별 메뉴 옵션 조회 권한 없음");
             throw new MenuOptionException(MenuOptionErrorCode.UNAUTHORIZED_ACCESS);
         }
-        menuRepository.findById(menuId)
+        storeMongoRepository.findMenuByMenuId(menuId)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 메뉴");
                     return new MenuException(MenuErrorCode.NOT_FOUND);
@@ -191,9 +161,9 @@ public class MenuQueryService {
 
         log.info("메뉴 별 메뉴 옵션 조회 권한 확인 성공");
 
-        var options = menuOptionRepository.findByMenuIdOrderByAdditionalPrice(menuId)
+        var options = storeMongoRepository.findMenuOptionByMenuIdOrderByAdditionalPrice(menuId)
                 .stream()
-                .map(MenuOptionConverter::toMenuOptionSimpleResponseDTO)
+                .map(MenuOptionConverter::documentToMenuOptionSimpleResponseDTO)
                 .toList();
         log.info("메뉴 별 메뉴 옵션 조회 완료");
         return MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO.builder()
@@ -207,12 +177,12 @@ public class MenuQueryService {
             throw new MenuOptionException(MenuOptionErrorCode.UNAUTHORIZED_ACCESS);
         }
         log.info("메뉴 옵션 상세 조회 권한 확인 성공");
-        var menuOption = menuOptionRepository.findByIdWithMenu(optionId)
+        StoreDocument.MenuOption option = storeMongoRepository.findMenuOptionByMenuOptionId(optionId)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 메뉴 옵션");
                     return new MenuOptionException(MenuOptionErrorCode.NOT_FOUND);
                 });
         log.info("메뉴 옵션 상세 조회 완료");
-        return MenuOptionConverter.toMenuOptionSimpleResponseDTO(menuOption);
+        return MenuOptionConverter.documentToMenuOptionSimpleResponseDTO(option);
     }
 }

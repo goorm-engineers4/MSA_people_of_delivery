@@ -42,7 +42,7 @@ public class StoreCommandService {
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        if (storeRepository.existsByName(dto.getStoreCommonRequestDTO().getName())) {
+        if (storeRepository.existsByNameAndIsDeletedFalse(dto.getStoreCommonRequestDTO().getName())) {
             log.warn("이미 존재하는 가게 이름");
             throw new StoreException(StoreErrorCode.ALREADY_ADD);
         }
@@ -87,7 +87,7 @@ public class StoreCommandService {
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        if (dto.getStoreCommonRequestDTO().getName() != null && storeRepository.existsByName(dto.getStoreCommonRequestDTO().getName())) {
+        if (dto.getStoreCommonRequestDTO().getName() != null && storeRepository.existsByNameAndIsDeletedFalse(dto.getStoreCommonRequestDTO().getName())) {
             log.warn("이미 존재하는 가게 이름");
             throw new StoreException(StoreErrorCode.ALREADY_ADD);
         }

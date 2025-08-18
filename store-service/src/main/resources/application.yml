@@ -22,7 +22,9 @@ spring:
         serviceUrl:
           defaultZone: http://localhost:8761/eureka/
 
-
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
   datasource:
     url: ${LOCAL_DB_URL}
     driver-class-name: org.postgresql.Driver

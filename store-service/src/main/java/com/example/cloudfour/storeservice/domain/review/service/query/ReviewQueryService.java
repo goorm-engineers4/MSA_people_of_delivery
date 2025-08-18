@@ -1,13 +1,13 @@
 package com.example.cloudfour.storeservice.domain.review.service.query;
 
 import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.storeservice.domain.collection.document.ReviewDocument;
+import com.example.cloudfour.storeservice.domain.collection.repository.ReviewSearchRepository;
 import com.example.cloudfour.storeservice.domain.commondto.UserResponseDTO;
 import com.example.cloudfour.storeservice.domain.review.converter.ReviewConverter;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewResponseDTO;
-import com.example.cloudfour.storeservice.domain.review.entity.Review;
 import com.example.cloudfour.storeservice.domain.review.exception.ReviewErrorCode;
 import com.example.cloudfour.storeservice.domain.review.exception.ReviewException;
-import com.example.cloudfour.storeservice.domain.review.repository.ReviewRepository;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreErrorCode;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreException;
 import com.example.cloudfour.storeservice.domain.store.repository.StoreRepository;
@@ -34,7 +34,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReviewQueryService {
-    private final ReviewRepository reviewRepository;
+    private final ReviewSearchRepository reviewRepository;
     private final StoreRepository storeRepository;
     private final RestTemplate restTemplate;
     private static final LocalDateTime first_cursor = LocalDateTime.now().plusDays(1);
@@ -53,7 +53,7 @@ public class ReviewQueryService {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         ResponseEntity<UserResponseDTO> response = restTemplate.exchange("http://localhost:8080/api/user-service/users/me", HttpMethod.GET,entity, UserResponseDTO.class);
         UserResponseDTO findUser = response.getBody();
-        Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->{
+        ReviewDocument findReview = reviewRepository.findById(reviewId).orElseThrow(()->{
             log.warn("존재하지 않는 리뷰");
             return new ReviewException(ReviewErrorCode.NOT_FOUND);
         });
@@ -76,12 +76,12 @@ public class ReviewQueryService {
         log.info("가게 리뷰 목록 조회 권한 확인 성공");
         Pageable pageable = PageRequest.of(0,size);
 
-        Slice<Review> findReviews = reviewRepository.findAllByStoreId(storeId,cursor,pageable);
+        Slice<ReviewDocument> findReviews = reviewRepository.findAllByStoreId(storeId,cursor,pageable);
         if(findReviews.isEmpty()){
             log.info("가게 리뷰 데이터 없음");
             throw new ReviewException(ReviewErrorCode.NOT_FOUND);
         }
-        List<Review> reviews = findReviews.toList();
+        List<ReviewDocument> reviews = findReviews.toList();
         List<ReviewResponseDTO.ReviewStoreResponseDTO> reviewStoreListResponseDTOS = reviews.stream().map(ReviewConverter::toReviewStoreResponseDTO).toList();
         LocalDateTime next_cursor = null;
         if(!findReviews.isEmpty() && findReviews.hasNext()) {
@@ -101,12 +101,12 @@ public class ReviewQueryService {
         }
         log.info("사용자 리뷰 목록 조회 권한 확인 성공");
         Pageable pageable = PageRequest.of(0,size);
-        Slice<Review> findReviews = reviewRepository.findAllByUserId(user.userId(),cursor,pageable);
+        Slice<ReviewDocument> findReviews = reviewRepository.findAllByUserId(user.userId(),cursor,pageable);
         if(findReviews.isEmpty()){
             log.info("사용자 리뷰 데이터 없음");
             throw new ReviewException(ReviewErrorCode.NOT_FOUND);
         }
-        List<Review> reviews = findReviews.toList();
+        List<ReviewDocument> reviews = findReviews.toList();
         List<ReviewResponseDTO.ReviewUserResponseDTO> reviewUserListResponseDTOS = reviews.stream().map(ReviewConverter::toReviewUserResponseDTO).toList();
         LocalDateTime next_cursor = null;
         if(!findReviews.isEmpty() && findReviews.hasNext()) {
