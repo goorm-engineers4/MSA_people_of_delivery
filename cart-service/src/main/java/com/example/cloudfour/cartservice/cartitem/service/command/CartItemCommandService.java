@@ -13,7 +13,7 @@ import com.example.cloudfour.cartservice.cartitem.exception.CartItemException;
 import com.example.cloudfour.cartservice.cartitem.repository.CartItemRepository;
 import com.example.cloudfour.cartservice.commondto.MenuOptionResponseDTO;
 import com.example.cloudfour.cartservice.commondto.MenuResponseDTO;
-import com.example.cloudfour.cartservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +31,8 @@ public class CartItemCommandService {
     private final CartRepository cartRepository;
     private final RestTemplate restTemplate;
 
-    public CartItemResponseDTO.CartItemAddResponseDTO AddCartItem(CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO, UUID cartId, GatewayPrincipal user) {
-        Cart cart = cartRepository.findByIdAndUser(cartId, user.userId())
+    public CartItemResponseDTO.CartItemAddResponseDTO AddCartItem(CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO, UUID cartId, CurrentUser user) {
+        Cart cart = cartRepository.findByIdAndUser(cartId, user.id())
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 장바구니");
                     return new CartException(CartErrorCode.NOT_FOUND);
@@ -64,8 +64,8 @@ public class CartItemCommandService {
         return CartItemConverter.toCartItemAddResponseDTO(cartItem);
     }
 
-    public CartItemResponseDTO.CartItemAddResponseDTO CreateCartItem(CartItemRequestDTO.CartItemCreateRequestDTO cartItemCreateRequestDTO, UUID cartId, GatewayPrincipal user) {
-        Cart cart = cartRepository.findByIdAndUser(cartId, user.userId())
+    public CartItemResponseDTO.CartItemAddResponseDTO CreateCartItem(CartItemRequestDTO.CartItemCreateRequestDTO cartItemCreateRequestDTO, UUID cartId, CurrentUser user) {
+        Cart cart = cartRepository.findByIdAndUser(cartId, user.id())
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 장바구니");
                     return new CartException(CartErrorCode.NOT_FOUND);
@@ -96,12 +96,12 @@ public class CartItemCommandService {
         return CartItemConverter.toCartItemAddResponseDTO(cartItem);
     }
 
-    public CartItemResponseDTO.CartItemUpdateResponseDTO updateCartItem(CartItemRequestDTO.CartItemUpdateRequestDTO cartItemUpdateRequestDTO, UUID cartItemId, GatewayPrincipal user) {
+    public CartItemResponseDTO.CartItemUpdateResponseDTO updateCartItem(CartItemRequestDTO.CartItemUpdateRequestDTO cartItemUpdateRequestDTO, UUID cartItemId, CurrentUser user) {
         CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(()->{
             log.warn("존재하지 않는 장바구니 아이템");
             return new CartItemException(CartItemErrorCode.NOT_FOUND);
         });
-        if(user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId,user.userId())){
+        if(user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId,user.id())){
             log.warn("장바구니 아이템 수정 권한 없음");
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }
@@ -126,7 +126,7 @@ public class CartItemCommandService {
         return CartItemConverter.toCartItemUpdateResponseDTO(cartItem);
     }
 
-    public void deleteCartItem(UUID cartItemId, GatewayPrincipal user) {
+    public void deleteCartItem(UUID cartItemId, CurrentUser user) {
         CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(()->{
             log.warn("존재하지 않는 장바구니 아이템");
             return new CartItemException(CartItemErrorCode.NOT_FOUND);
@@ -135,7 +135,7 @@ public class CartItemCommandService {
             log.warn("존재하지 않는 장바구니");
             return new CartException(CartErrorCode.NOT_FOUND);
         });
-        if(user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId,user.userId())){
+        if(user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId,user.id())){
             log.warn("장바구니 아이템 삭제 권한 없음");
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }

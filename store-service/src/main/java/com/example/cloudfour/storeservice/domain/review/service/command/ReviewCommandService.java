@@ -1,6 +1,6 @@
 package com.example.cloudfour.storeservice.domain.review.service.command;
 
-import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import com.example.cloudfour.storeservice.domain.review.converter.ReviewConverter;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewRequestDTO;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewResponseDTO;
@@ -27,7 +27,8 @@ public class ReviewCommandService {
     private final StoreRepository storeRepository;
     private final ReviewRepository reviewRepository;
 
-    public ReviewResponseDTO.ReviewCreateResponseDTO createReview(ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO, GatewayPrincipal user) {
+    public ReviewResponseDTO.ReviewCreateResponseDTO createReview(ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO,
+          CurrentUser user) {
         if(user==null){
             log.warn("리뷰 생성 권한 없음");
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
@@ -39,19 +40,19 @@ public class ReviewCommandService {
             return new StoreException(StoreErrorCode.NOT_FOUND);
         });
         Review review = ReviewConverter.toReview(reviewCreateRequestDTO);
-        review.setUser(user.userId());
+        review.setUser(user.id());
         review.setStore(findStore);
         reviewRepository.save(review);
         log.info("리뷰 생성 성공");
         return ReviewConverter.toReviewCreateResponseDTO(review);
     }
 
-    public void deleteReview(UUID reviewId, GatewayPrincipal user) {
+    public void deleteReview(UUID reviewId, CurrentUser user) {
         Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->{
             log.warn("존재하지 않는 리뷰");
             return new ReviewException(ReviewErrorCode.NOT_FOUND);
         });
-        if(user == null || !reviewRepository.existsByReviewIdAndUserId(reviewId, user.userId())) {
+        if(user == null || !reviewRepository.existsByReviewIdAndUserId(reviewId, user.id())) {
             log.warn("리뷰 삭제 권한 없음");
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
@@ -60,7 +61,8 @@ public class ReviewCommandService {
         log.info("리뷰 삭제 성공");
     }
 
-    public ReviewResponseDTO.ReviewUpdateResponseDTO updateReview(ReviewRequestDTO.ReviewUpdateRequestDTO reviewUpdateRequestDTO, UUID reviewId, GatewayPrincipal user) {
+    public ReviewResponseDTO.ReviewUpdateResponseDTO updateReview(ReviewRequestDTO.ReviewUpdateRequestDTO reviewUpdateRequestDTO,
+              UUID reviewId, CurrentUser user) {
         Store findStore = storeRepository.findById(reviewUpdateRequestDTO.getReviewCommonRequestDTO().getStoreId()).
                 orElseThrow(()->{
                     log.warn("존재하지 않는 가게");
@@ -70,7 +72,7 @@ public class ReviewCommandService {
                 log.warn("존재하지 않는 리뷰");
                 return new ReviewException(ReviewErrorCode.NOT_FOUND);
         });
-        if(user == null || !reviewRepository.existsByReviewIdAndUserId(reviewId, user.userId())) {
+        if(user == null || !reviewRepository.existsByReviewIdAndUserId(reviewId, user.id())) {
             log.warn("리뷰 수정 권한 없음");
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }

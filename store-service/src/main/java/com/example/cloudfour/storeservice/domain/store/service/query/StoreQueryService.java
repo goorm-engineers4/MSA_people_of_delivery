@@ -1,8 +1,8 @@
 package com.example.cloudfour.storeservice.domain.store.service.query;
 
-import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
-import com.example.cloudfour.storeservice.domain.collection.repository.StoreSearchRepository;
+import com.example.cloudfour.storeservice.domain.collection.repository.query.StoreSearchRepository;
 import com.example.cloudfour.storeservice.domain.store.converter.StoreConverter;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreResponseDTO;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreErrorCode;
@@ -26,7 +26,7 @@ public class StoreQueryService {
     private final StoreSearchRepository storeMongoRepository;
 
     public StoreResponseDTO.StoreCursorListResponseDTO getAllStores(
-            LocalDateTime cursor, int size, String keyword,GatewayPrincipal user
+            LocalDateTime cursor, int size, String keyword, CurrentUser user
     ) {
         if(user==null){
             log.warn("가게 목록 조회 권한 없음");
@@ -36,7 +36,7 @@ public class StoreQueryService {
         String siDo = "서울특별시";
         String siGunGu = "서초구";
         String eupMyeongDong = "양재동";
-        if(user.userId()==null){
+        if(user.id()==null){
             siDo = "서울특별시";
             siGunGu = "서초구";
             eupMyeongDong = "양재동";
@@ -60,7 +60,7 @@ public class StoreQueryService {
 
     }
     public StoreResponseDTO.StoreCursorListResponseDTO getStoresByCategory(
-            UUID categoryId, LocalDateTime cursor, int size,GatewayPrincipal user
+            UUID categoryId, LocalDateTime cursor, int size,CurrentUser user
     ) {
         if(user==null){
             log.warn("카테고리 별 가게 목록 조회 권한 없음");
@@ -82,7 +82,7 @@ public class StoreQueryService {
         return StoreResponseDTO.StoreCursorListResponseDTO.of(storeList, nextCursor);
     }
 
-    public StoreResponseDTO.StoreDetailResponseDTO getStoreById(UUID storeId,GatewayPrincipal user) {
+    public StoreResponseDTO.StoreDetailResponseDTO getStoreById(UUID storeId,CurrentUser user) {
         if(user==null){
             log.warn("가게 상세 조회 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
@@ -94,6 +94,6 @@ public class StoreQueryService {
                     return new StoreException(StoreErrorCode.NOT_FOUND);
                 });
         log.info("가게 상제 조회 성공");
-        return StoreConverter.toStoreDetailResponseDTO(store);
+        return StoreConverter.documentToStoreDetailResponseDTO(store);
     }
 }

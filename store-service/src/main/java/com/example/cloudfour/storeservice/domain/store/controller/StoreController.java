@@ -1,7 +1,7 @@
 package com.example.cloudfour.storeservice.domain.store.controller;
 
 import com.example.cloudfour.modulecommon.apiPayLoad.CustomResponse;
-import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreRequestDTO;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreResponseDTO;
 import com.example.cloudfour.storeservice.domain.store.service.command.StoreCommandService;
@@ -28,7 +28,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/stores")
+@RequestMapping("/stores")
 @Tag(name = "Store", description = "가게 API by 지윤")
 public class StoreController {
 
@@ -39,7 +39,7 @@ public class StoreController {
     @Operation(summary = "가게 등록", description = "가게를 등록합니다.")
     public CustomResponse<StoreResponseDTO.StoreCreateResponseDTO> createStore(
             @RequestBody StoreRequestDTO.StoreCreateRequestDTO dto,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ) {
         return CustomResponse.onSuccess(HttpStatus.CREATED, storeCommandService.createStore(dto, user));
     }
@@ -53,7 +53,7 @@ public class StoreController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
             @RequestParam(name = "size", defaultValue = "10") Integer size,
             @RequestParam(name = "keyword", required = false) String keyword,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ) {
         StoreResponseDTO.StoreCursorListResponseDTO response = storeQueryService.getAllStores(cursor, size,keyword,user);
         return CustomResponse.onSuccess(HttpStatus.OK, response);
@@ -62,7 +62,7 @@ public class StoreController {
     @GetMapping("/{storeId}")
     @Operation(summary = "가게 상세 정보 조회", description = "가게의 상세 정보를 조회합니다.")
     public CustomResponse<StoreResponseDTO.StoreDetailResponseDTO> getStoreDetail(
-            @PathVariable UUID storeId,@AuthenticationPrincipal GatewayPrincipal user
+            @PathVariable UUID storeId,@AuthenticationPrincipal CurrentUser user
     ) {
         return CustomResponse.onSuccess(HttpStatus.OK, storeQueryService.getStoreById(storeId,user));
     }
@@ -72,7 +72,7 @@ public class StoreController {
     public CustomResponse<StoreResponseDTO.StoreUpdateResponseDTO> updateStore(
             @PathVariable UUID storeId,
             @RequestBody StoreRequestDTO.StoreUpdateRequestDTO dto,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ) {
         return CustomResponse.onSuccess(HttpStatus.OK, storeCommandService.updateStore(storeId, dto, user));
     }
@@ -81,7 +81,7 @@ public class StoreController {
     @Operation(summary = "가게 삭제", description = "본인의 가게를 삭제합니다.")
     public CustomResponse<String> deleteStore(
             @PathVariable UUID storeId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ) {
         storeCommandService.deleteStore(storeId, user);
         return CustomResponse.onSuccess(HttpStatus.OK, "가게 삭제 완료");
@@ -96,7 +96,7 @@ public class StoreController {
             @RequestParam(name = "cursor", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
             @RequestParam(name = "size", defaultValue = "10") Integer size,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ) {
         StoreResponseDTO.StoreCursorListResponseDTO response =
                 storeQueryService.getStoresByCategory(categoryId, cursor, size,user);

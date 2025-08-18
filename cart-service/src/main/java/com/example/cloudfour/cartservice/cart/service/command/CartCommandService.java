@@ -12,7 +12,7 @@ import com.example.cloudfour.cartservice.cartitem.dto.CartItemRequestDTO;
 import com.example.cloudfour.cartservice.cartitem.dto.CartItemResponseDTO;
 import com.example.cloudfour.cartservice.cartitem.service.command.CartItemCommandService;
 import com.example.cloudfour.cartservice.commondto.MenuResponseDTO;
-import com.example.cloudfour.cartservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class CartCommandService {
     private final RestTemplate restTemplate;
     private final CartItemCommandService cartItemCommandService;
 
-    public CartResponseDTO.CartCreateResponseDTO createCart(CartRequestDTO.CartCreateRequestDTO cartCreateRequestDTO, GatewayPrincipal user) {
+    public CartResponseDTO.CartCreateResponseDTO createCart(CartRequestDTO.CartCreateRequestDTO cartCreateRequestDTO, CurrentUser user) {
         UUID store =  restTemplate.getForObject("http://store-service/api/stores/{storeId}", UUID.class, cartCreateRequestDTO.getStoreId());
         UUID findUser =  restTemplate.getForObject("http://store-service/api/stores/{storeId}", UUID.class, cartCreateRequestDTO.getStoreId());
         boolean exists = cartRepository.existsByUserAndStore(findUser, store);
@@ -52,14 +52,14 @@ public class CartCommandService {
 
     }
 
-    public void deleteCart(UUID cartId, GatewayPrincipal user) {
+    public void deleteCart(UUID cartId, CurrentUser user) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 장바구니");
                     return new CartException(CartErrorCode.NOT_FOUND);
                 });
         log.info("장바구니 삭제 권한 확인 성공");
-        if (!cart.getUser().equals(user)) {
+        if (!cart.getUser().equals(user.id())) {
             log.warn("장바구니 삭제 권한 없음");
             throw new CartException(CartErrorCode.UNAUTHORIZED_ACCESS);
         }

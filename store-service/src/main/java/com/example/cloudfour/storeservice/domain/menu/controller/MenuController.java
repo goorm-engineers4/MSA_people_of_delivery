@@ -1,7 +1,7 @@
 package com.example.cloudfour.storeservice.domain.menu.controller;
 
 import com.example.cloudfour.modulecommon.apiPayLoad.CustomResponse;
-import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuRequestDTO;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuOptionResponseDTO;
@@ -26,7 +26,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/menus")
+@RequestMapping("/menus")
 @Tag(name = "Menu", description = "메뉴 API by 정병민")
 public class MenuController {
 
@@ -38,7 +38,7 @@ public class MenuController {
     public CustomResponse<MenuResponseDTO.MenuDetailResponseDTO> createMenu(
             @PathVariable("storeId") UUID storeId,
             @RequestBody MenuRequestDTO.MenuCreateRequestDTO requestDTO,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @AuthenticationPrincipal CurrentUser user) {
 
         MenuResponseDTO.MenuDetailResponseDTO result = menuCommandService.createMenu(requestDTO, storeId, user);
         return CustomResponse.onSuccess(HttpStatus.CREATED, result);
@@ -47,7 +47,7 @@ public class MenuController {
     @GetMapping("/{menuId}/detail")
     @Operation(summary = "메뉴 상세 조회", description = "메뉴의 상세 정보를 조회합니다.")
     public CustomResponse<MenuResponseDTO.MenuDetailResponseDTO> getMenuDetail(
-            @PathVariable("menuId") UUID menuId,@AuthenticationPrincipal GatewayPrincipal user) {
+            @PathVariable("menuId") UUID menuId,@AuthenticationPrincipal CurrentUser user) {
 
         MenuResponseDTO.MenuDetailResponseDTO result = menuQueryService.getMenuDetail(menuId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
@@ -57,7 +57,7 @@ public class MenuController {
     @Operation(summary = "해당 가게 메뉴 목록 조회", description = "가게의 메뉴 목록을 조회합니다.")
     public CustomResponse<MenuResponseDTO.MenuStoreListResponseDTO> getMenusByStore(
             @PathVariable("storeId") UUID storeId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
         ) {
 
         MenuResponseDTO.MenuStoreListResponseDTO result =
@@ -70,7 +70,7 @@ public class MenuController {
     public CustomResponse<MenuResponseDTO.MenuStoreListResponseDTO> getMenusByCategory(
             @PathVariable("storeId") UUID storeId,
             @RequestParam(name = "categoryId") UUID categoryId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
             ) {
 
         MenuResponseDTO.MenuStoreListResponseDTO result =
@@ -112,7 +112,7 @@ public class MenuController {
     public CustomResponse<MenuResponseDTO.MenuDetailResponseDTO> updateMenu(
             @RequestBody MenuRequestDTO.MenuUpdateRequestDTO requestDTO,
             @PathVariable("menuId") UUID menuId,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @AuthenticationPrincipal CurrentUser user) {
 
         MenuResponseDTO.MenuDetailResponseDTO result = menuCommandService.updateMenu(menuId, requestDTO, user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
@@ -122,7 +122,7 @@ public class MenuController {
     @Operation(summary = "메뉴 삭제", description = "메뉴를 삭제합니다.")
     public CustomResponse<String> deleteMenu(
             @PathVariable("menuId") UUID menuId,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @AuthenticationPrincipal CurrentUser user) {
 
         menuCommandService.deleteMenu(menuId, user);
         return CustomResponse.onSuccess(HttpStatus.OK, "메뉴 삭제 완료");
@@ -133,7 +133,7 @@ public class MenuController {
     public CustomResponse<MenuOptionResponseDTO.MenuOptionSimpleResponseDTO> createMenuOption(
             @PathVariable("menuId") UUID menuId,
             @RequestBody MenuRequestDTO.MenuOptionCreateRequestDTO requestDTO,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @AuthenticationPrincipal CurrentUser user) {
 
         MenuOptionResponseDTO.MenuOptionSimpleResponseDTO result =
                 menuCommandService.createMenuOption(requestDTO, user, menuId);
@@ -143,7 +143,7 @@ public class MenuController {
     @GetMapping("/{menuId}/options")
     @Operation(summary = "메뉴별 옵션 목록 조회", description = "특정 메뉴의 모든 옵션을 조회합니다.")
     public CustomResponse<MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO> getMenuOptions(
-            @PathVariable("menuId") UUID menuId,@AuthenticationPrincipal GatewayPrincipal user
+            @PathVariable("menuId") UUID menuId,@AuthenticationPrincipal CurrentUser user
             ) {
 
         MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO result =
@@ -154,7 +154,7 @@ public class MenuController {
     @GetMapping("/options/{optionId}/detail")
     @Operation(summary = "메뉴 옵션 상세 조회", description = "메뉴 옵션의 상세 정보를 조회합니다.")
     public CustomResponse<MenuOptionResponseDTO.MenuOptionSimpleResponseDTO> getMenuOptionDetail(
-            @PathVariable("optionId") UUID optionId,@AuthenticationPrincipal GatewayPrincipal user
+            @PathVariable("optionId") UUID optionId,@AuthenticationPrincipal CurrentUser user
             ) {
 
         MenuOptionResponseDTO.MenuOptionSimpleResponseDTO result =
@@ -167,7 +167,7 @@ public class MenuController {
     public CustomResponse<MenuOptionResponseDTO.MenuOptionSimpleResponseDTO> updateMenuOption(
             @PathVariable("optionId") UUID optionId,
             @RequestBody MenuRequestDTO.MenuOptionUpdateRequestDTO requestDTO,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @AuthenticationPrincipal CurrentUser user) {
 
         MenuOptionResponseDTO.MenuOptionSimpleResponseDTO result =
                 menuCommandService.updateMenuOption(optionId, requestDTO, user);
@@ -178,7 +178,7 @@ public class MenuController {
     @Operation(summary = "메뉴 옵션 삭제", description = "메뉴 옵션을 삭제합니다.")
     public CustomResponse<String> deleteMenuOption(
             @PathVariable("optionId") UUID optionId,
-            @AuthenticationPrincipal GatewayPrincipal user) {
+            @AuthenticationPrincipal CurrentUser user) {
 
         menuCommandService.deleteMenuOption(optionId, user);
         return CustomResponse.onSuccess(HttpStatus.OK, "메뉴 옵션 삭제 완료");

@@ -6,7 +6,7 @@ import com.example.cloudfour.cartservice.cart.entity.Cart;
 import com.example.cloudfour.cartservice.cart.exception.CartErrorCode;
 import com.example.cloudfour.cartservice.cart.exception.CartException;
 import com.example.cloudfour.cartservice.cart.repository.CartRepository;
-import com.example.cloudfour.cartservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,8 +19,8 @@ import java.util.UUID;
 public class CartQueryService {
     private final CartRepository cartRepository;
 
-    public CartResponseDTO.CartDetailResponseDTO getCartListById(UUID cartId, GatewayPrincipal user) {
-        Cart cart = cartRepository.findByIdAndUser(cartId, user.userId())
+    public CartResponseDTO.CartDetailResponseDTO getCartListById(UUID cartId, CurrentUser user) {
+        Cart cart = cartRepository.findByIdAndUser(cartId, user.id())
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 장바구니");
                     return new CartException(CartErrorCode.NOT_FOUND);

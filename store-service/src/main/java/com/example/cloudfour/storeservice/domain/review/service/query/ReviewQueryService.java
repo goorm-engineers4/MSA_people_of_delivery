@@ -1,8 +1,8 @@
 package com.example.cloudfour.storeservice.domain.review.service.query;
 
-import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import com.example.cloudfour.storeservice.domain.collection.document.ReviewDocument;
-import com.example.cloudfour.storeservice.domain.collection.repository.ReviewSearchRepository;
+import com.example.cloudfour.storeservice.domain.collection.repository.query.ReviewSearchRepository;
 import com.example.cloudfour.storeservice.domain.commondto.UserResponseDTO;
 import com.example.cloudfour.storeservice.domain.review.converter.ReviewConverter;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewResponseDTO;
@@ -11,16 +11,11 @@ import com.example.cloudfour.storeservice.domain.review.exception.ReviewExceptio
 import com.example.cloudfour.storeservice.domain.store.exception.StoreErrorCode;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreException;
 import com.example.cloudfour.storeservice.domain.store.repository.StoreRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -36,23 +31,24 @@ import java.util.UUID;
 public class ReviewQueryService {
     private final ReviewSearchRepository reviewRepository;
     private final StoreRepository storeRepository;
-    private final RestTemplate restTemplate;
+    private final RestTemplate rt;
     private static final LocalDateTime first_cursor = LocalDateTime.now().plusDays(1);
-    private final HttpServletRequest request;
+    private static final String BASE = "http://user-service/internal/users";
 
-    public ReviewResponseDTO.ReviewDetailResponseDTO getReviewById(UUID reviewId, GatewayPrincipal user) {
+    public ReviewResponseDTO.ReviewDetailResponseDTO getReviewById(UUID reviewId, CurrentUser user) {
         if(user==null){
             log.warn("상세 리뷰 조회 접근 권한 없음");
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
+
         log.info("상세 리뷰 조회 권한 확인 성공");
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Auth", request.getHeader("Auth"));
-        headers.add("Account-Value", request.getHeader("Account-Value"));
-        headers.add("X-User-Role", request.getHeader("X-User-Role"));
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-        ResponseEntity<UserResponseDTO> response = restTemplate.exchange("http://localhost:8080/api/user-service/users/me", HttpMethod.GET,entity, UserResponseDTO.class);
-        UserResponseDTO findUser = response.getBody();
+        UserResponseDTO findUser =  rt.getForObject(BASE+"/{id}",UserResponseDTO.class,user.id());
+
+        if(findUser == null){
+            log.warn("상세 리뷰 조회 접근 권한 없음");
+            throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
         ReviewDocument findReview = reviewRepository.findById(reviewId).orElseThrow(()->{
             log.warn("존재하지 않는 리뷰");
             return new ReviewException(ReviewErrorCode.NOT_FOUND);
@@ -61,7 +57,7 @@ public class ReviewQueryService {
         return ReviewConverter.toReviewDetailResponseDTO(findReview, findUser.getNickname());
     }
 
-    public ReviewResponseDTO.ReviewStoreListResponseDTO getReviewListByStore(UUID storeId, LocalDateTime cursor, Integer size, GatewayPrincipal user) {
+    public ReviewResponseDTO.ReviewStoreListResponseDTO getReviewListByStore(UUID storeId, LocalDateTime cursor, Integer size, CurrentUser user) {
         storeRepository.findById(storeId).orElseThrow(()->{
             log.warn("존재하지 않는 가게");
             return new StoreException(StoreErrorCode.NOT_FOUND);
@@ -91,7 +87,7 @@ public class ReviewQueryService {
         return ReviewConverter.toReviewStoreListResponseDTO(reviewStoreListResponseDTOS,findReviews.hasNext(),next_cursor);
     }
 
-    public ReviewResponseDTO.ReviewUserListResponseDTO getReviewListByUser(LocalDateTime cursor, Integer size, GatewayPrincipal user) {
+    public ReviewResponseDTO.ReviewUserListResponseDTO getReviewListByUser(LocalDateTime cursor, Integer size, CurrentUser user) {
         if(user==null){
             log.warn("가게 리뷰 목록 조회 접근 권한 없음");
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
@@ -101,7 +97,7 @@ public class ReviewQueryService {
         }
         log.info("사용자 리뷰 목록 조회 권한 확인 성공");
         Pageable pageable = PageRequest.of(0,size);
-        Slice<ReviewDocument> findReviews = reviewRepository.findAllByUserId(user.userId(),cursor,pageable);
+        Slice<ReviewDocument> findReviews = reviewRepository.findAllByUserId(user.id(),cursor,pageable);
         if(findReviews.isEmpty()){
             log.info("사용자 리뷰 데이터 없음");
             throw new ReviewException(ReviewErrorCode.NOT_FOUND);

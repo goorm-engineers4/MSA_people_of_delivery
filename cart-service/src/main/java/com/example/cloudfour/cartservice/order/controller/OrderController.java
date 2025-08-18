@@ -1,12 +1,12 @@
 package com.example.cloudfour.cartservice.order.controller;
 
-import com.example.cloudfour.cartservice.config.GatewayPrincipal;
 import com.example.cloudfour.cartservice.order.dto.OrderItemResponseDTO;
 import com.example.cloudfour.cartservice.order.dto.OrderRequestDTO;
 import com.example.cloudfour.cartservice.order.dto.OrderResponseDTO;
 import com.example.cloudfour.cartservice.order.service.command.OrderCommandService;
 import com.example.cloudfour.cartservice.order.service.query.OrderQueryService;
 import com.example.cloudfour.modulecommon.apiPayLoad.CustomResponse;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,7 +27,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/orders")
+@RequestMapping("/orders")
 @Tag(name = "Order", description = "주문 API by 김준형")
 public class OrderController {
     private final OrderCommandService orderCommandService;
@@ -38,7 +38,7 @@ public class OrderController {
     public CustomResponse<OrderResponseDTO.OrderCreateResponseDTO> createOrder(
             @PathVariable("cartId") UUID cartId,
             @RequestBody OrderRequestDTO.OrderCreateRequestDTO orderCreateRequestDTO,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ){
         OrderResponseDTO.OrderCreateResponseDTO order = orderCommandService.createOrder(orderCreateRequestDTO,cartId,user);
         return CustomResponse.onSuccess(HttpStatus.CREATED, order);
@@ -48,7 +48,7 @@ public class OrderController {
     @Operation(summary = "주문 상세 조회", description = "주문을 상세 조회합니다. 주문 상세 조회에 사용되는 API입니다.")
     public CustomResponse<OrderResponseDTO.OrderDetailResponseDTO> getOrder(
             @PathVariable("orderId") UUID orderId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ){
         OrderResponseDTO.OrderDetailResponseDTO order = orderQueryService.getOrderById(orderId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, order);
@@ -58,7 +58,7 @@ public class OrderController {
     @Operation(summary = "주문 아이템 상세 조회", description = "주문 아이템을 상세 조회합니다. 주문 아이템 상세 조회에 사용되는 API입니다.")
     public CustomResponse<OrderItemResponseDTO.OrderItemListResponseDTO> getOrderItem(
             @PathVariable("orderItemId") UUID orderItemId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ){
         OrderItemResponseDTO.OrderItemListResponseDTO orderItem = orderQueryService.getOrderItemById(orderItemId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, orderItem);
@@ -69,7 +69,7 @@ public class OrderController {
     @Parameter(name = "cursor", description = "데이터가 시작하는 부분을 표시합니다")
     @Parameter(name = "size", description = "size만큼 데이터를 가져옵니다.")
     public CustomResponse<OrderResponseDTO.OrderUserListResponseDTO> getMyOrder(
-            @AuthenticationPrincipal GatewayPrincipal user,
+            @AuthenticationPrincipal CurrentUser user,
             @RequestParam(name = "cursor", required = false) LocalDateTime cursor,
             @RequestParam(name = "size", defaultValue = "10") Integer size
     ){
@@ -83,7 +83,7 @@ public class OrderController {
     @Parameter(name = "size", description = "size만큼 데이터를 가져옵니다.")
     public CustomResponse<OrderResponseDTO.OrderStoreListResponseDTO> getStoreOrder(
             @PathVariable("storeId") UUID storeId,
-            @AuthenticationPrincipal GatewayPrincipal user,
+            @AuthenticationPrincipal CurrentUser user,
             @RequestParam(name = "cursor", required = false) LocalDateTime cursor,
             @RequestParam(name = "size", defaultValue = "10") Integer size
     ){
@@ -96,7 +96,7 @@ public class OrderController {
     public CustomResponse<OrderResponseDTO.OrderUpdateResponseDTO>  updateOrderStatus(
             @RequestBody OrderRequestDTO.OrderUpdateRequestDTO orderUpdateRequestDTO,
             @PathVariable("orderId") UUID orderId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ){
         OrderResponseDTO.OrderUpdateResponseDTO order = orderCommandService.updateOrder(orderUpdateRequestDTO,orderId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, order);
@@ -106,7 +106,7 @@ public class OrderController {
     @Operation(summary = "주문 취소", description = "주문을 취소합니다. 주문 취소에 사용되는 API입니다.")
     public CustomResponse<String>  deleteOrder(
             @PathVariable("orderId") UUID orderId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ){
         orderCommandService.deleteOrder(orderId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, "주문 취소 완료.");
