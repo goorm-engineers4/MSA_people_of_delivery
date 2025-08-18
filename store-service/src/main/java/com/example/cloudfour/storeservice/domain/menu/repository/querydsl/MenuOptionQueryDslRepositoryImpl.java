@@ -19,12 +19,6 @@ public class MenuOptionQueryDslRepositoryImpl implements MenuOptionQueryDslRepos
     private final JPAQueryFactory query;
 
     @Override
-    public List<MenuOption> findByMenuIdOrderByAdditionalPrice(UUID menuId) {
-        return query.selectFrom(menuOption).leftJoin(menuOption.menu, menu).fetchJoin()
-                .where(menu.id.eq(menuId)).fetch();
-    }
-
-    @Override
     public Optional<MenuOption> findByIdWithMenu(UUID optionId) {
         return Optional.ofNullable(query.selectFrom(menuOption).join(menuOption.menu,menu).fetchJoin()
                 .where(menuOption.id.eq((optionId))).fetchOne());
