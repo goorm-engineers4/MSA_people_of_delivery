@@ -2,6 +2,7 @@ package com.example.cloudfour.modulecommon.filter;
 
 
 import com.example.cloudfour.modulecommon.dto.CurrentUser;
+import com.example.cloudfour.modulecommon.token.TokenBlacklist;
 import com.nimbusds.jwt.SignedJWT;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,6 +22,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class JwtClaimsAuthFilter extends OncePerRequestFilter {
+
+    public JwtClaimsAuthFilter(TokenBlacklist blacklist) {
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
