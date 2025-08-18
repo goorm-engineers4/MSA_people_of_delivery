@@ -8,10 +8,8 @@ import com.example.cloudfour.storeservice.domain.menu.dto.MenuOptionResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.service.command.MenuCommandService;
 import com.example.cloudfour.storeservice.domain.menu.service.query.MenuQueryService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,8 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
@@ -59,18 +55,13 @@ public class MenuController {
 
     @GetMapping("/{storeId}")
     @Operation(summary = "해당 가게 메뉴 목록 조회", description = "가게의 메뉴 목록을 조회합니다.")
-    @Parameter(name = "cursor", description = "데이터가 시작하는 부분을 표시합니다")
-    @Parameter(name = "size", description = "size만큼 데이터를 가져옵니다.")
     public CustomResponse<MenuResponseDTO.MenuStoreListResponseDTO> getMenusByStore(
             @PathVariable("storeId") UUID storeId,
-            @RequestParam(name = "cursor", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
-            @RequestParam(name = "size", defaultValue = "10") Integer size,
             @AuthenticationPrincipal GatewayPrincipal user
         ) {
 
         MenuResponseDTO.MenuStoreListResponseDTO result =
-                menuQueryService.getMenusByStoreWithCursor(storeId, cursor, size,user);
+                menuQueryService.getMenusByStoreWithCursor(storeId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 
@@ -79,14 +70,11 @@ public class MenuController {
     public CustomResponse<MenuResponseDTO.MenuStoreListResponseDTO> getMenusByCategory(
             @PathVariable("storeId") UUID storeId,
             @RequestParam(name = "categoryId") UUID categoryId,
-            @RequestParam(name = "cursor", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
-            @RequestParam(name = "size", defaultValue = "10") Integer size,
             @AuthenticationPrincipal GatewayPrincipal user
             ) {
 
         MenuResponseDTO.MenuStoreListResponseDTO result =
-                menuQueryService.getMenusByStoreWithCategory(storeId, categoryId, cursor, size,user);
+                menuQueryService.getMenusByStoreWithCategory(storeId, categoryId, user);
         return CustomResponse.onSuccess(HttpStatus.OK, result);
     }
 

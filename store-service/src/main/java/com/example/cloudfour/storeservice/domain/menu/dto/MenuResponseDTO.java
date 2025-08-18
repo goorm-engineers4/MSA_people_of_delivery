@@ -14,7 +14,6 @@ public class MenuResponseDTO {
     public static class MenuDetailResponseDTO {
         @JsonUnwrapped
         MenuCommonResponseDTO menuCommonResponseDTO;
-        private String storeName;
         private String content;
         private java.time.LocalDateTime createdAt;
         private java.time.LocalDateTime updatedAt;
@@ -67,7 +66,5 @@ public class MenuResponseDTO {
     @Builder
     public static class MenuStoreListResponseDTO {
         private java.util.List<MenuListResponseDTO> menus;
-        private Boolean hasNext;
-        private java.time.LocalDateTime nextCursor;
     }
 }
