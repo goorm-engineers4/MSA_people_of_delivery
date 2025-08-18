@@ -21,20 +21,12 @@ public class EmailServiceImpl implements EmailService {
         helper.setTo(toEmail);
         helper.setSubject(title);
         helper.setText(content, true);
-        helper.setReplyTo("shieunmo@gmail.com");
+        helper.setReplyTo("rlawldbs1007@gmail.com");
         try{
             emailSender.send(message);
         } catch (RuntimeException e){
             e.printStackTrace();
             throw new RuntimeException("Unable to send email in sendEmail", e);
         }
-    }
-
-    public SimpleMailMessage createEmailForm(String toEmail, String title, String text) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject(title);
-        message.setText(text);
-        return message;
     }
 }
