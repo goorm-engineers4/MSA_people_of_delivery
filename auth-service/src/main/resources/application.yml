@@ -36,6 +36,7 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
+      database: 0
 
   mail:
     host: smtp.gmail.com
@@ -62,3 +63,14 @@ jwt:
   jwks:
     enabled: true
     key-id: auth-key-1
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
