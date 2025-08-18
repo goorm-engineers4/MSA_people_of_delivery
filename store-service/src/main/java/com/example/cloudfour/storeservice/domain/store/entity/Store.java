@@ -83,6 +83,7 @@ public class Store extends BaseEntity {
     private UUID ownerId;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean userIsDeleted = false;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "store", cascade = CascadeType.ALL)
