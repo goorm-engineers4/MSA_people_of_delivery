@@ -7,6 +7,7 @@ public class AuthResponseDTO {
             UUID id,
             String email,
             String role,
+            String name,
             boolean emailVerified
     ) {}
 

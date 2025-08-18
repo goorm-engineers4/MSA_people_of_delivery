@@ -40,7 +40,7 @@ public class UserCommandService {
 
         userRepository.save(user);
         return new AuthResponseDTO.UserBriefResponseDTO(
-                user.getId(), user.getEmail(), user.getRole().name(), user.isEmailVerified()
+                user.getId(), user.getEmail(), user.getRole().name(), user.getNickname(), user.isEmailVerified()
         );
     }
 

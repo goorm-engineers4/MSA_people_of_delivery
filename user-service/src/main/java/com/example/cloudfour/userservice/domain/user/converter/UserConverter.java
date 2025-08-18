@@ -4,6 +4,7 @@ import com.example.cloudfour.userservice.domain.user.dto.UserResponseDTO;
 import com.example.cloudfour.userservice.domain.user.entity.User;
 import com.example.cloudfour.userservice.domain.user.entity.UserAddress;
 import com.example.cloudfour.userservice.domain.region.entity.Region;
+import com.example.cloudfour.userservice.domain.user.enums.AddressStatus;
 
 import java.util.List;
 
@@ -36,6 +37,7 @@ public class UserConverter {
     public static UserAddress toUserAddress(String address, User user, Region region) {
         UserAddress ua = UserAddress.builder()
                 .address(address)
+                .addressStatus(AddressStatus.PRIMARY)
                 .build();
         ua.setUser(user);
         ua.setRegion(region);
