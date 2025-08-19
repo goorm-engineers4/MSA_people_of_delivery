@@ -1,8 +1,8 @@
 package com.example.cloudfour.storeservice.domain.menu.service.query;
 
-import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
-import com.example.cloudfour.storeservice.domain.collection.repository.StoreSearchRepository;
+import com.example.cloudfour.storeservice.domain.collection.repository.query.StoreSearchRepository;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuConverter;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuOptionConverter;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuResponseDTO;
@@ -34,7 +34,7 @@ public class MenuQueryService {
     private final StoreSearchRepository storeMongoRepository;
 
     public MenuResponseDTO.MenuStoreListResponseDTO getMenusByStoreWithCursor(
-            UUID storeId, GatewayPrincipal user
+            UUID storeId, CurrentUser user
     ) {
         storeMongoRepository.findStoreByStoreId(storeId).orElseThrow(() -> {
             log.warn("존재하지 않는 가게");
@@ -65,7 +65,7 @@ public class MenuQueryService {
     }
 
     public MenuResponseDTO.MenuStoreListResponseDTO getMenusByStoreWithCategory(
-            UUID storeId, UUID categoryId,GatewayPrincipal user
+            UUID storeId, UUID categoryId,CurrentUser user
     ) {
         storeMongoRepository.findStoreByStoreId(storeId)
                 .orElseThrow(() -> {
@@ -128,7 +128,7 @@ public class MenuQueryService {
 //                .toList();
 //    }
 
-    public MenuResponseDTO.MenuDetailResponseDTO getMenuDetail(UUID menuId,GatewayPrincipal user) {
+    public MenuResponseDTO.MenuDetailResponseDTO getMenuDetail(UUID menuId,CurrentUser user) {
         if(user==null){
             log.warn("메뉴 상세 조회 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
@@ -148,7 +148,7 @@ public class MenuQueryService {
         return MenuConverter.toMenuDetail2ResponseDTO(storeDocument, optionDTOs);
     }
 
-    public MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO getMenuOptionsByMenu(UUID menuId,GatewayPrincipal user) {
+    public MenuOptionResponseDTO.MenuOptionsByMenuResponseDTO getMenuOptionsByMenu(UUID menuId,CurrentUser user) {
         if(user==null){
             log.warn("메뉴 별 메뉴 옵션 조회 권한 없음");
             throw new MenuOptionException(MenuOptionErrorCode.UNAUTHORIZED_ACCESS);
@@ -171,7 +171,7 @@ public class MenuQueryService {
                 .build();
     }
 
-    public MenuOptionResponseDTO.MenuOptionSimpleResponseDTO getMenuOptionDetail(UUID optionId,GatewayPrincipal user) {
+    public MenuOptionResponseDTO.MenuOptionSimpleResponseDTO getMenuOptionDetail(UUID optionId,CurrentUser user) {
         if(user==null){
             log.warn("메뉴 옵션 상세 조회 권한 없음");
             throw new MenuOptionException(MenuOptionErrorCode.UNAUTHORIZED_ACCESS);

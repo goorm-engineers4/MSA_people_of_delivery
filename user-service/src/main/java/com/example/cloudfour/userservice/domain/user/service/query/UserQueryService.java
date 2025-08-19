@@ -47,7 +47,7 @@ public class UserQueryService {
 
     private static AuthResponseDTO.UserBriefResponseDTO toBrief(User u) {
         return new AuthResponseDTO.UserBriefResponseDTO(
-                u.getId(), u.getEmail(), u.getRole().name(), u.isEmailVerified()
+                u.getId(), u.getEmail(), u.getRole().name(), u.getNickname(), u.isEmailVerified()
         );
     }
 }

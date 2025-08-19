@@ -1,7 +1,7 @@
 package com.example.cloudfour.storeservice.domain.review.controller;
 
 import com.example.cloudfour.modulecommon.apiPayLoad.CustomResponse;
-import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewRequestDTO;
 import com.example.cloudfour.storeservice.domain.review.dto.ReviewResponseDTO;
 import com.example.cloudfour.storeservice.domain.review.service.command.ReviewCommandService;
@@ -26,7 +26,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/reviews")
+@RequestMapping("/reviews")
 @Tag(name = "Review", description = "리뷰 API by 김준형")
 public class ReviewController {
     private final ReviewCommandService reviewCommandService;
@@ -36,7 +36,7 @@ public class ReviewController {
     @Operation(summary = "리뷰 생성", description = "리뷰를 생성합니다. 리뷰 생성에 사용되는 API입니다.")
     public CustomResponse<ReviewResponseDTO.ReviewCreateResponseDTO> createReview(
         @RequestBody ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO,
-        @AuthenticationPrincipal GatewayPrincipal user
+        @AuthenticationPrincipal CurrentUser user
     ){
         ReviewResponseDTO.ReviewCreateResponseDTO review = reviewCommandService.createReview(reviewCreateRequestDTO,user);
         return CustomResponse.onSuccess(HttpStatus.CREATED, review);
@@ -47,7 +47,7 @@ public class ReviewController {
     public CustomResponse<ReviewResponseDTO.ReviewUpdateResponseDTO> updateReview(
             @RequestBody ReviewRequestDTO.ReviewUpdateRequestDTO reviewUpdateRequestDTO,
             @PathVariable("reviewId") UUID reviewId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ){
         ReviewResponseDTO.ReviewUpdateResponseDTO review = reviewCommandService.updateReview(reviewUpdateRequestDTO,reviewId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, review);
@@ -57,7 +57,7 @@ public class ReviewController {
     @Operation(summary = "리뷰 삭제", description = "리뷰를 삭제합니다. 리뷰 삭제에 사용되는 API입니다.")
     public CustomResponse<String> deleteReview(
             @PathVariable("reviewId") UUID reviewId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ){
         reviewCommandService.deleteReview(reviewId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, "리뷰 삭제 완료");
@@ -67,7 +67,7 @@ public class ReviewController {
     @Operation(summary = "리뷰 상세 조회", description = "리뷰를 상세 조회합니다. 리뷰 상세 조회에 사용되는 API입니다.")
     public CustomResponse<ReviewResponseDTO.ReviewDetailResponseDTO> getReview(
             @PathVariable("reviewId") UUID reviewId,
-            @AuthenticationPrincipal GatewayPrincipal user
+            @AuthenticationPrincipal CurrentUser user
     ){
         ReviewResponseDTO.ReviewDetailResponseDTO review = reviewQueryService.getReviewById(reviewId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, review);
@@ -78,7 +78,7 @@ public class ReviewController {
     @Parameter(name = "cursor", description = "데이터가 시작하는 부분을 표시합니다")
     @Parameter(name = "size", description = "size만큼 데이터를 가져옵니다.")
     public CustomResponse<ReviewResponseDTO.ReviewUserListResponseDTO> getUserReviews(
-            @AuthenticationPrincipal GatewayPrincipal user,
+            @AuthenticationPrincipal CurrentUser user,
             @RequestParam(name = "cursor", required = false) LocalDateTime cursor,
             @RequestParam(name = "size", defaultValue = "10") Integer size
     ){
@@ -92,7 +92,7 @@ public class ReviewController {
     @Parameter(name = "size", description = "size만큼 데이터를 가져옵니다.")
     public CustomResponse<ReviewResponseDTO.ReviewStoreListResponseDTO> getStoreReviews(
             @PathVariable("storeId") UUID storeId,
-            @AuthenticationPrincipal GatewayPrincipal user,
+            @AuthenticationPrincipal CurrentUser user,
             @RequestParam(name = "cursor", required = false) LocalDateTime cursor,
             @RequestParam(name = "size", defaultValue = "10") Integer size
     ){

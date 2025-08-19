@@ -1,6 +1,6 @@
 package com.example.cloudfour.storeservice.domain.menu.service.command;
 
-import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuConverter;
 import com.example.cloudfour.storeservice.domain.menu.converter.MenuOptionConverter;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuRequestDTO;
@@ -41,7 +41,7 @@ public class MenuCommandService {
     public MenuResponseDTO.MenuDetailResponseDTO createMenu(
             MenuRequestDTO.MenuCreateRequestDTO requestDTO,
             UUID storeId,
-            GatewayPrincipal user
+            CurrentUser user
     ) {
         Store store = storeRepository.findByIdAndIsDeletedFalse(storeId)
                 .orElseThrow(() -> {
@@ -49,7 +49,7 @@ public class MenuCommandService {
                     return new StoreException(StoreErrorCode.NOT_FOUND);
                 });
 
-        if (user == null || !store.getOwnerId().equals(user.userId())) {
+        if (user == null || !store.getOwnerId().equals(user.id())) {
             log.warn("메뉴 생성 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
@@ -80,7 +80,7 @@ public class MenuCommandService {
     public MenuResponseDTO.MenuDetailResponseDTO updateMenu(
             UUID menuId,
             MenuRequestDTO.MenuUpdateRequestDTO requestDTO,
-            GatewayPrincipal user
+            CurrentUser user
     ) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> {
@@ -88,7 +88,7 @@ public class MenuCommandService {
                     return new MenuException(MenuErrorCode.NOT_FOUND);
                 });
 
-        if (user == null || !menu.getStore().getOwnerId().equals(user.userId())) {
+        if (user == null || !menu.getStore().getOwnerId().equals(user.id())) {
             log.warn("메뉴 수정 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
@@ -117,14 +117,14 @@ public class MenuCommandService {
     }
 
     
-    public void deleteMenu(UUID menuId, GatewayPrincipal user) {
+    public void deleteMenu(UUID menuId, CurrentUser user) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 메뉴");
                     return new MenuException(MenuErrorCode.NOT_FOUND);
                 });
 
-        if (user == null || !menu.getStore().getOwnerId().equals(user.userId())) {
+        if (user == null || !menu.getStore().getOwnerId().equals(user.id())) {
             log.warn("메뉴 삭제 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
@@ -135,7 +135,7 @@ public class MenuCommandService {
 
     public MenuOptionResponseDTO.MenuOptionSimpleResponseDTO createMenuOption(
             MenuRequestDTO.MenuOptionCreateRequestDTO requestDTO,
-            GatewayPrincipal user, UUID menuId
+            CurrentUser user, UUID menuId
     ) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> {
@@ -144,7 +144,7 @@ public class MenuCommandService {
                 });
 
 
-        if (user == null || !menu.getStore().getOwnerId().equals(user.userId())) {
+        if (user == null || !menu.getStore().getOwnerId().equals(user.id())) {
             log.warn("메뉴 옵션 생성 권한 없음");
             throw new MenuOptionException(MenuOptionErrorCode.UNAUTHORIZED_ACCESS);
         }
@@ -169,7 +169,7 @@ public class MenuCommandService {
     public MenuOptionResponseDTO.MenuOptionSimpleResponseDTO updateMenuOption(
             UUID optionId,
             MenuRequestDTO.MenuOptionUpdateRequestDTO requestDTO,
-            GatewayPrincipal user
+            CurrentUser user
     ) {
         MenuOption menuOption = menuOptionRepository.findByIdWithMenu(optionId)
                 .orElseThrow(() -> {
@@ -177,7 +177,7 @@ public class MenuCommandService {
                     return new MenuOptionException(MenuOptionErrorCode.NOT_FOUND);
                 });
 
-        if (user==null || !menuOption.getMenu().getStore().getOwnerId().equals(user.userId())) {
+        if (user==null || !menuOption.getMenu().getStore().getOwnerId().equals(user.id())) {
             log.warn("메뉴 옵션 수정 권한 없음");
             throw new MenuOptionException(MenuOptionErrorCode.UNAUTHORIZED_ACCESS);
         }
@@ -195,14 +195,14 @@ public class MenuCommandService {
     }
 
     
-    public void deleteMenuOption(UUID optionId, GatewayPrincipal user) {
+    public void deleteMenuOption(UUID optionId, CurrentUser user) {
         MenuOption menuOption = menuOptionRepository.findByIdWithMenu(optionId)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 메뉴옵션");
                     return new MenuOptionException(MenuOptionErrorCode.NOT_FOUND);
                 });
 
-        if (user == null || !menuOption.getMenu().getStore().getOwnerId().equals(user.userId())) {
+        if (user == null || !menuOption.getMenu().getStore().getOwnerId().equals(user.id())) {
             log.warn("메뉴 옵션 삭제 권한 없음");
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }

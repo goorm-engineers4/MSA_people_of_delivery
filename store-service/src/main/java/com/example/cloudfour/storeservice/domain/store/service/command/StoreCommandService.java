@@ -1,6 +1,6 @@
 package com.example.cloudfour.storeservice.domain.store.service.command;
 
-import com.example.cloudfour.storeservice.config.GatewayPrincipal;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import com.example.cloudfour.storeservice.domain.region.entity.Region;
 import com.example.cloudfour.storeservice.domain.region.exception.RegionErrorCode;
 import com.example.cloudfour.storeservice.domain.region.exception.RegionException;
@@ -34,7 +34,7 @@ public class StoreCommandService {
 
     public StoreResponseDTO.StoreCreateResponseDTO createStore(
             StoreRequestDTO.StoreCreateRequestDTO dto,
-            GatewayPrincipal user
+            CurrentUser user
     ) {
 
         if(user==null){
@@ -64,7 +64,7 @@ public class StoreCommandService {
         Store store = StoreConverter.toStore(dto);
         store.setStoreCategory(category);
         store.setRegion(region);
-        store.setOwnerId(user.userId());
+        store.setOwnerId(user.id());
 
         storeRepository.save(store);
         log.info("가게 저장 성공");
@@ -74,7 +74,7 @@ public class StoreCommandService {
     public StoreResponseDTO.StoreUpdateResponseDTO updateStore(
             UUID storeId,
             StoreRequestDTO.StoreUpdateRequestDTO dto,
-            GatewayPrincipal user
+            CurrentUser user
     ) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() ->{
@@ -82,7 +82,7 @@ public class StoreCommandService {
                     return new StoreException(StoreErrorCode.NOT_FOUND);
                 });
 
-        if (user == null || !store.getOwnerId().equals(user.userId())) {
+        if (user == null || !store.getOwnerId().equals(user.id())) {
             log.warn("가게 수정 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
@@ -108,14 +108,14 @@ public class StoreCommandService {
     }
 
     
-    public void deleteStore(UUID storeId, GatewayPrincipal user) {
+    public void deleteStore(UUID storeId, CurrentUser user) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 가게");
                     return new StoreException(StoreErrorCode.NOT_FOUND);
                 });
 
-        if (user==null || !store.getOwnerId().equals(user.userId())) {
+        if (user==null || !store.getOwnerId().equals(user.id())) {
             log.warn("가게 삭제 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }

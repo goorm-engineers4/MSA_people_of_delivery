@@ -8,7 +8,6 @@ import com.example.cloudfour.cartservice.cartitem.entity.CartItem;
 import com.example.cloudfour.cartservice.cartitem.exception.CartItemException;
 import com.example.cloudfour.cartservice.cartitem.repository.CartItemRepository;
 import com.example.cloudfour.cartservice.commondto.UserAddressResponseDTO;
-import com.example.cloudfour.cartservice.config.GatewayPrincipal;
 import com.example.cloudfour.cartservice.order.converter.OrderConverter;
 import com.example.cloudfour.cartservice.order.converter.OrderItemConverter;
 import com.example.cloudfour.cartservice.order.dto.OrderRequestDTO;
@@ -20,6 +19,7 @@ import com.example.cloudfour.cartservice.order.exception.OrderErrorCode;
 import com.example.cloudfour.cartservice.order.exception.OrderException;
 import com.example.cloudfour.cartservice.order.repository.OrderItemRepository;
 import com.example.cloudfour.cartservice.order.repository.OrderRepository;
+import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,18 +41,18 @@ public class OrderCommandService {
     private final RestTemplate restTemplate;
 
 
-    public OrderResponseDTO.OrderCreateResponseDTO createOrder(OrderRequestDTO.OrderCreateRequestDTO orderCreateRequestDTO, UUID cartId, GatewayPrincipal user) {
+    public OrderResponseDTO.OrderCreateResponseDTO createOrder(OrderRequestDTO.OrderCreateRequestDTO orderCreateRequestDTO, UUID cartId, CurrentUser user) {
         Cart cart = cartRepository.findById(cartId).orElseThrow(()->{
             log.warn("존재하지 않는 장바구니");
             return new CartException(CartErrorCode.NOT_FOUND);
         });
-        if(user == null || !cartRepository.existsByUserAndCart(user.userId(), cartId)){
+        if(user == null || !cartRepository.existsByUserAndCart(user.id(), cartId)){
             log.warn("주문 생성 권한 없음");
             throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
         }
-        UserAddressResponseDTO userAddress = restTemplate.getForObject("http://user-service/api/users/{userId}",UserAddressResponseDTO.class, user.userId());
+        UserAddressResponseDTO userAddress = restTemplate.getForObject("http://user-service/api/users/{userId}",UserAddressResponseDTO.class, user.id());
         UUID findStore = restTemplate.getForObject("http://store-service/api/stores/{storeId}", UUID.class,cart.getStore());
-        List<CartItem> cartItems = cartItemRepository.findAllByCartId(cartId,user.userId());
+        List<CartItem> cartItems = cartItemRepository.findAllByCartId(cartId,user.id());
         if(cartItems.isEmpty()) {
             log.warn("존재하지 않는 장바구니 아이템");
             throw new CartItemException(CartErrorCode.NOT_FOUND);
@@ -64,7 +64,7 @@ public class OrderCommandService {
         }
         Order order = OrderConverter.toOrder(orderCreateRequestDTO,totalPrice,userAddress.getAddress());
         order.setStore(findStore);
-        order.setUser(user.userId());
+        order.setUser(user.id());
         orderRepository.save(order);
         log.info("주문 생성 완료. 주문 아이템 생성, 장바구니 삭제 남음");
         List<OrderItem> orderItems = cartItems.stream().map(cartItem -> OrderItemConverter.CartItemtoOrderItem(cartItem, order)).toList();
@@ -75,8 +75,8 @@ public class OrderCommandService {
         return OrderConverter.toOrderCreateResponseDTO(order);
     }
 
-    public OrderResponseDTO.OrderUpdateResponseDTO updateOrder(OrderRequestDTO.OrderUpdateRequestDTO orderUpdateRequestDTO, UUID orderId, GatewayPrincipal user) {
-        if(user == null || !orderRepository.existsByOrderIdAndUserId(orderId, user.userId())) {
+    public OrderResponseDTO.OrderUpdateResponseDTO updateOrder(OrderRequestDTO.OrderUpdateRequestDTO orderUpdateRequestDTO, UUID orderId, CurrentUser user) {
+        if(user == null || !orderRepository.existsByOrderIdAndUserId(orderId, user.id())) {
             log.warn("주문 수정 권한 없음");
             throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
         }
@@ -92,8 +92,8 @@ public class OrderCommandService {
         return OrderConverter.toOrderUpdateResponseDTO(order,prev_orderStatus);
     }
 
-    public void deleteOrder(UUID orderId, GatewayPrincipal user) {
-        if(user == null || !orderRepository.existsByOrderIdAndUserId(orderId, user.userId())) {
+    public void deleteOrder(UUID orderId, CurrentUser user) {
+        if(user == null || !orderRepository.existsByOrderIdAndUserId(orderId, user.id())) {
             log.warn("주문 삭제 권한 없음");
             throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
         }
