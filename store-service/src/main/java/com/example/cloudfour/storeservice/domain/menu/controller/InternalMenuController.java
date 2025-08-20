@@ -18,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
@@ -29,13 +31,24 @@ public class InternalMenuController {
     private final MenuRepository menuQuery;
     private final MenuOptionRepository menuOptionQuery;
 
+    @RequestMapping(value = "/exists", method = RequestMethod.HEAD)
+    public CustomResponse<Boolean> existsByMenuId(@RequestParam UUID menuId) {
+        boolean exists = menuQuery.existsById(menuId);
+
+        if (exists) {
+            return CustomResponse.onSuccess(HttpStatus.OK, true);
+        } else {
+            return CustomResponse.onSuccess(HttpStatus.NOT_FOUND, false);
+        }
+    }
+
     @GetMapping("/{menuId}")
     public CustomResponse<MenuResponseDTO.MenuDetailResponseDTO> getMenuDetail(
             @PathVariable("menuId") UUID menuId) {
 
         Menu findMenu = menuQuery.findById(menuId).orElseThrow(()->new MenuException(MenuErrorCode.NOT_FOUND));
         MenuResponseDTO.MenuDetailResponseDTO result  = MenuConverter.toMenuDetail1ResponseDTO(findMenu);
-        return CustomResponse.onSuccess(HttpStatus.OK, result);
+        return resul
     }
 
     @GetMapping("/{optionId}")
@@ -48,6 +61,6 @@ public class InternalMenuController {
         );
         MenuOptionResponseDTO.MenuOptionDetailResponseDTO result =
                 MenuOptionConverter.toMenuOptionDetailResponseDTO(findMenuOption);
-        return CustomResponse.onSuccess(HttpStatus.OK, result);
+        return MenuOptionResponseDTO
     }
 }

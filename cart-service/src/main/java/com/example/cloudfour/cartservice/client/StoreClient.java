@@ -19,7 +19,7 @@ public class StoreClient {
 
     public Boolean existStore(UUID storeId) {
         try {
-            rt.headForHeaders(BASE + "/stores/exists");
+            rt.headForHeaders(BASE + "/stores/exists?storeId=" + storeId);
             return true;
         } catch (HttpClientErrorException.NotFound e) {
             return false;
@@ -28,7 +28,7 @@ public class StoreClient {
 
     public Boolean existMenu(UUID menuId) {
         try {
-            rt.headForHeaders(BASE + "/menus/exists");
+            rt.headForHeaders(BASE + "/menus/exists?storeId=" + menuId);
             return true;
         } catch (HttpClientErrorException.NotFound e) {
             return false;

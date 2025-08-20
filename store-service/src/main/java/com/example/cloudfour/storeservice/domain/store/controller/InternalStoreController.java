@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
@@ -21,6 +23,17 @@ import java.util.UUID;
 @RequestMapping("/internal/stores")
 public class InternalStoreController {
     private final StoreRepository query;
+
+    @RequestMapping(value = "/exists", method = RequestMethod.HEAD)
+    public CustomResponse<Boolean> existsByStoreId(@RequestParam UUID storeId) {
+        boolean exists = query.existsByIdAndIsDeletedFalse(storeId);
+
+        if (exists) {
+            return CustomResponse.onSuccess(HttpStatus.OK, true);
+        } else {
+            return CustomResponse.onSuccess(HttpStatus.NOT_FOUND, false);
+        }
+    }
 
     @GetMapping("/{storeId}")
     public CustomResponse<StoreResponseDTO.StoreDetailResponseDTO> getStoreDetail(
