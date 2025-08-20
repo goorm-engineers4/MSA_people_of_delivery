@@ -22,11 +22,19 @@ public class MenuOptionConverter {
                 .build();
     }
 
+    public static MenuOptionResponseDTO.MenuOptionDetailResponseDTO toMenuOptionDetailResponseDTO(MenuOption option) {
+        return MenuOptionResponseDTO.MenuOptionDetailResponseDTO.builder()
+                .menuOptionCommonResponseDTO(toMenuOptionCommonResponseDTO(option))
+                .build();
+    }
 
     public static MenuOptionCommonResponseDTO toMenuOptionCommonResponseDTO(MenuOption option) {
         return MenuOptionCommonResponseDTO.builder()
                 .additionalPrice(option.getAdditionalPrice())
                 .optionName(option.getOptionName())
+                .menuId(option.getMenu().getId())
+                .menuName(option.getMenu().getName())
+                .menuOptionId(option.getId())
                 .build();
     }
 }
