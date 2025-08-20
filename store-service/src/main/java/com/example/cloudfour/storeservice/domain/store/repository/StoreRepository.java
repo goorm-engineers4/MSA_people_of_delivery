@@ -11,4 +11,5 @@ public interface StoreRepository extends JpaRepository<Store, UUID>{
     void deleteAllByCreatedAtBefore(LocalDateTime createdAtBefore);
     Optional<Store> findByIdAndIsDeletedFalse(UUID storeId);
     Boolean existsByNameAndIsDeletedFalse(String name);
+    Boolean existsByIdAndIsDeletedFalse(UUID storeId);
 }
