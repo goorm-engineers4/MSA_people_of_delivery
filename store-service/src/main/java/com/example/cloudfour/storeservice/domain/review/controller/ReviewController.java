@@ -42,6 +42,15 @@ public class ReviewController {
         return CustomResponse.onSuccess(HttpStatus.CREATED, review);
     }
 
+    @PostMapping("/test")
+    public CustomResponse<ReviewResponseDTO.testResponseDTO> createReviewTest(
+            @RequestBody ReviewRequestDTO.testRequestDTO reviewCreateRequestDTO,
+            @AuthenticationPrincipal CurrentUser user
+    ){
+        ReviewResponseDTO.testResponseDTO review = reviewCommandService.createReviewTest(reviewCreateRequestDTO,user);
+        return CustomResponse.onSuccess(HttpStatus.CREATED, review);
+    }
+
     @PatchMapping("/{reviewId}")
     @Operation(summary = "리뷰 수정", description = "리뷰를 수정합니다. 리뷰 수정에 사용되는 API입니다.")
     public CustomResponse<ReviewResponseDTO.ReviewUpdateResponseDTO> updateReview(
