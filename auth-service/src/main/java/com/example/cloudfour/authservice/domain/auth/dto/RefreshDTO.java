@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class RefreshDTO {
-    private final String accessToken;;
+    private final String accessToken;
     private final Long accessTokenExpiresIn;
 }
