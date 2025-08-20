@@ -49,7 +49,7 @@ public class CartController {
         return CustomResponse.onSuccess(HttpStatus.OK, cart);
     }
 
-    @DeleteMapping("/{cartId}/delete")
+    @DeleteMapping("/{cartId}")
     @Operation(summary = "장바구니 삭제", description = "장바구니를 삭제합니다. 장바구니 삭제에 사용되는 API입니다.")
     public CustomResponse<String> deleteCart(
             @PathVariable("cartId") UUID cartId,
