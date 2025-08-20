@@ -41,7 +41,6 @@ public class ReviewQueryService {
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        log.info("상세 리뷰 조회 권한 확인 성공");
         UserResponseDTO findUser =  rt.getForObject(BASE+"/{id}",UserResponseDTO.class,user.id());
 
         if(findUser == null){
@@ -49,12 +48,14 @@ public class ReviewQueryService {
             throw new ReviewException(ReviewErrorCode.UNAUTHORIZED_ACCESS);
         }
 
+        log.info("상세 리뷰 조회 권한 확인 성공");
+
         ReviewDocument findReview = reviewRepository.findById(reviewId).orElseThrow(()->{
             log.warn("존재하지 않는 리뷰");
             return new ReviewException(ReviewErrorCode.NOT_FOUND);
         });
         log.info("상세 리뷰 조회 성공");
-        return ReviewConverter.toReviewDetailResponseDTO(findReview, findUser.getNickname());
+        return ReviewConverter.toReviewDetailResponseDTO(findReview,findReview.getUserName());
     }
 
     public ReviewResponseDTO.ReviewStoreListResponseDTO getReviewListByStore(UUID storeId, LocalDateTime cursor, Integer size, CurrentUser user) {

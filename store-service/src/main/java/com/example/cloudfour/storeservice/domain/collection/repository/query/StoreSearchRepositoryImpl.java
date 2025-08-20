@@ -1,15 +1,16 @@
-package com.example.cloudfour.storeservice.domain.collection.repository;
+package com.example.cloudfour.storeservice.domain.collection.repository.query;
 
 import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.jpa.impl.JPAQueryFactory;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -23,24 +24,39 @@ import java.util.stream.Collectors;
 import static com.example.cloudfour.storeservice.domain.collection.document.QStoreDocument.storeDocument;
 
 @Repository
-@RequiredArgsConstructor
-public class StoreSearchRepositoryImpl implements StoreSearchRepository {
+public class StoreSearchRepositoryImpl extends QuerydslRepositorySupport implements StoreSearchRepository {
 
-    private final JPAQueryFactory query;
     private final MongoTemplate mongoTemplate;
+
+    public StoreSearchRepositoryImpl(@Qualifier("mongoTemplate")MongoOperations operations, MongoTemplate mongoTemplate){
+        super(operations);
+        this.mongoTemplate = mongoTemplate;
+    }
 
     @Override
     public Optional<StoreDocument> findStoreByStoreId(UUID storeId) {
-        return Optional.ofNullable(query.selectFrom(storeDocument)
+
+        return Optional.ofNullable(from(storeDocument)
                 .where(storeDocument.storeId.eq(storeId))
                 .fetchOne());
     }
 
     @Override
-    public Slice<StoreDocument> findAllStoreByCategoryAndCursor(UUID categoryId, LocalDateTime cursor, Pageable pageable) {
+    public Slice<StoreDocument> findAllStoreByCategoryAndCursor(UUID categoryId, LocalDateTime cursor, Pageable pageable, String siDo, String siGunGu, String eupMyeongDong) {
+        BooleanBuilder regionBuilder = new BooleanBuilder();
+        if(siDo!=null){
+            regionBuilder.or(storeDocument.siDo.containsIgnoreCase(siDo));
+        }
+        if(siGunGu!=null){
+            regionBuilder.or(storeDocument.siGunGu.containsIgnoreCase(siGunGu));
+        }
+        if(eupMyeongDong!=null){
+            regionBuilder.or(storeDocument.eupMyeonDong.containsIgnoreCase(eupMyeongDong));
+        }
+
         int pageSize = pageable.getPageSize();
-        List<StoreDocument> stores = query.selectFrom(storeDocument)
-                .where(storeDocument.storeCategoryId.eq(categoryId)
+        List<StoreDocument> stores = from(storeDocument)
+                .where(storeDocument.storeCategoryId.eq(categoryId), regionBuilder
                         , storeDocument.createdAt.lt(cursor)).orderBy(storeDocument.createdAt.desc()).limit(pageSize+1)
                 .fetch();
 
@@ -65,17 +81,17 @@ public class StoreSearchRepositoryImpl implements StoreSearchRepository {
 
         BooleanBuilder regionBuilder = new BooleanBuilder();
         if(siDo!=null){
-            regionBuilder.or(storeDocument.siDo.eq(siDo));
+            regionBuilder.or(storeDocument.siDo.containsIgnoreCase(siDo));
         }
         if(siGunGu!=null){
-            regionBuilder.or(storeDocument.siGunGu.eq(siGunGu));
+            regionBuilder.or(storeDocument.siGunGu.containsIgnoreCase(siGunGu));
         }
         if(eupMyeongDong!=null){
-            regionBuilder.or(storeDocument.eupMyeonDong.eq(eupMyeongDong));
+            regionBuilder.or(storeDocument.eupMyeonDong.containsIgnoreCase(eupMyeongDong));
         }
         builder.and(regionBuilder);
 
-        List<StoreDocument> stores = query.selectFrom(storeDocument).where(builder)
+        List<StoreDocument> stores = from(storeDocument).where(builder)
                 .orderBy(storeDocument.createdAt.desc()).limit(pageSize+1).fetch();
         boolean hasNext = stores.size() > pageSize;
         if(hasNext){

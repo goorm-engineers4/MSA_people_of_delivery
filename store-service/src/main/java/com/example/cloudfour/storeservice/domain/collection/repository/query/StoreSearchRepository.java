@@ -1,4 +1,4 @@
-package com.example.cloudfour.storeservice.domain.collection.repository;
+package com.example.cloudfour.storeservice.domain.collection.repository.query;
 
 import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
 import org.springframework.data.domain.Pageable;
@@ -12,7 +12,8 @@ import java.util.UUID;
 public interface StoreSearchRepository {
     Optional<StoreDocument> findStoreByStoreId(UUID storeId);
 
-    Slice<StoreDocument> findAllStoreByCategoryAndCursor(UUID categoryId, LocalDateTime cursor, Pageable pageable);
+    Slice<StoreDocument> findAllStoreByCategoryAndCursor(UUID categoryId, LocalDateTime cursor, Pageable pageable
+    , String siDo, String siGunGu, String eupMyeongDong);
 
     Slice<StoreDocument> findAllStoreByKeyWordAndRegion(String keyword, LocalDateTime cursor, Pageable pageable
             ,String siDo, String siGunGu, String eupMyeongDong);
