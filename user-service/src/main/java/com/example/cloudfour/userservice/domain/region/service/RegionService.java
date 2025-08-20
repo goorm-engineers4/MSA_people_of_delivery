@@ -1,19 +1,27 @@
 package com.example.cloudfour.userservice.domain.region.service;
 
+import com.example.cloudfour.userservice.domain.region.dto.RegionResponseDTO;
 import com.example.cloudfour.userservice.domain.region.entity.Region;
 import com.example.cloudfour.userservice.domain.region.exception.RegionErrorCode;
 import com.example.cloudfour.userservice.domain.region.exception.RegionException;
 import com.example.cloudfour.userservice.domain.region.repository.RegionRepository;
 import com.example.cloudfour.userservice.domain.region.util.RegionParser;
+import com.example.cloudfour.userservice.domain.user.entity.UserAddress;
+import com.example.cloudfour.userservice.domain.user.exception.UserAddressErrorCode;
+import com.example.cloudfour.userservice.domain.user.exception.UserAddressException;
+import com.example.cloudfour.userservice.domain.user.repository.UserAddressRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class RegionService {
     private final RegionRepository regionRepository;
+    private final UserAddressRepository userAddressRepository;
 
     @Transactional
     public Region getOrCreateFromAddress(String fullAddress) {
@@ -40,7 +48,7 @@ public class RegionService {
         }
     }
 
-    private static record Sgd(String siDo, String siGunGu, String eupMyeonDong) {}
+    private record Sgd(String siDo, String siGunGu, String eupMyeonDong) {}
 
     private static Sgd normalize(String siDo, String siGunGu, String eupMyeonDong) {
         return new Sgd(nn(siDo), nn(siGunGu), nn(eupMyeonDong));
@@ -50,6 +58,17 @@ public class RegionService {
         String out = v.trim().replaceAll("\\s+", " ");
         if (out.isEmpty()) throw new RegionException(RegionErrorCode.INTERNAL_ERROR);
         return out;
+    }
+
+    public RegionResponseDTO getRegion(UUID userId){
+        UserAddress findUserAddress = userAddressRepository.findPrimaryByIdAndUserId(userId)
+                .orElseThrow(()->new UserAddressException(UserAddressErrorCode.NOT_FOUND));
+        Region region = findUserAddress.getRegion();
+        return RegionResponseDTO.builder()
+                .siDo(region.getSiDo())
+                .eupMyeonDong(region.getEupMyeonDong())
+                .siGunGu(region.getSiGunGu())
+                .build();
     }
 }
 

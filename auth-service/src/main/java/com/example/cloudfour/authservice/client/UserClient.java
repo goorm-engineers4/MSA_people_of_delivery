@@ -1,7 +1,7 @@
 package com.example.cloudfour.authservice.client;
 
 import com.example.cloudfour.authservice.domain.auth.dto.UserRequestDTO;
-import com.example.cloudfour.authservice.domain.auth.dto.UserResposneDTO;
+import com.example.cloudfour.authservice.domain.auth.dto.UserResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -15,26 +15,26 @@ public class UserClient {
 
     private static final String BASE = "http://user-service/internal/users";
 
-    public UserResposneDTO.ExistsByEmailResponseDTO existsByEmail(String email) {
-        return rt.getForObject(BASE + "/exists?email={email}", UserResposneDTO.ExistsByEmailResponseDTO.class, email);
+    public UserResponseDTO.ExistsByEmailResponseDTO existsByEmail(String email) {
+        return rt.getForObject(BASE + "/exists?email={email}", UserResponseDTO.ExistsByEmailResponseDTO.class, email);
     }
 
-    public UserResposneDTO.UserBriefResponseDTO create(UserRequestDTO.CreateUserRequestDTO req) {
-        return rt.postForObject(BASE, req, UserResposneDTO.UserBriefResponseDTO.class);
+    public UserResponseDTO.UserBriefResponseDTO create(UserRequestDTO.CreateUserRequestDTO req) {
+        return rt.postForObject(BASE, req, UserResponseDTO.UserBriefResponseDTO.class);
     }
 
-    public UserResposneDTO.UserBriefResponseDTO byEmail(String email) {
-        return rt.getForObject(BASE + "/by-email?email={email}", UserResposneDTO.UserBriefResponseDTO.class, email);
+    public UserResponseDTO.UserBriefResponseDTO byEmail(String email) {
+        return rt.getForObject(BASE + "/by-email?email={email}", UserResponseDTO.UserBriefResponseDTO.class, email);
     }
 
-    public UserResposneDTO.UserBriefResponseDTO byId(UUID id) {
-        return rt.getForObject(BASE + "/{id}", UserResposneDTO.UserBriefResponseDTO.class, id);
+    public UserResponseDTO.UserBriefResponseDTO byId(UUID id) {
+        return rt.getForObject(BASE + "/{id}", UserResponseDTO.UserBriefResponseDTO.class, id);
     }
 
-    public UserResposneDTO.PasswordVerifyResponseDTO verifyPassword(UUID id, String rawPassword) {
+    public UserResponseDTO.PasswordVerifyResponseDTO verifyPassword(UUID id, String rawPassword) {
         return rt.postForObject(BASE + "/{id}/verify-password",
                 new UserRequestDTO.PasswordVerifyRequestDTO(rawPassword),
-                UserResposneDTO.PasswordVerifyResponseDTO.class, id);
+                UserResponseDTO.PasswordVerifyResponseDTO.class, id);
     }
 
     public void markEmailVerified(UUID id) {

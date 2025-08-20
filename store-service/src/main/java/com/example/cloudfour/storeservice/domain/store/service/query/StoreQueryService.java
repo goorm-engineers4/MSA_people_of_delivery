@@ -3,6 +3,9 @@ package com.example.cloudfour.storeservice.domain.store.service.query;
 import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
 import com.example.cloudfour.storeservice.domain.collection.repository.query.StoreSearchRepository;
+import com.example.cloudfour.storeservice.domain.commondto.RegionResponseDTO;
+import com.example.cloudfour.storeservice.domain.region.exception.RegionErrorCode;
+import com.example.cloudfour.storeservice.domain.region.exception.RegionException;
 import com.example.cloudfour.storeservice.domain.store.converter.StoreConverter;
 import com.example.cloudfour.storeservice.domain.store.dto.StoreResponseDTO;
 import com.example.cloudfour.storeservice.domain.store.exception.StoreErrorCode;
@@ -13,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +28,8 @@ import java.util.UUID;
 public class StoreQueryService {
 
     private final StoreSearchRepository storeMongoRepository;
+    private final RestTemplate rt;
+    private static final String BASE = "http://user-service/internal/regions";
 
     public StoreResponseDTO.StoreCursorListResponseDTO getAllStores(
             LocalDateTime cursor, int size, String keyword, CurrentUser user
@@ -32,21 +38,16 @@ public class StoreQueryService {
             log.warn("가게 목록 조회 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
-        log.info("가게 검색 목록 조회 권한 확인 성공");
-        String siDo = "서울특별시";
-        String siGunGu = "서초구";
-        String eupMyeongDong = "양재동";
-        if(user.id()==null){
-            siDo = "서울특별시";
-            siGunGu = "서초구";
-            eupMyeongDong = "양재동";
+        RegionResponseDTO findRegion =  rt.getForObject(BASE+"/{userId}",RegionResponseDTO.class,user.id());
+        if(findRegion == null){
+            log.warn("존재하지 않는 지역");
+            throw new RegionException(RegionErrorCode.NOT_FOUND);
         }
-        //else{
-            //userid를 통해 userRegion 정보 가져오기, 시군구 정보 입력해서 storeRegion이랑 비교
-        //}
+        log.info("가게 검색 목록 조회 권한 확인 성공");
         LocalDateTime baseTime = (cursor != null) ? cursor : LocalDateTime.now();
         Pageable pageable = PageRequest.of(0, size);
-        Slice<StoreDocument> storeSlice = storeMongoRepository.findAllStoreByKeyWordAndRegion(keyword, baseTime, pageable,siDo,siGunGu,eupMyeongDong);
+        Slice<StoreDocument> storeSlice = storeMongoRepository.findAllStoreByKeyWordAndRegion(keyword, baseTime, pageable,
+                findRegion.getSiDo(), findRegion.getSiGunGu(), findRegion.getEupMyeonDong());
 
         List<StoreResponseDTO.StoreListResponseDTO> storeList = storeSlice.getContent().stream()
                 .map(StoreConverter::toStoreListResponseDTO)
@@ -66,10 +67,16 @@ public class StoreQueryService {
             log.warn("카테고리 별 가게 목록 조회 권한 없음");
             throw new StoreException(StoreErrorCode.UNAUTHORIZED_ACCESS);
         }
-        log.info("가게 카테고리 별 목록 조회 확인 성공");
+        RegionResponseDTO findRegion =  rt.getForObject(BASE+"/{userId}",RegionResponseDTO.class,user.id());
+        if(findRegion == null){
+            log.warn("존재하지 않는 지역");
+            throw new RegionException(RegionErrorCode.NOT_FOUND);
+        }
+        log.info("가게 카테고리 별 목록 조회 권한 확인 성공");
         LocalDateTime baseTime = (cursor != null) ? cursor : LocalDateTime.now();
         Pageable pageable = PageRequest.of(0, size);
-        Slice<StoreDocument> storeSlice = storeMongoRepository.findAllStoreByCategoryAndCursor(categoryId, baseTime, pageable);
+        Slice<StoreDocument> storeSlice = storeMongoRepository.findAllStoreByCategoryAndCursor(categoryId, baseTime, pageable
+        , findRegion.getSiDo(), findRegion.getSiGunGu(), findRegion.getEupMyeonDong());
 
         List<StoreResponseDTO.StoreListResponseDTO> storeList = storeSlice.getContent().stream()
                 .map(StoreConverter::toStoreListResponseDTO)

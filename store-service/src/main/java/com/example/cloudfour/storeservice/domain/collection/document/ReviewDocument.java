@@ -1,6 +1,5 @@
 package com.example.cloudfour.storeservice.domain.collection.document;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,7 +11,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -20,7 +18,8 @@ import java.util.UUID;
 @Document("review-service")
 public class ReviewDocument {
     @Id
-    private UUID id;
+    private String id;
+
     private UUID reviewId;
     private UUID userId;
     private UUID storeId;

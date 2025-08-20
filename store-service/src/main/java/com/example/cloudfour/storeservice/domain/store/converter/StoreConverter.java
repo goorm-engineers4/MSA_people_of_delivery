@@ -62,7 +62,16 @@ public class StoreConverter {
                 .build();
     }
 
-    public static StoreResponseDTO.StoreDetailResponseDTO toStoreDetailResponseDTO(StoreDocument storeDocument) {
+    public static StoreResponseDTO.StoreDetailResponseDTO toStoreDetailResponseDTO(Store store) {
+        return StoreResponseDTO.StoreDetailResponseDTO.builder()
+                .userId(store.getOwnerId())
+                .storeCommonMainResponseDTO(toStoreCommonMainResponseDTO(store))
+                .storeCommonOptionResponseDTO(toStoreCommonOptionResponseDTO(store))
+                .storeCommonsBaseResponseDTO(toStoreCommonBaseResponseDTO(store))
+                .build();
+    }
+
+    public static StoreResponseDTO.StoreDetailResponseDTO documentToStoreDetailResponseDTO(StoreDocument storeDocument) {
         return StoreResponseDTO.StoreDetailResponseDTO.builder()
                 .userId(storeDocument.getUserId())
                 .storeCommonMainResponseDTO(documentToStoreCommonMainResponseDTO(storeDocument))
@@ -89,6 +98,13 @@ public class StoreConverter {
                 .name(store.getName())
                 .address(store.getAddress())
                 .storePicture(store.getStorePicture())
+                .build();
+    }
+
+    public static StoreCommonResponseDTO.StoreCommonOptionResponseDTO toStoreCommonOptionResponseDTO(Store store){
+        return StoreCommonResponseDTO.StoreCommonOptionResponseDTO.builder()
+                .rating(store.getRating())
+                .reviewCount(store.getReviewCount())
                 .build();
     }
 

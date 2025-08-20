@@ -1,4 +1,4 @@
-package com.example.cloudfour.storeservice.domain.collection.repository;
+package com.example.cloudfour.storeservice.domain.collection.repository.query;
 
 import com.example.cloudfour.storeservice.domain.collection.document.ReviewDocument;
 import org.springframework.data.domain.Pageable;
