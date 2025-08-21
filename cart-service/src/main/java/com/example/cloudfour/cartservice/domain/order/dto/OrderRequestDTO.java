@@ -16,7 +16,6 @@ public class OrderRequestDTO {
         OrderStatus orderStatus;
         ReceiptType receiptType;
         String request;
-        UUID address;
     }
 
     @Getter

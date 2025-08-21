@@ -54,8 +54,6 @@ public class Order extends BaseEntity {
     @Column(name = "storeId", nullable = false)
     private UUID store;
 
-    @Column(name = "paymentId", nullable = false)
-    private UUID payment;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @Builder.Default
@@ -75,9 +73,6 @@ public class Order extends BaseEntity {
         this.store = store;
     }
 
-    public void setPayment(UUID payment){
-        this.payment = payment;
-    }
 
     public void updateOrderStatus(OrderStatus orderStatus){
         this.status = orderStatus;
