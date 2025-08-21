@@ -10,6 +10,7 @@ public class CartItemConverter {
 
     public static CartItemResponseDTO.CartItemAddResponseDTO toCartItemAddResponseDTO(CartItem cartItem) {
         return CartItemResponseDTO.CartItemAddResponseDTO.builder()
+                .menuId(cartItem.getMenu())
                 .cartItemCommonResponseDTO(toCartItemCommonResponseDTO(cartItem))
                 .build();
     }

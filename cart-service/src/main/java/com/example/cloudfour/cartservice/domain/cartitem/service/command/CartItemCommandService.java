@@ -80,6 +80,7 @@ public class CartItemCommandService {
         }
         log.info("장바구니 아이템 생성 권한 확인 성공");
         MenuResponseDTO menu = storeClient.menuById(cartItemCreateRequestDTO.getMenuId());
+        log.info("메뉴 데이터 가져옴");
         MenuOptionResponseDTO menuOption = storeClient.menuOptionById(cartItemCreateRequestDTO.getMenuOptionId());
 
         CartItem cartItem = CartItem.builder()
