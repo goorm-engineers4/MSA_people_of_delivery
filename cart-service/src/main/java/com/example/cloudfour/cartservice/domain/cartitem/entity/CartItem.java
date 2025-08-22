@@ -6,6 +6,8 @@ import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemExcep
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -32,8 +34,9 @@ public class CartItem {
     @Column(name = "menuId" ,nullable = false)
     private UUID menu;
 
-    @Column(name = "menuOptionId" ,nullable = true)
-    private UUID menuOption;
+    @OneToMany(mappedBy = "cartItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<CartItemOption> options = new ArrayList<>();
 
     public static class CartItemBuilder{
         private CartItemBuilder id(UUID id){
@@ -50,8 +53,18 @@ public class CartItem {
         this.menu = menu;
     }
 
-    public void setMenuOption(UUID menuOption){
-        this.menuOption = menuOption;
+    public void setMenuOption(UUID menuOptionId) {
+        CartItemOption option = CartItemOption.builder()
+                .menuOptionId(menuOptionId)
+                .additionalPrice(0)
+                .optionName("")
+                .build();
+        addOption(option);
+    }
+
+    public void addOption(CartItemOption option) {
+        option.setCartItem(this);
+        this.options.add(option);
     }
 
     public void update(Integer quantity, Integer price){

@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -35,10 +34,10 @@ public class CartItemController {
     @Operation(summary = "장바구니 항목 추가", description = "장바구니 항목을 추가합니다. 장바구니 항목 추가에 사용되는 API입니다.")
     public CustomResponse<CartItemResponseDTO.CartItemAddResponseDTO> addCartItem(
             @PathVariable("cartId") UUID cartId,
-            @RequestBody CartItemRequestDTO.CartItemCreateRequestDTO cartItemCreateRequestDTO,
+            @RequestBody CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO,
             @AuthenticationPrincipal CurrentUser user
     ){
-        CartItemResponseDTO.CartItemAddResponseDTO cartItem = cartItemCommandService.AddCartItem(cartItemCreateRequestDTO, cartId, user);
+        CartItemResponseDTO.CartItemAddResponseDTO cartItem = cartItemCommandService.AddCartItem(cartItemAddRequestDTO, cartId, user);
         return CustomResponse.onSuccess(HttpStatus.CREATED, cartItem);
     }
 
@@ -49,16 +48,6 @@ public class CartItemController {
             @AuthenticationPrincipal CurrentUser user
     ){
         CartItemResponseDTO.CartItemListResponseDTO cartItem = cartItemIdQueryService.getCartItemById(cartItemId,user);
-        return CustomResponse.onSuccess(HttpStatus.OK, cartItem);
-    }
-
-    @GetMapping("/{cartId}/list")
-    @Operation(summary = "장바구니 목록 조회", description = "장바구니 목록을 조회합니다. 장바구니 목록 조회에 사용되는 API입니다.")
-    public CustomResponse<List<CartItemResponseDTO.CartItemListResponseDTO>> getCartItemList(
-            @PathVariable("cartId") UUID cartId,
-            @AuthenticationPrincipal CurrentUser user
-    ){
-        List<CartItemResponseDTO.CartItemListResponseDTO> cartItem = cartItemIdQueryService.getCartItemList(cartId,user);
         return CustomResponse.onSuccess(HttpStatus.OK, cartItem);
     }
 

@@ -20,7 +20,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import com.example.cloudfour.cartservice.domain.cartitem.entity.CartItemOption;
 
 @Service
 @Slf4j
@@ -48,18 +51,38 @@ public class CartItemCommandService {
             throw new CartException(CartErrorCode.MENU_NOT_FOUND);
         }
 
-        MenuOptionResponseDTO menuOption = storeClient.menuOptionById(cartItemAddRequestDTO.getMenuOptionId());
-
         log.info("장바구니 아이템 추가 권한 확인 성공");
 
+        List<UUID> selectedOptionIds =
+                Optional.ofNullable(cartItemAddRequestDTO.getMenuOptionIds()).orElseGet(List::of);
+        
+        int additionalPrice = 0;
+        if (!selectedOptionIds.isEmpty()) {
+            List<MenuOptionResponseDTO> options = storeClient.menuOptionsByIds(selectedOptionIds);
+            additionalPrice = options.stream()
+                    .mapToInt(MenuOptionResponseDTO::getAdditionalPrice)
+                    .sum();
+        }
+
         CartItem cartItem = CartItem.builder()
-                .quantity(cartItemAddRequestDTO.getQuantity())
-                .price(cartItemAddRequestDTO.getPrice()+menuOption.getAdditionalPrice())
+                .quantity(1)
+                .price(0 + additionalPrice)
                 .build();
 
         cartItem.setCart(cart);
         cartItem.setMenu(menu);
-        cartItem.setMenuOption(menuOption.getMenuOptionId());
+
+        if (!selectedOptionIds.isEmpty()) {
+            List<MenuOptionResponseDTO> options = storeClient.menuOptionsByIds(selectedOptionIds);
+            for (MenuOptionResponseDTO optionResponse : options) {
+                CartItemOption option = CartItemOption.builder()
+                        .menuOptionId(optionResponse.getMenuOptionId())
+                        .additionalPrice(optionResponse.getAdditionalPrice())
+                        .optionName(optionResponse.getOptionName())
+                        .build();
+                cartItem.addOption(option);
+            }
+        }
 
         cartItemRepository.save(cartItem);
 
@@ -67,7 +90,7 @@ public class CartItemCommandService {
         return CartItemConverter.toCartItemAddResponseDTO(cartItem);
     }
 
-    public CartItemResponseDTO.CartItemAddResponseDTO AddCartItem(CartItemRequestDTO.CartItemCreateRequestDTO cartItemCreateRequestDTO, UUID cartId, CurrentUser user) {
+    public CartItemResponseDTO.CartItemAddResponseDTO AddCartItem(CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO, UUID cartId, CurrentUser user) {
         Cart cart = cartRepository.findByIdAndUser(cartId, user.id())
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 장바구니");
@@ -79,22 +102,55 @@ public class CartItemCommandService {
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }
         log.info("장바구니 아이템 생성 권한 확인 성공");
-        MenuResponseDTO menu = storeClient.menuById(cartItemCreateRequestDTO.getMenuId());
-        log.info("메뉴 데이터 가져옴");
-        MenuOptionResponseDTO menuOption = storeClient.menuOptionById(cartItemCreateRequestDTO.getMenuOptionId());
+
+        MenuResponseDTO menu = storeClient.menuById(cartItemAddRequestDTO.getMenuId());
+        log.info("메뉴 데이터 가져옴: {}", menu.getMenuId());
+
+        List<UUID> selectedOptionIds =
+                Optional.ofNullable(cartItemAddRequestDTO.getMenuOptionIds()).orElseGet(List::of);
+
+        List<MenuOptionResponseDTO> options = selectedOptionIds.isEmpty()
+                ? List.of()
+                : storeClient.menuOptionsByIds(selectedOptionIds);
+
+        boolean invalid = options.stream().anyMatch(opt -> !opt.getMenuId().equals(menu.getMenuId()));
+        if (invalid) {
+            log.warn("요청한 옵션 중 메뉴와 소속이 다른 옵션 존재");
+            throw new CartItemException(CartItemErrorCode.INVALID_OPTION);
+        }
+
+        int basePrice = menu.getPrice();
+        int additional = options.stream().mapToInt(MenuOptionResponseDTO::getAdditionalPrice).sum();
+        int unitPrice = basePrice + additional;
+
+        int quantity = 1;
+        if (quantity <= 0) {
+            log.warn("수량이 0 이하: {}", quantity);
+            throw new CartItemException(CartItemErrorCode.INVALID_QUANTITY);
+        }
+
+        int totalPrice = unitPrice * quantity;
 
         CartItem cartItem = CartItem.builder()
-                .quantity(1)
-                .price(menu.getPrice()+menuOption.getAdditionalPrice())
+                .quantity(quantity)
+                .price(totalPrice)
                 .build();
 
         cartItem.setCart(cart);
         cartItem.setMenu(menu.getMenuId());
-        cartItem.setMenuOption(menuOption.getMenuOptionId());
+
+        for (MenuOptionResponseDTO optionResponse : options) {
+            CartItemOption option = CartItemOption.builder()
+                    .menuOptionId(optionResponse.getMenuOptionId())
+                    .additionalPrice(optionResponse.getAdditionalPrice())
+                    .optionName(optionResponse.getOptionName())
+                    .build();
+            cartItem.addOption(option);
+        }
 
         cartItemRepository.save(cartItem);
+        log.info("장바구니 아이템 생성 완료 (cartId={}, itemId={})", cart.getId(), cartItem.getId());
 
-        log.info("장바구니 아이템 생성 완료");
         return CartItemConverter.toCartItemAddResponseDTO(cartItem);
     }
 
@@ -109,9 +165,19 @@ public class CartItemCommandService {
         }
 
         log.info("장바구니 아이템 수정 권한 확인 성공");
-        MenuOptionResponseDTO menuOption = storeClient.menuOptionById(cartItemUpdateRequestDTO.getMenuOptionId());
 
-        MenuResponseDTO menu = storeClient.menuById(menuOption.getMenuId());
+        List<UUID> selectedOptionIds =
+                Optional.ofNullable(cartItemUpdateRequestDTO.getMenuOptionIds()).orElseGet(List::of);
+        
+        int additionalPrice = 0;
+        if (!selectedOptionIds.isEmpty()) {
+            List<MenuOptionResponseDTO> options = storeClient.menuOptionsByIds(selectedOptionIds);
+            additionalPrice = options.stream()
+                    .mapToInt(MenuOptionResponseDTO::getAdditionalPrice)
+                    .sum();
+        }
+
+        MenuResponseDTO menu = storeClient.menuById(cartItem.getMenu());
 
         Integer quantity = cartItemUpdateRequestDTO.getQuantity();
         if(quantity <=0){
@@ -119,8 +185,22 @@ public class CartItemCommandService {
             throw new CartItemException(CartItemErrorCode.UPDATE_FAILED);
         }
 
-        cartItem.update(quantity, quantity*(menu.getPrice()+menuOption.getAdditionalPrice()));
-        cartItem.setMenuOption(menuOption.getMenuOptionId());
+        int totalPrice = (menu.getPrice() + additionalPrice) * quantity;
+        cartItem.update(quantity, totalPrice);
+
+        cartItem.getOptions().clear();
+        if (!selectedOptionIds.isEmpty()) {
+            List<MenuOptionResponseDTO> options = storeClient.menuOptionsByIds(selectedOptionIds);
+            for (MenuOptionResponseDTO optionResponse : options) {
+                CartItemOption option = CartItemOption.builder()
+                        .menuOptionId(optionResponse.getMenuOptionId())
+                        .additionalPrice(optionResponse.getAdditionalPrice())
+                        .optionName(optionResponse.getOptionName())
+                        .build();
+                cartItem.addOption(option);
+            }
+        }
+        
         cartItemRepository.save(cartItem);
         log.info("장바구니 아이템 수정 완료");
         return CartItemConverter.toCartItemUpdateResponseDTO(cartItem);

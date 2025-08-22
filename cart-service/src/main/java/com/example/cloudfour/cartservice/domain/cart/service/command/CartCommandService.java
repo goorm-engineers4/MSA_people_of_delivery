@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -48,7 +49,7 @@ public class CartCommandService {
         cart.setStore(store);
         Cart savedCart = cartRepository.save(cart);
         MenuResponseDTO menu = storeClient.menuById(cartCreateRequestDTO.getMenuId());
-        CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO = CartItemConverter.toCartItemAddRequestDTO(cartCreateRequestDTO,menu.getPrice());
+        CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO = CartItemConverter.toCartItemAddRequestDTO(cartCreateRequestDTO, menu.getPrice());
         CartItemResponseDTO.CartItemAddResponseDTO cartItemAddResponseDTO = cartItemCommandService.CreateCartItem(cartItemAddRequestDTO, savedCart.getId(), user);
         log.info("장바구니 생성 완료, cartId={}", savedCart.getId());
         return CartConverter.toCartCreateResponseDTO(savedCart,cartItemAddResponseDTO.getCartItemCommonResponseDTO().getCartItemId());

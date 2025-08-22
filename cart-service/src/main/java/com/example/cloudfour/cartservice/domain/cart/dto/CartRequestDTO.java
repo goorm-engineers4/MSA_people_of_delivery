@@ -3,6 +3,7 @@ package com.example.cloudfour.cartservice.domain.cart.dto;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
 import java.util.UUID;
 
 public class CartRequestDTO {
@@ -11,6 +12,6 @@ public class CartRequestDTO {
     public static class CartCreateRequestDTO{
         UUID storeId;
         UUID menuId;
-        UUID menuOptionId;
+        List<UUID> menuOptionIds;
     }
 }

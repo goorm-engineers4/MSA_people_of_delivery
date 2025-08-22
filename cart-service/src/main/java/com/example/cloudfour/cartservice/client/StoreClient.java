@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,15 +38,29 @@ public class StoreClient {
     }
 
     public StoreResponseDTO storeById(UUID storeId) {
-        return rt.getForObject(BASE + "/stores/{storeId}", StoreResponseDTO.class, Map.of("storeId", storeId));
+        return rt.getForObject(BASE + "/stores/{storeId}", StoreResponseDTO.class, storeId);
     }
 
     public MenuResponseDTO menuById(UUID menuId) {
-        return rt.getForObject(BASE +"/menus/{menuId}", MenuResponseDTO.class, Map.of("menuId", menuId));
+        return rt.getForObject(BASE +"/menus/{menuId}", MenuResponseDTO.class,menuId);
     }
 
     public MenuOptionResponseDTO menuOptionById(UUID menuOptionId) {
-        return rt.getForObject(BASE +"/menus/options/{optionId}/detail", MenuOptionResponseDTO.class, Map.of("optionId", menuOptionId));
+        return rt.getForObject(BASE +"/menus/options/{optionId}/detail", MenuOptionResponseDTO.class, menuOptionId);
+    }
+
+    public MenuOptionResponseDTO menuOptionsById(UUID menuOptionId) {
+        return rt.getForObject(BASE +"/menus/options/{optionId}/detail", MenuOptionResponseDTO.class, menuOptionId);
+    }
+
+    public List<MenuOptionResponseDTO> menuOptionsByIds(List<UUID> menuOptionIds) {
+        if (menuOptionIds == null || menuOptionIds.isEmpty()) {
+            return List.of();
+        }
+
+        return menuOptionIds.stream()
+                .map(this::menuOptionById)
+                .toList();
     }
 
 
