@@ -10,7 +10,11 @@ import com.example.cloudfour.cartservice.domain.order.enums.OrderStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class OrderConverter {
+public final class OrderConverter {
+
+    private OrderConverter() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
     public static Order toOrder(OrderRequestDTO.OrderCreateRequestDTO orderCreateRequestDTO, Integer totalPrice, String address) {
         return Order.builder()
                 .orderType(orderCreateRequestDTO.getOrderType())
@@ -39,6 +43,18 @@ public class OrderConverter {
 
     public static OrderResponseDTO.OrderDetailResponseDTO toOrderDetailResponseDTO(Order order, List<OrderItemResponseDTO.OrderItemListResponseDTO> orderItems) {
         return OrderResponseDTO.OrderDetailResponseDTO.builder()
+                .orderType(order.getOrderType())
+                .receiptType(order.getReceiptType())
+                .address(order.getAddress())
+                .request(order.getRequest())
+                .items(orderItems)
+                .orderCommonResponseDTO(toOrderCommonResponseDTO(order))
+                .build();
+    }
+
+    public static OrderResponseDTO.OrderDetailResponseDTO toOrderDetailResponseDTO(Order order, List<OrderItemResponseDTO.OrderItemListResponseDTO> orderItems, String storeName) {
+        return OrderResponseDTO.OrderDetailResponseDTO.builder()
+                .storeName(storeName)
                 .orderType(order.getOrderType())
                 .receiptType(order.getReceiptType())
                 .address(order.getAddress())

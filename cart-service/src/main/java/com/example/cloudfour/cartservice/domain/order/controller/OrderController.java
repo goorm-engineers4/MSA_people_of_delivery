@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -37,7 +38,7 @@ public class OrderController {
     @Operation(summary = "주문 생성", description = "주문을 생성합니다. 주문 생성에 사용되는 API입니다.")
     public CustomResponse<OrderResponseDTO.OrderCreateResponseDTO> createOrder(
             @PathVariable("cartId") UUID cartId,
-            @RequestBody OrderRequestDTO.OrderCreateRequestDTO orderCreateRequestDTO,
+            @Valid @RequestBody OrderRequestDTO.OrderCreateRequestDTO orderCreateRequestDTO,
             @AuthenticationPrincipal CurrentUser user
     ){
         OrderResponseDTO.OrderCreateResponseDTO order = orderCommandService.createOrder(orderCreateRequestDTO,cartId,user);
@@ -94,7 +95,7 @@ public class OrderController {
     @PatchMapping("/{orderId}/status")
     @Operation(summary = "주문 상태 변경", description = "주문 상태를 변경합니다. 주문 상태 변경에 사용되는 API입니다.")
     public CustomResponse<OrderResponseDTO.OrderUpdateResponseDTO>  updateOrderStatus(
-            @RequestBody OrderRequestDTO.OrderUpdateRequestDTO orderUpdateRequestDTO,
+            @Valid @RequestBody OrderRequestDTO.OrderUpdateRequestDTO orderUpdateRequestDTO,
             @PathVariable("orderId") UUID orderId,
             @AuthenticationPrincipal CurrentUser user
     ){

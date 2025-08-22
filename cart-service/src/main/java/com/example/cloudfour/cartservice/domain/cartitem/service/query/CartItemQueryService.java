@@ -1,6 +1,5 @@
 package com.example.cloudfour.cartservice.domain.cartitem.service.query;
 
-import com.example.cloudfour.cartservice.domain.cart.repository.CartRepository;
 import com.example.cloudfour.cartservice.domain.cartitem.converter.CartItemConverter;
 import com.example.cloudfour.cartservice.domain.cartitem.dto.CartItemResponseDTO;
 import com.example.cloudfour.cartservice.domain.cartitem.entity.CartItem;
@@ -8,49 +7,58 @@ import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemError
 import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemException;
 import com.example.cloudfour.cartservice.domain.cartitem.repository.CartItemRepository;
 import com.example.cloudfour.modulecommon.dto.CurrentUser;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class CartItemQueryService {
+
     private final CartItemRepository cartItemRepository;
-    private final CartRepository cartRepository;
 
     public CartItemResponseDTO.CartItemListResponseDTO getCartItemById(UUID cartItemId, CurrentUser user) {
-        if(user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId,user.id())){
-            log.warn("장바구니 아이템 조회 권한 없음");
-            throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
-        }
-        log.info("장바구니 아이템 조회 권한 확인 성공");
-        CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(()->{
-                    log.warn("존재하지 않는 장바구니 아이템");
-                    return new CartItemException(CartItemErrorCode.NOT_FOUND);
-                });
-        log.info("장바구니 아이템 조회 완료");
+        validateUser(user);
+        validateCartItemId(cartItemId);
+        validateCartItemOwnership(cartItemId, user.id());
+
+        CartItem cartItem = findCartItemWithOptions(cartItemId);
+        
+        log.info("장바구니 아이템 조회 완료 (cartItemId={})", cartItemId);
         return CartItemConverter.toCartItemListResponseDTO(cartItem);
     }
 
-    public List<CartItemResponseDTO.CartItemListResponseDTO>getCartItemList(UUID cartId, CurrentUser user) {
-        if(user == null || !cartRepository.existsByUserAndCart(user.id(),cartId)){
-            log.warn("장바구니 아이템 목록 조회 권한 없음");
+    private void validateUser(CurrentUser user) {
+        if (user == null || user.id() == null) {
+            log.warn("유효하지 않은 사용자");
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }
-        log.info("장바구니 아이템 목록 조회 권한 확인");
-        List<CartItem> cartItem = cartItemRepository.findAllByCartId(cartId,user.id());
-        if(cartItem.isEmpty()){
-            log.warn("존재하지 않는 장바구니 아이템");
+    }
+
+    private void validateCartItemId(UUID cartItemId) {
+        if (cartItemId == null) {
+            log.warn("CartItem ID가 null입니다");
             throw new CartItemException(CartItemErrorCode.NOT_FOUND);
         }
-        log.info("장바구니 아이템 목록 조회 완료");
-        return cartItem.stream().map(CartItemConverter::toCartItemListResponseDTO).toList();
+    }
+
+    private void validateCartItemOwnership(UUID cartItemId, UUID userId) {
+        if (!cartItemRepository.existsByCartItemAndUser(cartItemId, userId)) {
+            log.warn("장바구니 아이템 조회 권한 없음 (cartItemId={}, userId={})", cartItemId, userId);
+            throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
+        }
+    }
+
+    private CartItem findCartItemWithOptions(UUID cartItemId) {
+        return cartItemRepository.findByIdWithOptions(cartItemId)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 장바구니 아이템: {}", cartItemId);
+                    return new CartItemException(CartItemErrorCode.NOT_FOUND);
+                });
     }
 }

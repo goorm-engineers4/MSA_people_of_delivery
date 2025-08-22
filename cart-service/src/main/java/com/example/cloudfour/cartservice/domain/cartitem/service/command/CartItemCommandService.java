@@ -9,6 +9,7 @@ import com.example.cloudfour.cartservice.domain.cartitem.converter.CartItemConve
 import com.example.cloudfour.cartservice.domain.cartitem.dto.CartItemRequestDTO;
 import com.example.cloudfour.cartservice.domain.cartitem.dto.CartItemResponseDTO;
 import com.example.cloudfour.cartservice.domain.cartitem.entity.CartItem;
+import com.example.cloudfour.cartservice.domain.cartitem.entity.CartItemOption;
 import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemErrorCode;
 import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemException;
 import com.example.cloudfour.cartservice.domain.cartitem.repository.CartItemRepository;
@@ -20,6 +21,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -27,124 +33,254 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional
 public class CartItemCommandService {
+
     private final CartItemRepository cartItemRepository;
     private final CartRepository cartRepository;
     private final StoreClient storeClient;
 
-    public CartItemResponseDTO.CartItemAddResponseDTO CreateCartItem(CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO, UUID cartId, CurrentUser user) {
-        Cart cart = cartRepository.findByIdAndUser(cartId, user.id())
-                .orElseThrow(() -> {
-                    log.warn("존재하지 않는 장바구니");
-                    return new CartException(CartErrorCode.NOT_FOUND);
-                });
-
-        if(user==null){
+    public CartItemResponseDTO.CartItemAddResponseDTO CreateCartItem(
+            CartItemRequestDTO.CartItemAddRequestDTO req,
+            UUID cartId,
+            CurrentUser user
+    ) {
+        if (user == null) {
             log.warn("장바구니 아이템 추가 권한 없음");
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }
-        UUID menu = cartItemAddRequestDTO.getMenuId();
 
-        if (!storeClient.existMenu(menu)) {
-            throw new CartException(CartErrorCode.MENU_NOT_FOUND);
-        }
-
-        MenuOptionResponseDTO menuOption = storeClient.menuOptionById(cartItemAddRequestDTO.getMenuOptionId());
-
-        log.info("장바구니 아이템 추가 권한 확인 성공");
-
-        CartItem cartItem = CartItem.builder()
-                .quantity(cartItemAddRequestDTO.getQuantity())
-                .price(cartItemAddRequestDTO.getPrice()+menuOption.getAdditionalPrice())
-                .build();
-
-        cartItem.setCart(cart);
-        cartItem.setMenu(menu);
-        cartItem.setMenuOption(menuOption.getMenuOptionId());
-
-        cartItemRepository.save(cartItem);
-
-        log.info("장바구니 아이템 추가 완료");
-        return CartItemConverter.toCartItemAddResponseDTO(cartItem);
-    }
-
-    public CartItemResponseDTO.CartItemAddResponseDTO AddCartItem(CartItemRequestDTO.CartItemCreateRequestDTO cartItemCreateRequestDTO, UUID cartId, CurrentUser user) {
         Cart cart = cartRepository.findByIdAndUser(cartId, user.id())
                 .orElseThrow(() -> {
                     log.warn("존재하지 않는 장바구니");
                     return new CartException(CartErrorCode.NOT_FOUND);
                 });
 
-        if(user==null){
+        if (!storeClient.existMenu(req.getMenuId())) {
+            throw new CartException(CartErrorCode.MENU_NOT_FOUND);
+        }
+
+        MenuResponseDTO menu = storeClient.menuById(req.getMenuId());
+
+        List<UUID> selectedOptionIds = dedup(req.getMenuOptionIds());
+        List<MenuOptionResponseDTO> options = fetchOptionsOnce(selectedOptionIds);
+
+        validateOptionsBelongToMenu(options, menu.getMenuId());
+
+        int unitPrice = calcUnitPrice(menu.getPrice(), options);
+        int quantity = 1;
+        int totalPrice = unitPrice * quantity;
+
+        List<CartItem> existing = cartItemRepository.findByCartIdAndMenuId(cartId, menu.getMenuId());
+        for (CartItem e : existing) {
+            if (isSameOptions(e.getOptions(), options)) {
+                int newQty = e.getQuantity() + quantity;
+                int newTotal = unitPrice * newQty;
+                e.update(newQty, newTotal);
+                cartItemRepository.save(e);
+                log.info("기존 장바구니 아이템 수량 증가 (cartItemId={}, {} -> {})", e.getId(), newQty - quantity, newQty);
+                return CartItemConverter.toCartItemAddResponseDTO(e);
+            }
+        }
+
+        CartItem item = CartItem.builder()
+                .quantity(quantity)
+                .price(totalPrice)
+                .build();
+        item.setCart(cart);
+        item.setMenu(menu.getMenuId());
+        attachOptions(item, options);
+
+        cartItemRepository.save(item);
+        log.info("새로운 장바구니 아이템 추가 (cartId={}, itemId={})", cart.getId(), item.getId());
+
+        return cartItemRepository.findByIdWithOptions(item.getId())
+                .map(CartItemConverter::toCartItemAddResponseDTO)
+                .orElseGet(() -> CartItemConverter.toCartItemAddResponseDTO(item));
+    }
+
+    public CartItemResponseDTO.CartItemAddResponseDTO AddCartItem(
+            CartItemRequestDTO.CartItemAddRequestDTO req,
+            UUID cartId,
+            CurrentUser user
+    ) {
+        if (user == null) {
             log.warn("장바구니 아이템 생성 권한 없음");
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }
-        log.info("장바구니 아이템 생성 권한 확인 성공");
-        MenuResponseDTO menu = storeClient.menuById(cartItemCreateRequestDTO.getMenuId());
-        log.info("메뉴 데이터 가져옴");
-        MenuOptionResponseDTO menuOption = storeClient.menuOptionById(cartItemCreateRequestDTO.getMenuOptionId());
 
-        CartItem cartItem = CartItem.builder()
-                .quantity(1)
-                .price(menu.getPrice()+menuOption.getAdditionalPrice())
+        Cart cart = cartRepository.findByIdAndUser(cartId, user.id())
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 장바구니");
+                    return new CartException(CartErrorCode.NOT_FOUND);
+                });
+
+        MenuResponseDTO menu = storeClient.menuById(req.getMenuId());
+        log.info("메뉴 데이터: {}", menu.getMenuId());
+
+        List<UUID> selectedOptionIds = dedup(req.getMenuOptionIds());
+        List<MenuOptionResponseDTO> options = fetchOptionsOnce(selectedOptionIds);
+
+        validateOptionsBelongToMenu(options, menu.getMenuId());
+
+        int quantity = 1;
+        if (quantity <= 0) {
+            log.warn("수량이 0 이하: {}", quantity);
+            throw new CartItemException(CartItemErrorCode.INVALID_QUANTITY);
+        }
+
+        int unitPrice = calcUnitPrice(menu.getPrice(), options);
+        int totalPrice = unitPrice * quantity;
+
+        List<CartItem> existing = cartItemRepository.findByCartIdAndMenuId(cartId, menu.getMenuId());
+        for (CartItem e : existing) {
+            if (isSameOptions(e.getOptions(), options)) {
+                int newQty = e.getQuantity() + quantity;
+                int newTotal = unitPrice * newQty;
+                e.update(newQty, newTotal);
+                cartItemRepository.save(e);
+                log.info("기존 장바구니 아이템 수량 증가 (cartItemId={}, {} -> {})", e.getId(), newQty - quantity, newQty);
+                return CartItemConverter.toCartItemAddResponseDTO(e);
+            }
+        }
+
+        CartItem item = CartItem.builder()
+                .quantity(quantity)
+                .price(totalPrice)
                 .build();
+        item.setCart(cart);
+        item.setMenu(menu.getMenuId());
+        attachOptions(item, options);
 
-        cartItem.setCart(cart);
-        cartItem.setMenu(menu.getMenuId());
-        cartItem.setMenuOption(menuOption.getMenuOptionId());
+        cartItemRepository.save(item);
+        log.info("새로운 장바구니 아이템 생성 완료 (cartId={}, itemId={})", cart.getId(), item.getId());
 
-        cartItemRepository.save(cartItem);
-
-        log.info("장바구니 아이템 생성 완료");
-        return CartItemConverter.toCartItemAddResponseDTO(cartItem);
+        return cartItemRepository.findByIdWithOptions(item.getId())
+                .map(CartItemConverter::toCartItemAddResponseDTO)
+                .orElseGet(() -> CartItemConverter.toCartItemAddResponseDTO(item));
     }
 
-    public CartItemResponseDTO.CartItemUpdateResponseDTO updateCartItem(CartItemRequestDTO.CartItemUpdateRequestDTO cartItemUpdateRequestDTO, UUID cartItemId, CurrentUser user) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(()->{
+    public CartItemResponseDTO.CartItemUpdateResponseDTO updateCartItem(
+            CartItemRequestDTO.CartItemUpdateRequestDTO req,
+            UUID cartItemId,
+            CurrentUser user
+    ) {
+        CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(() -> {
             log.warn("존재하지 않는 장바구니 아이템");
             return new CartItemException(CartItemErrorCode.NOT_FOUND);
         });
-        if(user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId,user.id())){
+
+        if (user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId, user.id())) {
             log.warn("장바구니 아이템 수정 권한 없음");
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        log.info("장바구니 아이템 수정 권한 확인 성공");
-        MenuOptionResponseDTO menuOption = storeClient.menuOptionById(cartItemUpdateRequestDTO.getMenuOptionId());
+        List<UUID> selectedOptionIds = dedup(req.getMenuOptionIds());
+        List<MenuOptionResponseDTO> options = fetchOptionsOnce(selectedOptionIds);
 
-        MenuResponseDTO menu = storeClient.menuById(menuOption.getMenuId());
+        MenuResponseDTO menu = storeClient.menuById(cartItem.getMenu());
 
-        Integer quantity = cartItemUpdateRequestDTO.getQuantity();
-        if(quantity <=0){
-            log.info("수량이 0보다 적으므로 장바구니 수정 취소");
-            throw new CartItemException(CartItemErrorCode.UPDATE_FAILED);
+        Integer quantity = req.getQuantity();
+        if (quantity == null || quantity <= 0) {
+            log.warn("수량이 0 이하: {}", quantity);
+            throw new CartItemException(CartItemErrorCode.INVALID_QUANTITY);
         }
 
-        cartItem.update(quantity, quantity*(menu.getPrice()+menuOption.getAdditionalPrice()));
-        cartItem.setMenuOption(menuOption.getMenuOptionId());
+        if (!options.isEmpty()) {
+            validateOptionsBelongToMenu(options, menu.getMenuId());
+        }
+
+        int unitPrice = calcUnitPrice(menu.getPrice(), options);
+        int totalPrice = unitPrice * quantity;
+
+        cartItem.update(quantity, totalPrice);
+
+        int before = cartItem.getOptions().size();
+        cartItem.getOptions().clear();
+        attachOptions(cartItem, options);
+        log.info("옵션 교체: {} -> {}", before, cartItem.getOptions().size());
+
         cartItemRepository.save(cartItem);
-        log.info("장바구니 아이템 수정 완료");
-        return CartItemConverter.toCartItemUpdateResponseDTO(cartItem);
+
+        CartItem loaded = cartItemRepository.findByIdWithOptions(cartItemId)
+                .orElseThrow(() -> new CartItemException(CartItemErrorCode.NOT_FOUND));
+        return CartItemConverter.toCartItemUpdateResponseDTO(loaded);
     }
 
     public void deleteCartItem(UUID cartItemId, CurrentUser user) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(()->{
+        CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(() -> {
             log.warn("존재하지 않는 장바구니 아이템");
             return new CartItemException(CartItemErrorCode.NOT_FOUND);
         });
-        Cart cart = cartRepository.findById(cartItem.getCart().getId()).orElseThrow(()->{
+
+        Cart cart = cartRepository.findById(cartItem.getCart().getId()).orElseThrow(() -> {
             log.warn("존재하지 않는 장바구니");
             return new CartException(CartErrorCode.NOT_FOUND);
         });
-        if(user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId,user.id())){
+
+        if (user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId, user.id())) {
             log.warn("장바구니 아이템 삭제 권한 없음");
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }
-        log.info("장바구니 아이템 삭제 권한 확인 성공");
+
         cartItemRepository.delete(cartItem);
         cartItemRepository.flush();
-        if(cart.getCartItems().isEmpty()){
+
+        if (cart.getCartItems().isEmpty()) {
             cartRepository.delete(cart);
         }
         log.info("장바구니 아이템 삭제 완료");
+    }
+
+
+    private List<UUID> dedup(List<UUID> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        return new ArrayList<>(new LinkedHashSet<>(ids));
+    }
+
+    private List<MenuOptionResponseDTO> fetchOptionsOnce(List<UUID> optionIds) {
+        if (optionIds == null || optionIds.isEmpty()) return List.of();
+        return storeClient.menuOptionsByIds(optionIds);
+    }
+
+    private void validateOptionsBelongToMenu(List<MenuOptionResponseDTO> options, UUID menuId) {
+        boolean invalid = options.stream().anyMatch(o -> !menuId.equals(o.getMenuId()));
+        if (invalid) {
+            log.warn("요청한 옵션 중 메뉴와 소속이 다른 옵션 존재");
+            throw new CartItemException(CartItemErrorCode.INVALID_OPTION);
+        }
+    }
+
+    private int calcUnitPrice(int basePrice, List<MenuOptionResponseDTO> options) {
+        int additional = options.stream().mapToInt(MenuOptionResponseDTO::getAdditionalPrice).sum();
+        return basePrice + additional;
+    }
+
+    private void attachOptions(CartItem item, List<MenuOptionResponseDTO> options) {
+        if (options == null || options.isEmpty()) return;
+        for (MenuOptionResponseDTO o : options) {
+            CartItemOption opt = CartItemOption.builder()
+                    .menuOptionId(o.getMenuOptionId())
+                    .additionalPrice(o.getAdditionalPrice())
+                    .optionName(o.getOptionName())
+                    .build();
+            item.addOption(opt);
+        }
+    }
+
+    private boolean isSameOptions(List<CartItemOption> existingOptions, List<MenuOptionResponseDTO> newOptions) {
+        if (existingOptions == null) return newOptions == null || newOptions.isEmpty();
+        if (newOptions == null) return existingOptions.isEmpty();
+        if (existingOptions.size() != newOptions.size()) return false;
+
+        List<UUID> a = existingOptions.stream()
+                .map(CartItemOption::getMenuOptionId)
+                .sorted(Comparator.nullsLast(Comparator.naturalOrder()))
+                .toList();
+
+        List<UUID> b = newOptions.stream()
+                .map(MenuOptionResponseDTO::getMenuOptionId)
+                .sorted(Comparator.nullsLast(Comparator.naturalOrder()))
+                .toList();
+
+        return a.equals(b);
     }
 }

@@ -2,7 +2,6 @@ package com.example.cloudfour.cartservice.domain.order.service.query;
 
 import com.example.cloudfour.cartservice.client.StoreClient;
 import com.example.cloudfour.cartservice.client.UserClient;
-import com.example.cloudfour.cartservice.commondto.MenuOptionResponseDTO;
 import com.example.cloudfour.cartservice.commondto.StoreResponseDTO;
 import com.example.cloudfour.cartservice.commondto.UserResponseDTO;
 import com.example.cloudfour.cartservice.domain.order.converter.OrderConverter;
@@ -24,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,31 +32,30 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class OrderQueryService {
+
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
-    private static final LocalDateTime first_cursor = LocalDateTime.now().plusDays(1);
     private final StoreClient storeClient;
     private final UserClient userClient;
 
-    public OrderResponseDTO.OrderDetailResponseDTO getOrderById(UUID orderId , CurrentUser user) {
-        Order order = orderRepository.findById(orderId).orElseThrow(()->{
-            log.warn("존재하지 않는 주문");
-            return new OrderException(OrderErrorCode.NOT_FOUND);
-        });
-        if(user == null || !orderRepository.existsByOrderIdAndUserId(orderId, user.id())) {
-            log.warn("주문 조회 권한 없음");
-            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
-        }
-        log.info("주문 조회 권한 확인 성공");
-        List<OrderItem> orderItems =  orderItemRepository.findByOrderId(orderId);
-        List<OrderItemResponseDTO.OrderItemListResponseDTO> orderItemDTOS =
-                orderItems.stream().map(orderItem -> {
-                    MenuOptionResponseDTO menuOptionDTO = storeClient.menuOptionById(orderItem.getMenuOption());
-                    return OrderItemConverter.toOrderItemClassListDTO(orderItem, menuOptionDTO);
-                }).toList();
-        log.info("주문 조회 완료");
-        return OrderConverter.toOrderDetailResponseDTO(order,orderItemDTOS);
+    private static final LocalDateTime FIRST_CURSOR = LocalDateTime.now().plusDays(1);
+
+    public OrderResponseDTO.OrderDetailResponseDTO getOrderById(UUID orderId, CurrentUser user) {
+        validateUser(user);
+        validateOrderId(orderId);
+        validateOrderOwnership(orderId, user.id());
+
+        Order order = findOrderById(orderId);
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+        List<OrderItemResponseDTO.OrderItemListResponseDTO> orderItemDtos =
+                orderItems.stream().map(OrderItemConverter::toOrderItemClassListDTO).toList();
+        
+        StoreResponseDTO store = fetchStoreInfo(order.getStore());
+        
+        log.info("주문 조회 완료 (orderId={})", orderId);
+        return OrderConverter.toOrderDetailResponseDTO(order, orderItemDtos, store.getName());
     }
 
     public OrderItemResponseDTO.OrderItemListResponseDTO getOrderItemById(UUID orderItemId, CurrentUser user){
@@ -69,9 +68,8 @@ public class OrderQueryService {
             throw new OrderItemException(OrderItemErrorCode.UNAUTHORIZED_ACCESS);
         }
         log.info("주문 아이템 조회 권한 확인 성공");
-        MenuOptionResponseDTO menuOptionDTO = storeClient.menuOptionById(orderItem.getMenuOption());
         log.info("주문 아이템 조회 완료");
-        return OrderItemConverter.toOrderItemClassListDTO(orderItem,menuOptionDTO);
+        return OrderItemConverter.toOrderItemClassListDTO(orderItem);
     }
 
     public OrderResponseDTO.OrderUserListResponseDTO getOrderListByUser(CurrentUser user, LocalDateTime cursor, Integer size) {
@@ -81,10 +79,10 @@ public class OrderQueryService {
         }
         log.info("사용자 주문 목록 조회 권한 확인 성공");
         if(cursor == null) {
-            cursor = first_cursor;
+            cursor = FIRST_CURSOR;
         }
         Pageable pageable = PageRequest.of(0, size);
-        Slice<Order> orders = orderRepository.findAllByUserId(user.id(),cursor,pageable);
+        Slice<Order> orders = orderRepository.findAllByUserId(user.id(), cursor, pageable);
         if(orders.isEmpty()) {
             log.warn("존재하지 않는 주문");
             throw new OrderException(OrderErrorCode.NOT_FOUND);
@@ -109,10 +107,10 @@ public class OrderQueryService {
             throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
         }
         if(cursor == null) {
-            cursor = first_cursor;
+            cursor = FIRST_CURSOR;
         }
         Pageable pageable = PageRequest.of(0, size);
-        Slice<Order> orders = orderRepository.findAllByStoreId(storeId,cursor,pageable);
+        Slice<Order> orders = orderRepository.findAllByStoreId(storeId, cursor, pageable);
         if(orders.isEmpty()) {
             throw new OrderException(OrderErrorCode.NOT_FOUND);
         }
@@ -127,6 +125,44 @@ public class OrderQueryService {
             next_cursor = orderList.getLast().getCreatedAt();
         }
         log.info("가게 주문 목록 조회 완료");
-        return OrderConverter.toOrderStoreListResponseDTO(orderStoreResponseDTOS,orders.hasNext(),next_cursor);
+        return OrderConverter.toOrderStoreListResponseDTO(orderStoreResponseDTOS, orders.hasNext(), next_cursor);
+    }
+
+    private void validateUser(CurrentUser user) {
+        if (user == null || user.id() == null) {
+            log.warn("유효하지 않은 사용자");
+            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
+        }
+    }
+
+    private void validateOrderId(UUID orderId) {
+        if (orderId == null) {
+            log.warn("Order ID가 null입니다");
+            throw new OrderException(OrderErrorCode.NOT_FOUND);
+        }
+    }
+
+    private void validateOrderOwnership(UUID orderId, UUID userId) {
+        if (!orderRepository.existsByOrderIdAndUserId(orderId, userId)) {
+            log.warn("주문 조회 권한 없음 (orderId={}, userId={})", orderId, userId);
+            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
+        }
+    }
+
+    private Order findOrderById(UUID orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 주문: {}", orderId);
+                    return new OrderException(OrderErrorCode.NOT_FOUND);
+                });
+    }
+
+    private StoreResponseDTO fetchStoreInfo(UUID storeId) {
+        try {
+            return storeClient.storeById(storeId);
+        } catch (Exception e) {
+            log.error("스토어 정보 조회 실패 (storeId={})", storeId, e);
+            throw new OrderException(OrderErrorCode.NOT_FOUND);
+        }
     }
 }

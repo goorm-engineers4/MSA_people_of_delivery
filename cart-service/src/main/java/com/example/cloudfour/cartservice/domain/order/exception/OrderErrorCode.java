@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 @Getter
 public enum OrderErrorCode implements BaseErrorCode {
+    INVALID_INPUT(HttpStatus.BAD_REQUEST, "ORDER400_0", "잘못된 입력값입니다."),
     CREATE_FAILED(HttpStatus.BAD_REQUEST, "ORDER400_1", "주문 정보를 생성할 수 없습니다."),
     UPDATE_FAILED(HttpStatus.BAD_REQUEST, "ORDER400_2", "주문 정보를 수정할 수 없습니다."),
     DELETE_FAILED(HttpStatus.BAD_REQUEST, "ORDER400_3", "주문 정보를 삭제할 수 없습니다."),
