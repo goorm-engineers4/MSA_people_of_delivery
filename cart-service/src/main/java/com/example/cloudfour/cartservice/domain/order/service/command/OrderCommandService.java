@@ -8,7 +8,6 @@ import com.example.cloudfour.cartservice.domain.cart.exception.CartException;
 import com.example.cloudfour.cartservice.domain.cart.repository.CartRepository;
 import com.example.cloudfour.cartservice.domain.cartitem.entity.CartItem;
 import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemException;
-import com.example.cloudfour.cartservice.domain.cartitem.repository.CartItemRepository;
 import com.example.cloudfour.cartservice.commondto.UserAddressResponseDTO;
 import com.example.cloudfour.cartservice.domain.order.converter.OrderConverter;
 import com.example.cloudfour.cartservice.domain.order.converter.OrderItemConverter;
@@ -19,6 +18,7 @@ import com.example.cloudfour.cartservice.domain.order.entity.OrderItem;
 import com.example.cloudfour.cartservice.domain.order.enums.OrderStatus;
 import com.example.cloudfour.cartservice.domain.order.exception.OrderErrorCode;
 import com.example.cloudfour.cartservice.domain.order.exception.OrderException;
+import com.example.cloudfour.cartservice.domain.order.repository.OrderItemOptionRepository;
 import com.example.cloudfour.cartservice.domain.order.repository.OrderItemRepository;
 import com.example.cloudfour.cartservice.domain.order.repository.OrderRepository;
 import com.example.cloudfour.modulecommon.dto.CurrentUser;
@@ -37,14 +37,14 @@ import java.util.UUID;
 public class OrderCommandService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final OrderItemOptionRepository orderItemOptionRepository;
     private final CartRepository cartRepository;
-    private final CartItemRepository cartItemRepository;
     private final StoreClient storeClient;
     private final UserClient userClient;
 
 
     public OrderResponseDTO.OrderCreateResponseDTO createOrder(OrderRequestDTO.OrderCreateRequestDTO orderCreateRequestDTO, UUID cartId, CurrentUser user) {
-        Cart cart = cartRepository.findById(cartId).orElseThrow(()->{
+        Cart cart = cartRepository.findByIdAndUserWithCartItems(cartId, user.id()).orElseThrow(()->{
             log.warn("존재하지 않는 장바구니");
             return new CartException(CartErrorCode.NOT_FOUND);
         });
@@ -57,7 +57,7 @@ public class OrderCommandService {
         if (!storeClient.existStore(store)) {
             throw new CartException(CartErrorCode.STORE_NOT_FOUND);
         }
-        List<CartItem> cartItems = cartItemRepository.findAllByCartId(cartId,user.id());
+        List<CartItem> cartItems = cart.getCartItems();
         if(cartItems.isEmpty()) {
             log.warn("존재하지 않는 장바구니 아이템");
             throw new CartItemException(CartErrorCode.NOT_FOUND);
@@ -74,6 +74,13 @@ public class OrderCommandService {
         log.info("주문 생성 완료. 주문 아이템 생성, 장바구니 삭제 남음");
         List<OrderItem> orderItems = cartItems.stream().map(cartItem -> OrderItemConverter.CartItemtoOrderItem(cartItem, order)).toList();
         orderItemRepository.saveAll(orderItems);
+
+        orderItems.forEach(orderItem -> {
+            if (orderItem.getOptions() != null && !orderItem.getOptions().isEmpty()) {
+                orderItemOptionRepository.saveAll(orderItem.getOptions());
+            }
+        });
+        
         log.info("주문 아이템 생성 완료. 장바구니 삭제 남음");
         cartRepository.delete(cart);
         log.info("장바구니 삭제 완료.");

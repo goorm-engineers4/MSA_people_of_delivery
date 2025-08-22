@@ -5,6 +5,8 @@ import com.example.cloudfour.cartservice.domain.order.exception.OrderItemExcepti
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -29,8 +31,14 @@ public class OrderItem {
     @Column(name = "menuId", nullable = false)
     private UUID menu;
 
-    @Column(name = "menuOptionId", nullable = false)
+    // 단일 옵션 (기존 호환성 유지)
+    @Column(name = "menuOptionId")
     private UUID menuOption;
+
+    // 여러 옵션을 위한 새로운 구조
+    @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OrderItemOption> options = new ArrayList<>();
 
     public static class OrderItemBuilder{
         private OrderItemBuilder id(UUID id){
@@ -50,6 +58,17 @@ public class OrderItem {
     public void setMenuOption(UUID menuOption){
         if (menuOption != null) {
             this.menuOption = menuOption;
+        }
+    }
+
+    public void addOption(OrderItemOption option) {
+        option.setOrderItem(this);
+        this.options.add(option);
+    }
+
+    public void addOptions(List<OrderItemOption> options) {
+        if (options != null) {
+            options.forEach(this::addOption);
         }
     }
 }
