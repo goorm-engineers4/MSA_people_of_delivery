@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 @Getter
 public enum CartItemErrorCode implements BaseErrorCode {
+    INVALID_INPUT(HttpStatus.BAD_REQUEST, "CARTITEM400_0", "잘못된 입력값입니다."),
     CREATE_FAILED(HttpStatus.BAD_REQUEST, "CARTITEM400_1", "장바구니 아이템 정보를 생성할 수 없습니다."),
     UPDATE_FAILED(HttpStatus.BAD_REQUEST, "CARTITEM400_2", "장바구니 아이템 정보를 수정할 수 없습니다."),
     DELETE_FAILED(HttpStatus.BAD_REQUEST, "CARTITEM400_3", "장바구니 아이템 정보를 삭제할 수 없습니다."),

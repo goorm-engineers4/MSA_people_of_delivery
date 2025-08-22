@@ -20,8 +20,9 @@ import java.util.UUID;
 @Builder
 @Table(name = "p_order")
 public class Order extends BaseEntity {
+    
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Enumerated(EnumType.STRING)
@@ -35,6 +36,7 @@ public class Order extends BaseEntity {
     @Column(nullable = false)
     private String address;
 
+    @Column(length = 500)
     private String request;
 
     @Column(nullable = false)
@@ -54,27 +56,66 @@ public class Order extends BaseEntity {
     @Column(name = "storeId", nullable = false)
     private UUID store;
 
-
-    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    public static class OrderBuilder{
-        private OrderBuilder id(UUID id) {
-            throw new OrderException(OrderErrorCode.CREATE_FAILED);
+    public void updateOrderStatus(OrderStatus orderStatus) {
+        if (orderStatus == null) {
+            throw new OrderException(OrderErrorCode.INVALID_INPUT);
         }
+        this.status = orderStatus;
     }
 
-    public void setUser(UUID user){
+    public void addOrderItem(OrderItem orderItem) {
+        if (orderItem == null) {
+            throw new OrderException(OrderErrorCode.INVALID_INPUT);
+        }
+        orderItem.setOrder(this);
+        this.orderItems.add(orderItem);
+    }
+
+    public void removeOrderItem(UUID orderItemId) {
+        if (orderItemId == null) {
+            throw new OrderException(OrderErrorCode.INVALID_INPUT);
+        }
+        this.orderItems.removeIf(item -> item.getId().equals(orderItemId));
+    }
+
+    public int getItemCount() {
+        return this.orderItems.size();
+    }
+
+    public boolean isCompleted() {
+        return this.status == OrderStatus.주문완료;
+    }
+
+    public boolean isCancelled() {
+        return this.status == OrderStatus.주문취소;
+    }
+
+    public boolean isInProgress() {
+        return this.status != OrderStatus.주문완료 && this.status != OrderStatus.주문취소;
+    }
+
+
+    public void setUser(UUID user) {
+        if (user == null) {
+            throw new OrderException(OrderErrorCode.INVALID_INPUT);
+        }
         this.user = user;
     }
 
-    public void setStore(UUID store){
+    public void setStore(UUID store) {
+        if (store == null) {
+            throw new OrderException(OrderErrorCode.INVALID_INPUT);
+        }
         this.store = store;
     }
 
-
-    public void updateOrderStatus(OrderStatus orderStatus){
-        this.status = orderStatus;
+    public static class OrderBuilder {
+        private OrderBuilder id(UUID id) {
+            throw new OrderException(OrderErrorCode.CREATE_FAILED);
+        }
     }
 }

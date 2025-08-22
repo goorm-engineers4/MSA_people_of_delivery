@@ -55,7 +55,7 @@ public class OrderController {
         return CustomResponse.onSuccess(HttpStatus.OK, order);
     }
 
-    @GetMapping("/detail/{orderItemId}")
+    @GetMapping("/{orderItemId}")
     @Operation(summary = "주문 아이템 상세 조회", description = "주문 아이템을 상세 조회합니다. 주문 아이템 상세 조회에 사용되는 API입니다.")
     public CustomResponse<OrderItemResponseDTO.OrderItemListResponseDTO> getOrderItem(
             @PathVariable("orderItemId") UUID orderItemId,
@@ -95,7 +95,7 @@ public class OrderController {
     @PatchMapping("/{orderId}/status")
     @Operation(summary = "주문 상태 변경", description = "주문 상태를 변경합니다. 주문 상태 변경에 사용되는 API입니다.")
     public CustomResponse<OrderResponseDTO.OrderUpdateResponseDTO>  updateOrderStatus(
-            @RequestBody OrderRequestDTO.OrderUpdateRequestDTO orderUpdateRequestDTO,
+            @Valid @RequestBody OrderRequestDTO.OrderUpdateRequestDTO orderUpdateRequestDTO,
             @PathVariable("orderId") UUID orderId,
             @AuthenticationPrincipal CurrentUser user
     ){

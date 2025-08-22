@@ -22,21 +22,56 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CartQueryService {
+
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
 
     public CartResponseDTO.CartDetailResponseDTO getCartListById(UUID cartId, CurrentUser user) {
-        Cart cart = cartRepository.findByIdAndUserWithCartItems(cartId, user.id())
+        validateUser(user);
+        validateCartId(cartId);
+
+        Cart cart = findCartWithOwnershipValidation(cartId, user.id());
+        List<CartItem> cartItemsWithOptions = loadCartItemsWithOptions(cartId);
+
+        replaceCartItems(cart, cartItemsWithOptions);
+        
+        log.info("장바구니 조회 완료 (cartId={}, itemCount={})", cartId, cartItemsWithOptions.size());
+        return CartConverter.toCartDetailResponseDTO(cart);
+    }
+
+
+    private void validateUser(CurrentUser user) {
+        if (user == null || user.id() == null) {
+            log.warn("유효하지 않은 사용자");
+            throw new CartException(CartErrorCode.UNAUTHORIZED_ACCESS);
+        }
+    }
+
+    private void validateCartId(UUID cartId) {
+        if (cartId == null) {
+            log.warn("Cart ID가 null입니다");
+            throw new CartException(CartErrorCode.NOT_FOUND);
+        }
+    }
+
+    private Cart findCartWithOwnershipValidation(UUID cartId, UUID userId) {
+        return cartRepository.findByIdAndUserWithCartItems(cartId, userId)
                 .orElseThrow(() -> {
-                    log.warn("존재하지 않는 장바구니");
+                    log.warn("존재하지 않는 장바구니 또는 접근 권한 없음 (cartId={}, userId={})", cartId, userId);
                     return new CartException(CartErrorCode.NOT_FOUND);
                 });
+    }
 
+    private List<CartItem> loadCartItemsWithOptions(UUID cartId) {
         List<CartItem> cartItems = cartItemRepository.findAllByCartIdWithOptions(cartId);
+        log.debug("CartItem 옵션과 함께 로드 완료 (cartId={}, itemCount={})", cartId, cartItems.size());
+        return cartItems;
+    }
+
+    private void replaceCartItems(Cart cart, List<CartItem> newCartItems) {
         cart.getCartItems().clear();
-        cart.getCartItems().addAll(cartItems);
-        
-        log.info("장바구니 목록 조회 권한 확인 성공");
-        return CartConverter.toCartDetailResponseDTO(cart);
+        if (!newCartItems.isEmpty()) {
+            cart.getCartItems().addAll(newCartItems);
+        }
     }
 }

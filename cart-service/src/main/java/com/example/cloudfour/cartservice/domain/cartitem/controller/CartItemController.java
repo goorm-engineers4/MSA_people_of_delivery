@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import jakarta.validation.Valid;
 
 import java.util.UUID;
 
@@ -36,7 +37,7 @@ public class CartItemController {
     @Operation(summary = "장바구니 항목 추가", description = "장바구니 항목을 추가합니다. 장바구니 항목 추가에 사용되는 API입니다.")
     public CustomResponse<CartItemResponseDTO.CartItemAddResponseDTO> addCartItem(
             @PathVariable("cartId") UUID cartId,
-            @RequestBody CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO,
+            @Valid @RequestBody CartItemRequestDTO.CartItemAddRequestDTO cartItemAddRequestDTO,
             @AuthenticationPrincipal CurrentUser user
     ){
         CartItemResponseDTO.CartItemAddResponseDTO cartItem = cartItemCommandService.AddCartItem(cartItemAddRequestDTO, cartId, user);
@@ -57,7 +58,7 @@ public class CartItemController {
     @Operation(summary = "장바구니 항목, 옵션 수정", description = "장바구니 항목, 옵션을 수정합니다. 장바구니 항목, 옵션 수정에 사용되는 API입니다.")
     public CustomResponse<CartItemResponseDTO.CartItemUpdateResponseDTO> updateCartItem(
             @PathVariable("cartItemId") UUID cartItemId,
-            @RequestBody CartItemRequestDTO.CartItemUpdateRequestDTO request,
+            @Valid @RequestBody CartItemRequestDTO.CartItemUpdateRequestDTO request,
             @AuthenticationPrincipal CurrentUser user
     ){
         log.info("CartItem 수정 요청 - cartItemId: {}, request: menuOptionIds={}, quantity={}", 

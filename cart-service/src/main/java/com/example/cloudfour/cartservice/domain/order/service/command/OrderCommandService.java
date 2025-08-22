@@ -8,6 +8,7 @@ import com.example.cloudfour.cartservice.domain.cart.exception.CartException;
 import com.example.cloudfour.cartservice.domain.cart.repository.CartRepository;
 import com.example.cloudfour.cartservice.domain.cartitem.entity.CartItem;
 import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemException;
+import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemErrorCode;
 import com.example.cloudfour.cartservice.commondto.UserAddressResponseDTO;
 import com.example.cloudfour.cartservice.domain.order.converter.OrderConverter;
 import com.example.cloudfour.cartservice.domain.order.converter.OrderItemConverter;
@@ -43,78 +44,183 @@ public class OrderCommandService {
     private final UserClient userClient;
 
 
-    public OrderResponseDTO.OrderCreateResponseDTO createOrder(OrderRequestDTO.OrderCreateRequestDTO orderCreateRequestDTO, UUID cartId, CurrentUser user) {
-        Cart cart = cartRepository.findByIdAndUserWithCartItems(cartId, user.id()).orElseThrow(()->{
-            log.warn("존재하지 않는 장바구니");
-            return new CartException(CartErrorCode.NOT_FOUND);
-        });
-        if(user == null || !cartRepository.existsByUserAndCart(user.id(), cartId)){
-            log.warn("주문 생성 권한 없음");
-            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
-        }
-        UserAddressResponseDTO userAddress = userClient.addressById(user.id());
-        UUID store = cart.getStore();
-        if (!storeClient.existStore(store)) {
-            throw new CartException(CartErrorCode.STORE_NOT_FOUND);
-        }
-        List<CartItem> cartItems = cart.getCartItems();
-        if(cartItems.isEmpty()) {
-            log.warn("존재하지 않는 장바구니 아이템");
-            throw new CartItemException(CartErrorCode.NOT_FOUND);
-        }
-        log.info("주문 생성 권한 확인 성공");
-        Integer totalPrice = 0;
-        for (CartItem cartItem : cartItems) {
-            totalPrice += cartItem.getPrice();
-        }
-        Order order = OrderConverter.toOrder(orderCreateRequestDTO,totalPrice,userAddress.getAddress());
-        order.setStore(store);
-        order.setUser(user.id());
-        orderRepository.save(order);
-        log.info("주문 생성 완료. 주문 아이템 생성, 장바구니 삭제 남음");
-        List<OrderItem> orderItems = cartItems.stream().map(cartItem -> OrderItemConverter.CartItemtoOrderItem(cartItem, order)).toList();
-        orderItemRepository.saveAll(orderItems);
+    public OrderResponseDTO.OrderCreateResponseDTO createOrder(
+            OrderRequestDTO.OrderCreateRequestDTO req, 
+            UUID cartId, 
+            CurrentUser user
+    ) {
+        validateUser(user);
+        validateCartId(cartId);
 
-        orderItems.forEach(orderItem -> {
-            if (orderItem.getOptions() != null && !orderItem.getOptions().isEmpty()) {
-                orderItemOptionRepository.saveAll(orderItem.getOptions());
-            }
-        });
+        Cart cart = findCartWithOwnershipValidation(cartId, user.id());
+        UserAddressResponseDTO userAddress = fetchUserAddress(user.id());
+        validateStoreExists(cart.getStore());
+        validateCartItemsNotEmpty(cart.getCartItems());
+
+        int totalPrice = calculateTotalPrice(cart.getCartItems());
         
-        log.info("주문 아이템 생성 완료. 장바구니 삭제 남음");
-        cartRepository.delete(cart);
-        log.info("장바구니 삭제 완료.");
+        Order order = createOrderEntity(req, totalPrice, userAddress.getAddress(), cart.getStore(), user.id());
+        orderRepository.save(order);
+        
+        List<OrderItem> orderItems = createOrderItems(cart.getCartItems(), order);
+        orderItemRepository.saveAll(orderItems);
+        
+        saveOrderItemOptions(orderItems);
+        
+        deleteCart(cart);
+        
+        log.info("주문 생성 완료 (orderId={}, totalPrice={})", order.getId(), totalPrice);
         return OrderConverter.toOrderCreateResponseDTO(order);
     }
 
-    public OrderResponseDTO.OrderUpdateResponseDTO updateOrder(OrderRequestDTO.OrderUpdateRequestDTO orderUpdateRequestDTO, UUID orderId, CurrentUser user) {
-        if(user == null || !orderRepository.existsByOrderIdAndUserId(orderId, user.id())) {
-            log.warn("주문 수정 권한 없음");
-            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
-        }
-        Order order = orderRepository.findById(orderId).orElseThrow(()->{
-            log.warn("존재하지 않는 주문");
-            return new OrderException(OrderErrorCode.NOT_FOUND);
-        });
-        log.info("주문 수정 권한 확인 성공");
-        OrderStatus prev_orderStatus = order.getStatus();
-        order.updateOrderStatus(orderUpdateRequestDTO.getNewStatus());
+    public OrderResponseDTO.OrderUpdateResponseDTO updateOrder(
+            OrderRequestDTO.OrderUpdateRequestDTO req, 
+            UUID orderId, 
+            CurrentUser user
+    ) {
+        validateUser(user);
+        validateOrderId(orderId);
+        validateOrderOwnership(orderId, user.id());
+
+        Order order = findOrderById(orderId);
+        OrderStatus prevStatus = order.getStatus();
+        
+        order.updateOrderStatus(req.getNewStatus());
         orderRepository.save(order);
-        log.info("주문 수정 완료");
-        return OrderConverter.toOrderUpdateResponseDTO(order,prev_orderStatus);
+        
+        log.info("주문 수정 완료 (orderId={}, status: {} -> {})", 
+            orderId, prevStatus, order.getStatus());
+        
+        return OrderConverter.toOrderUpdateResponseDTO(order, prevStatus);
     }
 
     public void deleteOrder(UUID orderId, CurrentUser user) {
-        if(user == null || !orderRepository.existsByOrderIdAndUserId(orderId, user.id())) {
-            log.warn("주문 삭제 권한 없음");
+        validateUser(user);
+        validateOrderId(orderId);
+        validateOrderOwnership(orderId, user.id());
+
+        Order order = findOrderById(orderId);
+        order.softDelete();
+        
+        log.info("주문 삭제 완료 (orderId={})", orderId);
+    }
+
+    private void validateUser(CurrentUser user) {
+        if (user == null || user.id() == null) {
+            log.warn("유효하지 않은 사용자");
             throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
         }
-        Order order = orderRepository.findById(orderId).orElseThrow(()->{
-            log.warn("존재하지 않는 주문");
-            return new OrderException(OrderErrorCode.NOT_FOUND);
-        });
-        log.info("주문 삭제 권한 확인");
-        order.softDelete();
-        log.info("주문 삭제 완료");
+    }
+
+    private void validateCartId(UUID cartId) {
+        if (cartId == null) {
+            log.warn("Cart ID가 null입니다");
+            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
+        }
+    }
+
+    private void validateOrderId(UUID orderId) {
+        if (orderId == null) {
+            log.warn("Order ID가 null입니다");
+            throw new OrderException(OrderErrorCode.NOT_FOUND);
+        }
+    }
+
+    private void validateOrderOwnership(UUID orderId, UUID userId) {
+        if (!orderRepository.existsByOrderIdAndUserId(orderId, userId)) {
+            log.warn("주문 접근 권한 없음 (orderId={}, userId={})", orderId, userId);
+            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
+        }
+    }
+
+    private Order findOrderById(UUID orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 주문: {}", orderId);
+                    return new OrderException(OrderErrorCode.NOT_FOUND);
+                });
+    }
+
+    private Cart findCartWithOwnershipValidation(UUID cartId, UUID userId) {
+        Cart cart = cartRepository.findByIdAndUserWithCartItems(cartId, userId)
+                .orElseThrow(() -> {
+                    log.warn("존재하지 않는 장바구니 또는 접근 권한 없음 (cartId={}, userId={})", cartId, userId);
+                    return new CartException(CartErrorCode.NOT_FOUND);
+                });
+
+        if (!cartRepository.existsByUserAndCart(userId, cartId)) {
+            log.warn("주문 생성 권한 없음 (cartId={}, userId={})", cartId, userId);
+            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        return cart;
+    }
+
+    private UserAddressResponseDTO fetchUserAddress(UUID userId) {
+        try {
+            return userClient.addressById(userId);
+        } catch (Exception e) {
+            log.error("사용자 주소 조회 실패 (userId={})", userId, e);
+            throw new OrderException(OrderErrorCode.UNAUTHORIZED_ACCESS);
+        }
+    }
+
+    private void validateStoreExists(UUID storeId) {
+        if (storeId == null) {
+            log.warn("Store ID가 null입니다");
+            throw new CartException(CartErrorCode.STORE_NOT_FOUND);
+        }
+
+        if (!storeClient.existStore(storeId)) {
+            log.warn("존재하지 않는 스토어: {}", storeId);
+            throw new CartException(CartErrorCode.STORE_NOT_FOUND);
+        }
+    }
+
+    private void validateCartItemsNotEmpty(List<CartItem> cartItems) {
+        if (cartItems == null || cartItems.isEmpty()) {
+            log.warn("장바구니에 아이템이 없습니다");
+            throw new CartItemException(CartItemErrorCode.NOT_FOUND);
+        }
+    }
+
+    private int calculateTotalPrice(List<CartItem> cartItems) {
+        return cartItems.stream()
+                .mapToInt(CartItem::getPrice)
+                .sum();
+    }
+
+    private Order createOrderEntity(
+            OrderRequestDTO.OrderCreateRequestDTO req, 
+            int totalPrice, 
+            String address, 
+            UUID storeId, 
+            UUID userId
+    ) {
+        Order order = OrderConverter.toOrder(req, totalPrice, address);
+        order.setStore(storeId);
+        order.setUser(userId);
+        return order;
+    }
+
+    private List<OrderItem> createOrderItems(List<CartItem> cartItems, Order order) {
+        return cartItems.stream()
+                .map(cartItem -> OrderItemConverter.CartItemtoOrderItem(cartItem, order))
+                .toList();
+    }
+
+    private void saveOrderItemOptions(List<OrderItem> orderItems) {
+        orderItems.stream()
+                .filter(orderItem -> orderItem.getOptions() != null && !orderItem.getOptions().isEmpty())
+                .forEach(orderItem -> orderItemOptionRepository.saveAll(orderItem.getOptions()));
+    }
+
+    private void deleteCart(Cart cart) {
+        try {
+            cartRepository.delete(cart);
+            log.debug("장바구니 삭제 완료 (cartId={})", cart.getId());
+        } catch (Exception e) {
+            log.error("장바구니 삭제 실패 (cartId={})", cart.getId(), e);
+        }
     }
 }

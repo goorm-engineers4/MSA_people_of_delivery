@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,7 +33,7 @@ public class CartController {
     @PostMapping
     @Operation(summary = "장바구니 생성", description = "장바구니를 생성합니다. 장바구니 생성에 사용되는 API입니다.")
     public CustomResponse<CartResponseDTO.CartCreateResponseDTO> createCart(
-            @RequestBody CartRequestDTO.CartCreateRequestDTO cartCreateRequestDTO,
+            @Valid @RequestBody CartRequestDTO.CartCreateRequestDTO cartCreateRequestDTO,
             @AuthenticationPrincipal CurrentUser user
     ){
         CartResponseDTO.CartCreateResponseDTO cart = cartCommandService.createCart(cartCreateRequestDTO,user);

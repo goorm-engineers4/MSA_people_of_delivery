@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 @Getter
 public enum CartErrorCode implements BaseErrorCode {
+    INVALID_INPUT(HttpStatus.BAD_REQUEST, "CART400_0", "잘못된 입력값입니다."),
     CREATE_FAILED(HttpStatus.BAD_REQUEST, "CART400_1", "장바구니 정보를 생성할 수 없습니다."),
     DELETE_FAILED(HttpStatus.BAD_REQUEST, "CART400_2", "장바구니 정보를 삭제할 수 없습니다."),
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "CART401", "장바구니에 접근할 수 있는 권한이 없습니다."),
