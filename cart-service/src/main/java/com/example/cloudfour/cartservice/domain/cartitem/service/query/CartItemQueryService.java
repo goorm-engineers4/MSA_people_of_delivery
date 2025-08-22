@@ -1,6 +1,5 @@
 package com.example.cloudfour.cartservice.domain.cartitem.service.query;
 
-import com.example.cloudfour.cartservice.domain.cart.repository.CartRepository;
 import com.example.cloudfour.cartservice.domain.cartitem.converter.CartItemConverter;
 import com.example.cloudfour.cartservice.domain.cartitem.dto.CartItemResponseDTO;
 import com.example.cloudfour.cartservice.domain.cartitem.entity.CartItem;
@@ -8,21 +7,17 @@ import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemError
 import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemException;
 import com.example.cloudfour.cartservice.domain.cartitem.repository.CartItemRepository;
 import com.example.cloudfour.modulecommon.dto.CurrentUser;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 public class CartItemQueryService {
     private final CartItemRepository cartItemRepository;
-    private final CartRepository cartRepository;
 
     public CartItemResponseDTO.CartItemListResponseDTO getCartItemById(UUID cartItemId, CurrentUser user) {
         if(user == null || !cartItemRepository.existsByCartItemAndUser(cartItemId,user.id())){
@@ -37,20 +32,5 @@ public class CartItemQueryService {
                 });
         log.info("장바구니 아이템 조회 완료");
         return CartItemConverter.toCartItemListResponseDTO(cartItem);
-    }
-
-    public List<CartItemResponseDTO.CartItemListResponseDTO>getCartItemList(UUID cartId, CurrentUser user) {
-        if(user == null || !cartRepository.existsByUserAndCart(user.id(),cartId)){
-            log.warn("장바구니 아이템 목록 조회 권한 없음");
-            throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
-        }
-        log.info("장바구니 아이템 목록 조회 권한 확인");
-        List<CartItem> cartItem = cartItemRepository.findAllByCartId(cartId,user.id());
-        if(cartItem.isEmpty()){
-            log.warn("존재하지 않는 장바구니 아이템");
-            throw new CartItemException(CartItemErrorCode.NOT_FOUND);
-        }
-        log.info("장바구니 아이템 목록 조회 완료");
-        return cartItem.stream().map(CartItemConverter::toCartItemListResponseDTO).toList();
     }
 }

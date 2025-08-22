@@ -12,6 +12,9 @@ public interface CartRepository extends JpaRepository<Cart, UUID> {
     @Query("select c from Cart c where c.id = :cartId and c.user = :userId")
     Optional<Cart> findByIdAndUser(@Param("cartId") UUID cartId, @Param("userId") UUID userId);
 
+    @Query("select c from Cart c left join fetch c.cartItems where c.id = :cartId and c.user = :userId")
+    Optional<Cart> findByIdAndUserWithCartItems(@Param("cartId") UUID cartId, @Param("userId") UUID userId);
+
     @Query("select count(c) > 0 from Cart c where c.user = :userId and c.store = :storeId")
     boolean existsByUserAndStore(@Param("userId") UUID userId, @Param("storeId") UUID storeId);
 
