@@ -1,10 +1,13 @@
 package com.example.cloudfour.storeservice.domain.menu.converter;
 
 import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
+import com.example.cloudfour.storeservice.domain.commondto.MenuCartResponseDTO;
+import com.example.cloudfour.storeservice.domain.commondto.MenuOptionCartResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.controller.MenuCommonResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuRequestDTO;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.entity.Menu;
+import com.example.cloudfour.storeservice.domain.menu.entity.MenuOption;
 
 import java.util.List;
 
@@ -106,4 +109,13 @@ public class MenuConverter {
                 .category(menu.getMenuCategory().getMenuCategoryName())
                 .build();
     }
+
+    public static MenuCartResponseDTO toFindMenuDTO(Menu menu){
+        return MenuCartResponseDTO.builder()
+                .menuId(menu.getId())
+                .price(menu.getPrice())
+                .build();
+    }
+
+
 }
