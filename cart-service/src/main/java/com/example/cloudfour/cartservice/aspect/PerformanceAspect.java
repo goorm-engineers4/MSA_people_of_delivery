@@ -6,10 +6,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
-/**
- * 성능 모니터링을 위한 AOP Aspect
- * Service 레이어의 메서드 실행 시간을 측정합니다.
- */
 @Slf4j
 @Aspect
 @Component

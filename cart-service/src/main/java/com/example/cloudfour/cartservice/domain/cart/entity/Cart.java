@@ -3,8 +3,21 @@ package com.example.cloudfour.cartservice.domain.cart.entity;
 import com.example.cloudfour.cartservice.domain.cart.exception.CartErrorCode;
 import com.example.cloudfour.cartservice.domain.cart.exception.CartException;
 import com.example.cloudfour.cartservice.domain.cartitem.entity.CartItem;
-import jakarta.persistence.*;
-import lombok.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,10 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * 장바구니 엔티티
- * 사용자별로 스토어의 상품들을 담을 수 있는 컨테이너 역할
- */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

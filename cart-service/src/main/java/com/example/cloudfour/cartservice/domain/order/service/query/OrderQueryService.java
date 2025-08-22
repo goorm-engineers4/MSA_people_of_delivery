@@ -2,7 +2,6 @@ package com.example.cloudfour.cartservice.domain.order.service.query;
 
 import com.example.cloudfour.cartservice.client.StoreClient;
 import com.example.cloudfour.cartservice.client.UserClient;
-import com.example.cloudfour.cartservice.commondto.MenuOptionResponseDTO;
 import com.example.cloudfour.cartservice.commondto.StoreResponseDTO;
 import com.example.cloudfour.cartservice.commondto.UserResponseDTO;
 import com.example.cloudfour.cartservice.domain.order.converter.OrderConverter;

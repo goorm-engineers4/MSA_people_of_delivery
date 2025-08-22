@@ -2,8 +2,22 @@ package com.example.cloudfour.cartservice.domain.order.entity;
 
 import com.example.cloudfour.cartservice.domain.order.exception.OrderItemErrorCode;
 import com.example.cloudfour.cartservice.domain.order.exception.OrderItemException;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,11 +45,9 @@ public class OrderItem {
     @Column(name = "menuId", nullable = false)
     private UUID menu;
 
-    // 단일 옵션 (기존 호환성 유지)
     @Column(name = "menuOptionId")
     private UUID menuOption;
 
-    // 여러 옵션을 위한 새로운 구조
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OrderItemOption> options = new ArrayList<>();

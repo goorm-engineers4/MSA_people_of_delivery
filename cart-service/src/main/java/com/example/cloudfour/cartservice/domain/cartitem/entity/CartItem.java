@@ -3,17 +3,28 @@ package com.example.cloudfour.cartservice.domain.cartitem.entity;
 import com.example.cloudfour.cartservice.domain.cart.entity.Cart;
 import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemErrorCode;
 import com.example.cloudfour.cartservice.domain.cartitem.exception.CartItemException;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * 장바구니 아이템 엔티티
- * 장바구니에 담긴 개별 상품과 옵션 정보를 관리
- */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
