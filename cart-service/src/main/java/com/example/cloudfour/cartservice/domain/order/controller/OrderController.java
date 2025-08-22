@@ -55,7 +55,7 @@ public class OrderController {
         return CustomResponse.onSuccess(HttpStatus.OK, order);
     }
 
-    @GetMapping("/{orderItemId}")
+    @GetMapping("/detail/{orderItemId}")
     @Operation(summary = "주문 아이템 상세 조회", description = "주문 아이템을 상세 조회합니다. 주문 아이템 상세 조회에 사용되는 API입니다.")
     public CustomResponse<OrderItemResponseDTO.OrderItemListResponseDTO> getOrderItem(
             @PathVariable("orderItemId") UUID orderItemId,
