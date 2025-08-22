@@ -45,11 +45,14 @@ public class CartItemCommandService {
             log.warn("장바구니 아이템 추가 권한 없음");
             throw new CartItemException(CartItemErrorCode.UNAUTHORIZED_ACCESS);
         }
-        UUID menu = cartItemAddRequestDTO.getMenuId();
 
-        if (!storeClient.existMenu(menu)) {
+
+
+        if (!storeClient.existMenu(cartItemAddRequestDTO.getMenuId())) {
             throw new CartException(CartErrorCode.MENU_NOT_FOUND);
         }
+
+        MenuResponseDTO menu = storeClient.menuById(cartItemAddRequestDTO.getMenuId());
 
         log.info("장바구니 아이템 추가 권한 확인 성공");
 
@@ -64,13 +67,30 @@ public class CartItemCommandService {
                     .sum();
         }
 
+        List<CartItem> existingCartItems = cartItemRepository.findByCartIdAndMenuId(cartId, menu.getMenuId());
+        
+        for (CartItem existingItem : existingCartItems) {
+            if (isSameOptions(existingItem.getOptions(), selectedOptionIds.isEmpty() ? List.of() : storeClient.menuOptionsByIds(selectedOptionIds))) {
+                int newQuantity = existingItem.getQuantity() + 1;
+                int newTotalPrice = (menu.getPrice() + additionalPrice) * newQuantity;
+                
+                existingItem.update(newQuantity, newTotalPrice);
+                cartItemRepository.save(existingItem);
+                
+                log.info("기존 장바구니 아이템 수량 증가 (cartItemId={}, quantity: {} -> {})", 
+                    existingItem.getId(), existingItem.getQuantity() - 1, existingItem.getQuantity());
+                
+                return CartItemConverter.toCartItemAddResponseDTO(existingItem);
+            }
+        }
+
         CartItem cartItem = CartItem.builder()
                 .quantity(1)
-                .price(0 + additionalPrice)
+                .price(menu.getPrice() + additionalPrice)
                 .build();
 
         cartItem.setCart(cart);
-        cartItem.setMenu(menu);
+        cartItem.setMenu(menu.getMenuId());
 
         if (!selectedOptionIds.isEmpty()) {
             List<MenuOptionResponseDTO> options = storeClient.menuOptionsByIds(selectedOptionIds);
@@ -86,7 +106,7 @@ public class CartItemCommandService {
 
         cartItemRepository.save(cartItem);
 
-        log.info("장바구니 아이템 추가 완료");
+        log.info("새로운 장바구니 아이템 추가 완료");
         return CartItemConverter.toCartItemAddResponseDTO(cartItem);
     }
 
@@ -131,6 +151,23 @@ public class CartItemCommandService {
 
         int totalPrice = unitPrice * quantity;
 
+        List<CartItem> existingCartItems = cartItemRepository.findByCartIdAndMenuId(cartId, menu.getMenuId());
+        
+        for (CartItem existingItem : existingCartItems) {
+            if (isSameOptions(existingItem.getOptions(), options)) {
+                int newQuantity = existingItem.getQuantity() + quantity;
+                int newTotalPrice = unitPrice * newQuantity;
+                
+                existingItem.update(newQuantity, newTotalPrice);
+                cartItemRepository.save(existingItem);
+                
+                log.info("기존 장바구니 아이템 수량 증가 (cartItemId={}, quantity: {} -> {})", 
+                    existingItem.getId(), existingItem.getQuantity() - quantity, existingItem.getQuantity());
+                
+                return CartItemConverter.toCartItemAddResponseDTO(existingItem);
+            }
+        }
+
         CartItem cartItem = CartItem.builder()
                 .quantity(quantity)
                 .price(totalPrice)
@@ -149,9 +186,27 @@ public class CartItemCommandService {
         }
 
         cartItemRepository.save(cartItem);
-        log.info("장바구니 아이템 생성 완료 (cartId={}, itemId={})", cart.getId(), cartItem.getId());
+        log.info("새로운 장바구니 아이템 생성 완료 (cartId={}, itemId={})", cart.getId(), cartItem.getId());
 
         return CartItemConverter.toCartItemAddResponseDTO(cartItem);
+    }
+
+    private boolean isSameOptions(List<CartItemOption> existingOptions, List<MenuOptionResponseDTO> newOptions) {
+        if (existingOptions.size() != newOptions.size()) {
+            return false;
+        }
+
+        List<UUID> existingOptionIds = existingOptions.stream()
+                .map(CartItemOption::getMenuOptionId)
+                .sorted()
+                .toList();
+        
+        List<UUID> newOptionIds = newOptions.stream()
+                .map(MenuOptionResponseDTO::getMenuOptionId)
+                .sorted()
+                .toList();
+        
+        return existingOptionIds.equals(newOptionIds);
     }
 
     public CartItemResponseDTO.CartItemUpdateResponseDTO updateCartItem(CartItemRequestDTO.CartItemUpdateRequestDTO cartItemUpdateRequestDTO, UUID cartItemId, CurrentUser user) {

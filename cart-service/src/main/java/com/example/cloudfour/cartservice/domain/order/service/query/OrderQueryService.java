@@ -51,12 +51,13 @@ public class OrderQueryService {
         log.info("주문 조회 권한 확인 성공");
         List<OrderItem> orderItems =  orderItemRepository.findByOrderId(orderId);
         List<OrderItemResponseDTO.OrderItemListResponseDTO> orderItemDTOS =
-                orderItems.stream().map(orderItem -> {
-                    MenuOptionResponseDTO menuOptionDTO = storeClient.menuOptionById(orderItem.getMenuOption());
-                    return OrderItemConverter.toOrderItemClassListDTO(orderItem, menuOptionDTO);
-                }).toList();
+                orderItems.stream().map(OrderItemConverter::toOrderItemClassListDTO).toList();
+        
+        // store 정보 가져오기
+        StoreResponseDTO store = storeClient.storeById(order.getStore());
+        
         log.info("주문 조회 완료");
-        return OrderConverter.toOrderDetailResponseDTO(order,orderItemDTOS);
+        return OrderConverter.toOrderDetailResponseDTO(order, orderItemDTOS, store.getName());
     }
 
     public OrderItemResponseDTO.OrderItemListResponseDTO getOrderItemById(UUID orderItemId, CurrentUser user){
@@ -69,9 +70,8 @@ public class OrderQueryService {
             throw new OrderItemException(OrderItemErrorCode.UNAUTHORIZED_ACCESS);
         }
         log.info("주문 아이템 조회 권한 확인 성공");
-        MenuOptionResponseDTO menuOptionDTO = storeClient.menuOptionById(orderItem.getMenuOption());
         log.info("주문 아이템 조회 완료");
-        return OrderItemConverter.toOrderItemClassListDTO(orderItem,menuOptionDTO);
+        return OrderItemConverter.toOrderItemClassListDTO(orderItem);
     }
 
     public OrderResponseDTO.OrderUserListResponseDTO getOrderListByUser(CurrentUser user, LocalDateTime cursor, Integer size) {

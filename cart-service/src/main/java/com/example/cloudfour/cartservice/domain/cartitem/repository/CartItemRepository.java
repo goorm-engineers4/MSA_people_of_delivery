@@ -14,4 +14,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
     
     @Query("select ci from CartItem ci left join fetch ci.options where ci.cart.id = :cartId")
     List<CartItem> findAllByCartIdWithOptions(@Param("cartId") UUID cartId);
+    
+    @Query("select ci from CartItem ci left join fetch ci.options where ci.cart.id = :cartId and ci.menu = :menuId")
+    List<CartItem> findByCartIdAndMenuId(@Param("cartId") UUID cartId, @Param("menuId") UUID menuId);
 }

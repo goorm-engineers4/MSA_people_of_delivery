@@ -48,6 +48,18 @@ public class OrderConverter {
                 .build();
     }
 
+    public static OrderResponseDTO.OrderDetailResponseDTO toOrderDetailResponseDTO(Order order, List<OrderItemResponseDTO.OrderItemListResponseDTO> orderItems, String storeName) {
+        return OrderResponseDTO.OrderDetailResponseDTO.builder()
+                .storeName(storeName)
+                .orderType(order.getOrderType())
+                .receiptType(order.getReceiptType())
+                .address(order.getAddress())
+                .request(order.getRequest())
+                .items(orderItems)
+                .orderCommonResponseDTO(toOrderCommonResponseDTO(order))
+                .build();
+    }
+
     public static OrderResponseDTO.OrderUserResponseDTO toOrderUserResponseDTO(Order order,String storeName) {
         return OrderResponseDTO.OrderUserResponseDTO.builder()
                 .storeName(storeName)

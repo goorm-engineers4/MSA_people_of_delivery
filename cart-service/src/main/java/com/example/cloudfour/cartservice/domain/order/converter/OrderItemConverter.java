@@ -13,12 +13,6 @@ import java.util.stream.Collectors;
 
 public class OrderItemConverter {
     
-    public static OrderItemResponseDTO.OrderItemListResponseDTO toOrderItemClassListDTO(OrderItem orderItem, MenuOptionResponseDTO option) {
-        return OrderItemResponseDTO.OrderItemListResponseDTO.builder()
-                .option(option)
-                .build();
-    }
-
     public static OrderItemResponseDTO.OrderItemListResponseDTO toOrderItemClassListDTO(OrderItem orderItem) {
         List<OrderItemResponseDTO.OrderItemOptionDTO> options = orderItem.getOptions().stream()
                 .map(option -> OrderItemResponseDTO.OrderItemOptionDTO.builder()

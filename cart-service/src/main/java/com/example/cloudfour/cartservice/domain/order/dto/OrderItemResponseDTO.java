@@ -15,10 +15,6 @@ public class OrderItemResponseDTO {
         Integer quantity;
         Integer price;
         UUID menuId;
-
-        @JsonUnwrapped
-        MenuOptionResponseDTO option;
-
         List<OrderItemOptionDTO> options;
     }
 
