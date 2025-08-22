@@ -124,7 +124,7 @@ public class StoreConverter {
                 .deliveryTip(storeDocument.getDeliveryTip())
                 .operationHours(storeDocument.getOperationHours())
                 .closedDays(storeDocument.getClosedDays())
-                .category(storeDocument.getStoreCategory())
+                .category(storeDocument.getStoreCategory().getStoreCategoryName())
                 .build();
     }
 
