@@ -21,4 +21,6 @@ public interface StoreRepository extends JpaRepository<Store, UUID>{
     List<Store> findAllBySyncStatus(SyncStatus syncStatus);
 
     List<Store> findAllByIsDeletedIsFalse();
+
+    boolean existsByIdAndIsDeletedFalse(UUID storeId);
 }
