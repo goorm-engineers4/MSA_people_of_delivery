@@ -43,7 +43,7 @@ public class CartItemOption {
     @Column(name = "option_name", nullable = false, length = 100)
     private String optionName;
 
-    void setCartItem(CartItem cartItem) {
+    public void setCartItem(CartItem cartItem) {
         this.cartItem = cartItem;
     }
 }

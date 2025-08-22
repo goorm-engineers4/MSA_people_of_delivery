@@ -59,7 +59,15 @@ public class StoreClient {
         }
 
         return menuOptionIds.stream()
-                .map(this::menuOptionById)
+                .map(id -> {
+                    try {
+                        return menuOptionById(id);
+                    } catch (Exception e) {
+                        System.err.println("Failed to fetch menu option: " + id + ", error: " + e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(option -> option != null)
                 .toList();
     }
 

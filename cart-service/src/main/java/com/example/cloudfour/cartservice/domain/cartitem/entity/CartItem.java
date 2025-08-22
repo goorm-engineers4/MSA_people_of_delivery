@@ -63,8 +63,10 @@ public class CartItem {
     }
 
     public void addOption(CartItemOption option) {
-        option.setCartItem(this);
-        this.options.add(option);
+        if (option != null) {
+            option.setCartItem(this);
+            this.options.add(option);
+        }
     }
 
     public void update(Integer quantity, Integer price){

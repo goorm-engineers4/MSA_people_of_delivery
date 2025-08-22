@@ -9,6 +9,7 @@ import com.example.cloudfour.modulecommon.dto.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/cartItems")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "CartItem", description = "장바구니아이템 API by 조성칠")
 public class CartItemController {
     private final CartItemCommandService cartItemCommandService;
@@ -58,6 +60,9 @@ public class CartItemController {
             @RequestBody CartItemRequestDTO.CartItemUpdateRequestDTO request,
             @AuthenticationPrincipal CurrentUser user
     ){
+        log.info("CartItem 수정 요청 - cartItemId: {}, request: menuOptionIds={}, quantity={}", 
+            cartItemId, request.getMenuOptionIds(), request.getQuantity());
+        
         CartItemResponseDTO.CartItemUpdateResponseDTO cartItem = cartItemCommandService.updateCartItem(request, cartItemId, user);
         return CustomResponse.onSuccess(HttpStatus.OK, cartItem);
     }

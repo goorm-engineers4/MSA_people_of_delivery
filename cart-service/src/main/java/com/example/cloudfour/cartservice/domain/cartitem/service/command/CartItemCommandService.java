@@ -221,12 +221,20 @@ public class CartItemCommandService {
 
         log.info("장바구니 아이템 수정 권한 확인 성공");
 
+        // 요청 데이터 상세 로깅
+        log.info("원본 요청 데이터 - menuOptionIds: {}, quantity: {}", 
+            cartItemUpdateRequestDTO.getMenuOptionIds(), 
+            cartItemUpdateRequestDTO.getQuantity());
+
         List<UUID> selectedOptionIds =
                 Optional.ofNullable(cartItemUpdateRequestDTO.getMenuOptionIds()).orElseGet(List::of);
+        
+        log.info("처리된 옵션 ID 목록: {}, 수량: {}", selectedOptionIds, cartItemUpdateRequestDTO.getQuantity());
         
         int additionalPrice = 0;
         if (!selectedOptionIds.isEmpty()) {
             List<MenuOptionResponseDTO> options = storeClient.menuOptionsByIds(selectedOptionIds);
+            log.info("Store에서 가져온 옵션 정보: {}", options.size());
             additionalPrice = options.stream()
                     .mapToInt(MenuOptionResponseDTO::getAdditionalPrice)
                     .sum();
@@ -243,22 +251,41 @@ public class CartItemCommandService {
         int totalPrice = (menu.getPrice() + additionalPrice) * quantity;
         cartItem.update(quantity, totalPrice);
 
+        int beforeClearCount = cartItem.getOptions().size();
         cartItem.getOptions().clear();
+        log.info("기존 옵션 삭제 완료 - 삭제된 옵션 개수: {}", beforeClearCount);
+
         if (!selectedOptionIds.isEmpty()) {
             List<MenuOptionResponseDTO> options = storeClient.menuOptionsByIds(selectedOptionIds);
+            log.info("새로운 옵션 추가 시작 - 추가할 옵션 개수: {}", options.size());
+            
             for (MenuOptionResponseDTO optionResponse : options) {
                 CartItemOption option = CartItemOption.builder()
                         .menuOptionId(optionResponse.getMenuOptionId())
                         .additionalPrice(optionResponse.getAdditionalPrice())
                         .optionName(optionResponse.getOptionName())
                         .build();
+                
+                log.info("옵션 생성 - ID: {}, 이름: {}, 추가가격: {}", 
+                    optionResponse.getMenuOptionId(), 
+                    optionResponse.getOptionName(), 
+                    optionResponse.getAdditionalPrice());
+                
                 cartItem.addOption(option);
             }
+            
+            log.info("옵션 추가 완료 - 현재 옵션 개수: {}", cartItem.getOptions().size());
+        } else {
+            log.info("추가할 옵션이 없음");
         }
-        
+
         cartItemRepository.save(cartItem);
-        log.info("장바구니 아이템 수정 완료");
-        return CartItemConverter.toCartItemUpdateResponseDTO(cartItem);
+
+        CartItem updatedCartItem = cartItemRepository.findByIdWithOptions(cartItemId)
+                .orElseThrow(() -> new CartItemException(CartItemErrorCode.NOT_FOUND));
+        
+        log.info("장바구니 아이템 수정 완료 (옵션 개수: {})", updatedCartItem.getOptions().size());
+        return CartItemConverter.toCartItemUpdateResponseDTO(updatedCartItem);
     }
 
     public void deleteCartItem(UUID cartItemId, CurrentUser user) {
