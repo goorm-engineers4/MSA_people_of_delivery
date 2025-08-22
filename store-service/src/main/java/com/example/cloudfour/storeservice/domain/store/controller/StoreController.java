@@ -44,14 +44,6 @@ public class StoreController {
         return CustomResponse.onSuccess(HttpStatus.CREATED, storeCommandService.createStore(dto, user));
     }
 
-    @PostMapping("/test")
-    public CustomResponse<StoreResponseDTO.testResponseDTO> createStoreTest(
-            @RequestBody StoreRequestDTO.testRequestDTO dto,
-            @AuthenticationPrincipal CurrentUser user
-    ) {
-        return CustomResponse.onSuccess(HttpStatus.CREATED, storeCommandService.createStoreTest(dto, user));
-    }
-
     @GetMapping("")
     @Operation(summary = "키워드로 가게 목록 조회", description = "키워드에 해당하는 가게 목록을 커서 기반으로 조회합니다.")
     @Parameter(name = "cursor", description = "데이터가 시작하는 기준 시간입니다.")

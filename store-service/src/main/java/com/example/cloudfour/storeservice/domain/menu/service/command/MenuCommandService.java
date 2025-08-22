@@ -129,7 +129,7 @@ public class MenuCommandService {
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
         log.info("메뉴 삭제 권한 성공");
-        menuRepository.delete(menu);
+        menu.softDelete();
         log.info("메뉴 ID: {}가 삭제되었습니다.", menuId);
     }
 
@@ -207,7 +207,7 @@ public class MenuCommandService {
             throw new MenuException(MenuErrorCode.UNAUTHORIZED_ACCESS);
         }
         log.info("메뉴옵션 삭제 권한 확인 성공");
-        menuOptionRepository.delete(menuOption);
+        menuOption.softDelete();
         log.info("메뉴 옵션 ID: {}가 삭제되었습니다.", optionId);
     }
 }
