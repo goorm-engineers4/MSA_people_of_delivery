@@ -33,10 +33,10 @@ public class StoreClient {
 
         try {
             rt.headForHeaders(BASE + "/stores/exists?storeId=" + storeId);
-            log.debug("스토어 존재 확인 완료: {}", storeId);
+            log.info("스토어 존재 확인 완료: {}", storeId);
             return true;
         } catch (HttpClientErrorException.NotFound e) {
-            log.debug("스토어가 존재하지 않음: {}", storeId);
+            log.info("스토어가 존재하지 않음: {}", storeId);
             return false;
         } catch (Exception e) {
             log.error("스토어 존재 여부 확인 실패: {}", storeId, e);
@@ -53,10 +53,10 @@ public class StoreClient {
 
         try {
             rt.headForHeaders(BASE + "/menus/exists?menuId=" + menuId);
-            log.debug("메뉴 존재 확인 완료: {}", menuId);
+            log.info("메뉴 존재 확인 완료: {}", menuId);
             return true;
         } catch (HttpClientErrorException.NotFound e) {
-            log.debug("메뉴가 존재하지 않음: {}", menuId);
+            log.info("메뉴가 존재하지 않음: {}", menuId);
             return false;
         } catch (Exception e) {
             log.error("메뉴 존재 여부 확인 실패: {}", menuId, e);
@@ -74,7 +74,7 @@ public class StoreClient {
 
         try {
             StoreResponseDTO store = rt.getForObject(BASE + "/stores/{storeId}", StoreResponseDTO.class, storeId);
-            log.debug("스토어 정보 조회 완료: {}", storeId);
+            log.info("스토어 정보 조회 완료: {}", storeId);
             return store;
         } catch (Exception e) {
             log.error("스토어 정보 조회 실패: {}", storeId, e);
@@ -91,7 +91,7 @@ public class StoreClient {
 
         try {
             MenuResponseDTO menu = rt.getForObject(BASE + "/menus/{menuId}", MenuResponseDTO.class, menuId);
-            log.debug("메뉴 정보 조회 완료: {}", menuId);
+            log.info("메뉴 정보 조회 완료: {}", menuId);
             return menu;
         } catch (Exception e) {
             log.error("메뉴 정보 조회 실패: {}", menuId, e);
@@ -113,7 +113,7 @@ public class StoreClient {
                 MenuOptionResponseDTO.class, 
                 menuOptionId
             );
-            log.debug("메뉴 옵션 정보 조회 완료: {}", menuOptionId);
+            log.info("메뉴 옵션 정보 조회 완료: {}", menuOptionId);
             return option;
         } catch (Exception e) {
             log.error("메뉴 옵션 정보 조회 실패: {}", menuOptionId, e);

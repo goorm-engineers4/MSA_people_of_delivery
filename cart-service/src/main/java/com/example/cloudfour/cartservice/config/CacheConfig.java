@@ -16,8 +16,10 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         return new ConcurrentMapCacheManager(
             "stores",
-            "menus",
-            "menuOptions"
+            "menus", 
+            "menuOptions",
+            "users",
+            "userAddresses"
         );
     }
 }
