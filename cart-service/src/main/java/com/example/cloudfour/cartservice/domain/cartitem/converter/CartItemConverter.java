@@ -6,6 +6,9 @@ import com.example.cloudfour.cartservice.domain.cartitem.dto.CartItemRequestDTO;
 import com.example.cloudfour.cartservice.domain.cartitem.dto.CartItemResponseDTO;
 import com.example.cloudfour.cartservice.domain.cartitem.entity.CartItem;
 
+import java.util.List;
+import java.util.UUID;
+
 public class CartItemConverter {
 
     public static CartItemResponseDTO.CartItemAddResponseDTO toCartItemAddResponseDTO(CartItem cartItem) {
@@ -29,19 +32,30 @@ public class CartItemConverter {
     }
 
     public static CartItemRequestDTO.CartItemAddRequestDTO toCartItemAddRequestDTO(CartRequestDTO.CartCreateRequestDTO cartCreateRequestDTO, int price){
-        return   CartItemRequestDTO.CartItemAddRequestDTO.builder()
+        List<UUID> menuOptionIds = cartCreateRequestDTO.getMenuOptionIds();
+        
+        return CartItemRequestDTO.CartItemAddRequestDTO.builder()
                 .menuId(cartCreateRequestDTO.getMenuId())
-                .menuOptionId(cartCreateRequestDTO.getMenuOptionId())
-                .quantity(1)
-                .price(price)
+                .menuOptionIds(menuOptionIds)
                 .build();
     }
 
     public static CartItemCommonResponseDTO toCartItemCommonResponseDTO(CartItem cartItem){
+        List<CartItemCommonResponseDTO.MenuOptionDto> menuOptions = null;
+        if (cartItem.getOptions() != null && !cartItem.getOptions().isEmpty()) {
+            menuOptions = cartItem.getOptions().stream()
+                .map(option -> CartItemCommonResponseDTO.MenuOptionDto.builder()
+                    .id(option.getMenuOptionId())
+                    .additionalPrice(option.getAdditionalPrice())
+                    .optionName(option.getOptionName())
+                    .build())
+                .toList();
+        }
+        
         return CartItemCommonResponseDTO.builder()
                 .cartItemId(cartItem.getId())
                 .cartId(cartItem.getCart().getId())
-                .menuOptionId(cartItem.getMenuOption())
+                .menuOptions(menuOptions)
                 .quantity(cartItem.getQuantity())
                 .price(cartItem.getPrice())
                 .build();

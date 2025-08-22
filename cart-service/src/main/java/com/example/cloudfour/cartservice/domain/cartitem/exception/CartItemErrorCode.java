@@ -14,6 +14,8 @@ public enum CartItemErrorCode implements BaseErrorCode {
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "CARTITEM401", "장바구니 아이템에 접근할 수 있는 권한이 없습니다."),
     NOT_FOUND(HttpStatus.NOT_FOUND, "CARTITEM404", "장바구니 아이템을 찾을 수 없습니다."),
     ALREADY_ADD(HttpStatus.CONFLICT, "CARTITEM409", "이미 등록된 장바구니 아이템입니다."),
+    INVALID_OPTION(HttpStatus.BAD_REQUEST, "CARTITEM400_4", "유효하지 않은 메뉴 옵션입니다."),
+    INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "CARTITEM400_5", "유효하지 않은 수량입니다."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CARTITEM500", "장바구니 아이템 처리 중 서버 오류가 발생했습니다.");
 
     private final HttpStatus status;
