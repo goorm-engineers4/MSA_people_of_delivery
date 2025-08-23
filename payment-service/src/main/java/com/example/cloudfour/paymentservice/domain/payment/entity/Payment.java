@@ -1,6 +1,5 @@
 package com.example.cloudfour.paymentservice.domain.payment.entity;
 
-import com.example.cloudfour.peopleofdelivery.domain.order.entity.Order;
 import com.example.cloudfour.paymentservice.domain.payment.enums.PaymentStatus;
 import com.example.cloudfour.modulecommon.entity.BaseEntity;
 import jakarta.persistence.CascadeType;
