@@ -2,12 +2,10 @@ package com.example.cloudfour.storeservice.domain.menu.converter;
 
 import com.example.cloudfour.storeservice.domain.collection.document.StoreDocument;
 import com.example.cloudfour.storeservice.domain.commondto.MenuCartResponseDTO;
-import com.example.cloudfour.storeservice.domain.commondto.MenuOptionCartResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.controller.MenuCommonResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuRequestDTO;
 import com.example.cloudfour.storeservice.domain.menu.dto.MenuResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.entity.Menu;
-import com.example.cloudfour.storeservice.domain.menu.entity.MenuOption;
 
 import java.util.List;
 
@@ -26,6 +24,7 @@ public class MenuConverter {
     public static MenuResponseDTO.MenuDetailResponseDTO toMenuDetail1ResponseDTO(Menu menu) {
         return MenuResponseDTO.MenuDetailResponseDTO.builder()
                 .menuCommonResponseDTO(toMenuCommonResponseDTO(menu))
+                .quantity(menu.getStock().getQuantity())
                 .content(menu.getContent())
                 .createdAt(menu.getCreatedAt())
                 .updatedAt(menu.getUpdatedAt())
@@ -36,6 +35,7 @@ public class MenuConverter {
             StoreDocument.Menu menu, List<MenuResponseDTO.MenuOptionDTO> options) {
         return MenuResponseDTO.MenuDetailResponseDTO.builder()
                 .menuCommonResponseDTO(documentToMenuCommonResponseDTO(menu))
+                .quantity(menu.getStock().getQuantity())
                 .content(menu.getContent())
                 .createdAt(menu.getCreatedAt())
                 .menuOptions(options)

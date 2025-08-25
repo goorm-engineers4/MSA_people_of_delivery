@@ -19,6 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -71,6 +72,9 @@ public class Menu extends BaseEntity {
     @JoinColumn(name = "storeId", nullable = false)
     private Store store;
 
+    @OneToOne(fetch = FetchType.LAZY,  mappedBy = "menu",cascade = CascadeType.ALL)
+    private Stock stock;
+
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "menu")
     @Builder.Default
     private List<MenuOption> menuOptions = new ArrayList<>();
@@ -89,6 +93,10 @@ public class Menu extends BaseEntity {
     public void setStore(Store store){
         this.store = store;
         store.getMenus().add(this);
+    }
+
+    public void setStock(Stock stock){
+        this.stock = stock;
     }
 
     public void syncCreated(){

@@ -16,6 +16,7 @@ public class MenuResponseDTO {
     public static class MenuDetailResponseDTO {
         @JsonUnwrapped
         MenuCommonResponseDTO menuCommonResponseDTO;
+        private Long quantity;
         private String content;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;

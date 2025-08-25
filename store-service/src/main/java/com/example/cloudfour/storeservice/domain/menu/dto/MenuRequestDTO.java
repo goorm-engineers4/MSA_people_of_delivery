@@ -12,6 +12,7 @@ public class MenuRequestDTO {
     public static class MenuCreateRequestDTO {
         @JsonUnwrapped
         MenuCommonRequestDTO.MenuCommonMainRequestDTO menuCommonMainRequestDTO;
+        Long quantity;
     }
 
     @Getter

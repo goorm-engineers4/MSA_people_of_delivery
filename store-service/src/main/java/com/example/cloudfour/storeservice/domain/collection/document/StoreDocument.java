@@ -62,6 +62,7 @@ public class StoreDocument {
         private Integer price;
         private String menuPicture;
         private MenuStatus menuStatus;
+        private StoreDocument.Stock stock;
         private StoreDocument.MenuCategory menuCategory;
         private List<StoreDocument.MenuOption> menuOptions;
         private LocalDateTime createdAt;
@@ -88,5 +89,12 @@ public class StoreDocument {
         private UUID id;
         private Float score;
         private String content;
+    }
+
+    @Getter
+    @Builder
+    public static class Stock{
+        private UUID id;
+        private Long quantity;
     }
 }

@@ -45,6 +45,11 @@ public class DocumentConverter {
                                         .price(m.getPrice())
                                         .menuPicture(m.getMenuPicture())
                                         .menuStatus(m.getStatus())
+                                        .stock(m.getStock()==null ? null:
+                                                StoreDocument.Stock.builder()
+                                                        .id(m.getStock().getId())
+                                                        .quantity(m.getStock().getQuantity())
+                                                        .build())
                                         .menuCategory(m.getMenuCategory() == null ? null :
                                                 StoreDocument.MenuCategory.builder()
                                                         .id(m.getMenuCategory().getId())
@@ -93,6 +98,11 @@ public class DocumentConverter {
                 .price(menu.getPrice())
                 .menuPicture(menu.getMenuPicture())
                 .menuStatus(menu.getStatus())
+                .stock(menu.getStock()==null ? null:
+                        StoreDocument.Stock.builder()
+                                .id(menu.getStock().getId())
+                                .quantity(menu.getStock().getQuantity())
+                                .build())
                 .menuCategory(menu.getMenuCategory() != null ?
                         StoreDocument.MenuCategory.builder()
                                 .id(menu.getMenuCategory().getId())

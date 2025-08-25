@@ -9,6 +9,7 @@ import com.example.cloudfour.storeservice.domain.menu.dto.MenuOptionResponseDTO;
 import com.example.cloudfour.storeservice.domain.menu.entity.Menu;
 import com.example.cloudfour.storeservice.domain.menu.entity.MenuCategory;
 import com.example.cloudfour.storeservice.domain.menu.entity.MenuOption;
+import com.example.cloudfour.storeservice.domain.menu.entity.Stock;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuException;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuErrorCode;
 import com.example.cloudfour.storeservice.domain.menu.exception.MenuOptionErrorCode;
@@ -65,10 +66,12 @@ public class MenuCommandService {
             throw new MenuException(MenuErrorCode.ALREADY_ADD);
         }
 
+        Stock stock = Stock.builder().quantity(requestDTO.getQuantity()).build();
+
         Menu menu = MenuConverter.toMenu(requestDTO);
         menu.setStore(store);
         menu.setMenuCategory(menuCategory);
-
+        stock.setMenu(menu);
 
         Menu savedMenu = menuRepository.save(menu);
         log.info("메뉴 생성 완료");
