@@ -28,7 +28,7 @@ public class Payment extends BaseEntity {
     private String paymentKey;
 
     @Column(nullable = false)
-    private String orderId;
+    private UUID orderId;
 
     @Column(nullable = false)
     private UUID userId;
