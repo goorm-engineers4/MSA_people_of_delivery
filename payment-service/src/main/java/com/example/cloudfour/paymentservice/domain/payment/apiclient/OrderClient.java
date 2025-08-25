@@ -36,37 +36,6 @@ public class OrderClient {
         }
     }
 
-    public boolean validateOrder(String orderId, UUID userId, Integer amount) {
-        try {
-            OrderResponseDTO order = getOrderById(orderId, userId);
-            
-            if (order == null) {
-                log.warn("주문 정보가 존재하지 않음: orderId={}, userId={}", orderId, userId);
-                return false;
-            }
-            
-            if (!userId.equals(order.getUserId())) {
-                log.warn("주문 소유자가 일치하지 않음: orderId={}, expectedUserId={}, actualUserId={}", 
-                    orderId, userId, order.getUserId());
-                return false;
-            }
-            
-            if (!amount.equals(order.getTotalPrice())) {
-                log.warn("주문 금액이 일치하지 않음: orderId={}, expectedAmount={}, actualAmount={}", 
-                    orderId, amount, order.getTotalPrice());
-                return false;
-            }
-            
-            log.info("주문 검증 성공: orderId={}, userId={}, amount={}", orderId, userId, amount);
-            return true;
-            
-        } catch (Exception e) {
-            log.error("주문 검증 실패: orderId={}, userId={}, amount={}, error={}", 
-                orderId, userId, amount, e.getMessage());
-            return false;
-        }
-    }
-
     public void updateOrderStatus(String orderId, String newStatus) {
         try {
             String url = BASE + "/orders/" + orderId + "/status";
