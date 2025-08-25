@@ -9,6 +9,7 @@ import com.example.cloudfour.storeservice.domain.menu.service.command.MenuComman
 import com.example.cloudfour.storeservice.domain.menu.service.query.MenuQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,7 +38,7 @@ public class MenuController {
     @Operation(summary = "메뉴 생성", description = "메뉴를 생성합니다.")
     public CustomResponse<MenuResponseDTO.MenuDetailResponseDTO> createMenu(
             @PathVariable("storeId") UUID storeId,
-            @RequestBody MenuRequestDTO.MenuCreateRequestDTO requestDTO,
+            @Valid @RequestBody MenuRequestDTO.MenuCreateRequestDTO requestDTO,
             @AuthenticationPrincipal CurrentUser user) {
 
         MenuResponseDTO.MenuDetailResponseDTO result = menuCommandService.createMenu(requestDTO, storeId, user);
@@ -110,7 +111,7 @@ public class MenuController {
     @PatchMapping("/{menuId}")
     @Operation(summary = "메뉴 수정", description = "메뉴를 수정합니다.")
     public CustomResponse<MenuResponseDTO.MenuDetailResponseDTO> updateMenu(
-            @RequestBody MenuRequestDTO.MenuUpdateRequestDTO requestDTO,
+            @Valid @RequestBody MenuRequestDTO.MenuUpdateRequestDTO requestDTO,
             @PathVariable("menuId") UUID menuId,
             @AuthenticationPrincipal CurrentUser user) {
 
@@ -132,7 +133,7 @@ public class MenuController {
     @Operation(summary = "메뉴 옵션 생성", description = "특정 메뉴에 새로운 옵션을 추가합니다.")
     public CustomResponse<MenuOptionResponseDTO.MenuOptionSimpleResponseDTO> createMenuOption(
             @PathVariable("menuId") UUID menuId,
-            @RequestBody MenuRequestDTO.MenuOptionCreateRequestDTO requestDTO,
+            @Valid @RequestBody MenuRequestDTO.MenuOptionCreateRequestDTO requestDTO,
             @AuthenticationPrincipal CurrentUser user) {
 
         MenuOptionResponseDTO.MenuOptionSimpleResponseDTO result =
@@ -166,7 +167,7 @@ public class MenuController {
     @Operation(summary = "메뉴 옵션 수정", description = "메뉴 옵션의 정보를 수정합니다.")
     public CustomResponse<MenuOptionResponseDTO.MenuOptionSimpleResponseDTO> updateMenuOption(
             @PathVariable("optionId") UUID optionId,
-            @RequestBody MenuRequestDTO.MenuOptionUpdateRequestDTO requestDTO,
+            @Valid @RequestBody MenuRequestDTO.MenuOptionUpdateRequestDTO requestDTO,
             @AuthenticationPrincipal CurrentUser user) {
 
         MenuOptionResponseDTO.MenuOptionSimpleResponseDTO result =

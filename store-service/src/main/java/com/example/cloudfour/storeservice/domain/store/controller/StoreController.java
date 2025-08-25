@@ -9,6 +9,7 @@ import com.example.cloudfour.storeservice.domain.store.service.query.StoreQueryS
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -38,7 +39,7 @@ public class StoreController {
     @PostMapping("")
     @Operation(summary = "가게 등록", description = "가게를 등록합니다.")
     public CustomResponse<StoreResponseDTO.StoreCreateResponseDTO> createStore(
-            @RequestBody StoreRequestDTO.StoreCreateRequestDTO dto,
+            @Valid  @RequestBody StoreRequestDTO.StoreCreateRequestDTO dto,
             @AuthenticationPrincipal CurrentUser user
     ) {
         return CustomResponse.onSuccess(HttpStatus.CREATED, storeCommandService.createStore(dto, user));
@@ -71,7 +72,7 @@ public class StoreController {
     @Operation(summary = "가게 정보 수정", description = "본인의 가게 정보를 수정합니다.")
     public CustomResponse<StoreResponseDTO.StoreUpdateResponseDTO> updateStore(
             @PathVariable UUID storeId,
-            @RequestBody StoreRequestDTO.StoreUpdateRequestDTO dto,
+            @Valid @RequestBody StoreRequestDTO.StoreUpdateRequestDTO dto,
             @AuthenticationPrincipal CurrentUser user
     ) {
         return CustomResponse.onSuccess(HttpStatus.OK, storeCommandService.updateStore(storeId, dto, user));

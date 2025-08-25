@@ -9,6 +9,7 @@ import com.example.cloudfour.storeservice.domain.review.service.query.ReviewQuer
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,7 +36,7 @@ public class ReviewController {
     @PostMapping("")
     @Operation(summary = "리뷰 생성", description = "리뷰를 생성합니다. 리뷰 생성에 사용되는 API입니다.")
     public CustomResponse<ReviewResponseDTO.ReviewCreateResponseDTO> createReview(
-        @RequestBody ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO,
+            @Valid @RequestBody ReviewRequestDTO.ReviewCreateRequestDTO reviewCreateRequestDTO,
         @AuthenticationPrincipal CurrentUser user
     ){
         ReviewResponseDTO.ReviewCreateResponseDTO review = reviewCommandService.createReview(reviewCreateRequestDTO,user);
@@ -45,7 +46,7 @@ public class ReviewController {
     @PatchMapping("/{reviewId}")
     @Operation(summary = "리뷰 수정", description = "리뷰를 수정합니다. 리뷰 수정에 사용되는 API입니다.")
     public CustomResponse<ReviewResponseDTO.ReviewUpdateResponseDTO> updateReview(
-            @RequestBody ReviewRequestDTO.ReviewUpdateRequestDTO reviewUpdateRequestDTO,
+            @Valid @RequestBody ReviewRequestDTO.ReviewUpdateRequestDTO reviewUpdateRequestDTO,
             @PathVariable("reviewId") UUID reviewId,
             @AuthenticationPrincipal CurrentUser user
     ){
