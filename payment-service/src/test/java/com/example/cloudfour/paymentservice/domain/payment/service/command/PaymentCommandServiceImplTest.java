@@ -264,21 +264,14 @@ class PaymentCommandServiceImplTest {
                     .amount(invalidAmount)
                     .build();
 
-            when(idempotencyService.checkPaymentApprovalIdempotency(paymentKey, orderId))
-                    .thenReturn(Optional.empty());
-            when(tossApiClient.approvePayment(anyString(), anyString(), anyInt(), anyString()))
-                    .thenReturn(tossResponse);
-
-            // When & Then
+            // When & Then - 주문 정보와 결제 정보 불일치로 인한 예외 발생
             assertThatThrownBy(() -> paymentCommandService.confirmPayment(invalidRequest, userId))
                     .isInstanceOf(PaymentException.class)
-                    .hasFieldOrPropertyWithValue("code", PaymentErrorCode.PAYMENT_APPROVAL_FAILED);
+                    .hasFieldOrPropertyWithValue("code", PaymentErrorCode.INVALID_INPUT);
 
-            verify(idempotencyService).checkPaymentApprovalIdempotency(paymentKey, orderId);
-            verify(tossApiClient).approvePayment(anyString(), anyString(), anyInt(), anyString());
-
-            verify(paymentRepository, atLeastOnce()).save(any(Payment.class));
-            verify(paymentHistoryRepository, atLeastOnce()).save(any(PaymentHistory.class));
+            // 검증 단계에서 예외가 발생하므로 이후 로직은 실행되지 않음
+            verify(idempotencyService, never()).checkPaymentApprovalIdempotency(anyString(), anyString());
+            verify(tossApiClient, never()).approvePayment(anyString(), anyString(), anyInt(), anyString());
         }
 
         @Test
@@ -292,22 +285,14 @@ class PaymentCommandServiceImplTest {
                     .amount(invalidAmount)
                     .build();
 
-            when(idempotencyService.checkPaymentApprovalIdempotency(paymentKey, orderId))
-                    .thenReturn(Optional.empty());
-            when(tossApiClient.approvePayment(anyString(), anyString(), anyInt(), anyString()))
-                    .thenReturn(tossResponse);
-
-            // When & Then
+            // When & Then - 주문 정보와 결제 정보 불일치로 인한 예외 발생
             assertThatThrownBy(() -> paymentCommandService.confirmPayment(invalidRequest, userId))
                     .isInstanceOf(PaymentException.class)
-                    .hasFieldOrPropertyWithValue("code", PaymentErrorCode.PAYMENT_APPROVAL_FAILED);
+                    .hasFieldOrPropertyWithValue("code", PaymentErrorCode.INVALID_INPUT);
 
-
-            verify(idempotencyService).checkPaymentApprovalIdempotency(paymentKey, orderId);
-            verify(tossApiClient).approvePayment(anyString(), anyString(), anyInt(), anyString());
-
-            verify(paymentRepository, atLeastOnce()).save(any(Payment.class));
-            verify(paymentHistoryRepository, atLeastOnce()).save(any(PaymentHistory.class));
+            // 검증 단계에서 예외가 발생하므로 이후 로직은 실행되지 않음
+            verify(idempotencyService, never()).checkPaymentApprovalIdempotency(anyString(), anyString());
+            verify(tossApiClient, never()).approvePayment(anyString(), anyString(), anyInt(), anyString());
         }
 
         @Test
@@ -321,21 +306,14 @@ class PaymentCommandServiceImplTest {
                     .amount(invalidAmount)
                     .build();
 
-            when(idempotencyService.checkPaymentApprovalIdempotency(paymentKey, orderId))
-                    .thenReturn(Optional.empty());
-            when(tossApiClient.approvePayment(anyString(), anyString(), anyInt(), anyString()))
-                    .thenReturn(tossResponse);
-
-            // When & Then
+            // When & Then - 주문 정보와 결제 정보 불일치로 인한 예외 발생
             assertThatThrownBy(() -> paymentCommandService.confirmPayment(invalidRequest, userId))
                     .isInstanceOf(PaymentException.class)
-                    .hasFieldOrPropertyWithValue("code", PaymentErrorCode.PAYMENT_APPROVAL_FAILED);
+                    .hasFieldOrPropertyWithValue("code", PaymentErrorCode.INVALID_INPUT);
 
-            verify(idempotencyService).checkPaymentApprovalIdempotency(paymentKey, orderId);
-            verify(tossApiClient).approvePayment(anyString(), anyString(), anyInt(), anyString());
-
-            verify(paymentRepository, atLeastOnce()).save(any(Payment.class));
-            verify(paymentHistoryRepository, atLeastOnce()).save(any(PaymentHistory.class));
+            // 검증 단계에서 예외가 발생하므로 이후 로직은 실행되지 않음
+            verify(idempotencyService, never()).checkPaymentApprovalIdempotency(anyString(), anyString());
+            verify(tossApiClient, never()).approvePayment(anyString(), anyString(), anyInt(), anyString());
         }
     }
 
