@@ -1,12 +1,12 @@
 package com.example.cloudfour.paymentservice.domain.payment.service.command;
 
+import com.example.cloudfour.paymentservice.domain.payment.dto.PaymentRequestDTO;
+import com.example.cloudfour.paymentservice.domain.payment.dto.PaymentResponseDTO;
+
 import java.util.UUID;
 
 public interface PaymentCommandService {
-    String createPayment(String request, UUID userId);
-    String verifyPayment(String request, UUID userId);
-    String updatePayment(String request, UUID orderId, UUID userId);
-    String cancelPayment(String request, UUID orderId, UUID userId);
-    void recordPaymentFail(String orderId, String message);
+    PaymentResponseDTO.PaymentConfirmResponseDTO confirmPayment(PaymentRequestDTO.PaymentConfirmRequestDTO request, UUID userId);
+    PaymentResponseDTO.PaymentCancelResponseDTO cancelPayment(PaymentRequestDTO.PaymentCancelRequestDTO request, UUID orderId, UUID userId);
     void updateStatusFromWebhook(String payload);
 }

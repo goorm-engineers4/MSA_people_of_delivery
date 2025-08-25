@@ -1,40 +1,29 @@
 package com.example.cloudfour.paymentservice.domain.payment.dto;
 
-import com.example.cloudfour.paymentservice.domain.payment.enums.PaymentStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 public class PaymentRequestDTO {
+
     @Getter
     @Builder
-    public static class PaymentCreateRequestDTO{
-        UUID orderId;
-        Integer totalPrice;
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PaymentConfirmRequestDTO {
+        private String paymentKey;
+        private String orderId;
+        private Integer amount;
     }
 
     @Getter
     @Builder
-    public static class PaymentVerifyRequestDTO{
-        String paymentKey;
-        String orderId;
-        Integer amount;
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PaymentCancelRequestDTO {
+        private String cancelReason;
     }
-
-    @Getter
-    @Builder
-    public static class PaymentUpdateRequestDTO{
-        UUID paymentHistoryId;
-        PaymentStatus paymentStatus;
-        UUID updatedBy;
-    }
-
-    @Getter
-    @Builder
-    public static class PaymentCancelRequestDTO{
-        String cancelReason;
-        UUID updatedBy;
-    }
-
 }

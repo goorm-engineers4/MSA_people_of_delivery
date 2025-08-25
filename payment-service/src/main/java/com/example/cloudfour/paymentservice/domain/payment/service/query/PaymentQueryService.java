@@ -1,10 +1,10 @@
 package com.example.cloudfour.paymentservice.domain.payment.service.query;
 
+import com.example.cloudfour.paymentservice.domain.payment.dto.PaymentResponseDTO;
+
 import java.util.UUID;
 
 public interface PaymentQueryService {
-    String getDetailPayment(UUID orderId, UUID userId);
-    String getStoreListPayment(UUID storeId, UUID userId);
-    String getUserListPayment(UUID userId);
-    String getStoreSummaryPayment(UUID storeId, UUID userId);
+    PaymentResponseDTO.PaymentDetailResponseDTO getDetailPayment(UUID orderId, UUID userId);
+    PaymentResponseDTO.PaymentUserListResponseDTO getUserListPayment(UUID userId);
 }
