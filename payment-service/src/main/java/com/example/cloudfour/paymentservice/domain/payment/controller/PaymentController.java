@@ -2,6 +2,10 @@ package com.example.cloudfour.paymentservice.domain.payment.controller;
 
 import com.example.cloudfour.modulecommon.apiPayLoad.CustomResponse;
 import com.example.cloudfour.modulecommon.dto.CurrentUser;
+import com.example.cloudfour.paymentservice.domain.payment.dto.PaymentRequestDTO;
+import com.example.cloudfour.paymentservice.domain.payment.dto.PaymentResponseDTO;
+import com.example.cloudfour.paymentservice.domain.payment.service.command.PaymentCommandService;
+import com.example.cloudfour.paymentservice.domain.payment.service.query.PaymentQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -16,49 +20,61 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/payments")
-@Tag(name="Payment", description = "결제 API")
+@Tag(name="Payment", description = "토스페이먼츠 결제 관리 API")
 public class PaymentController {
     
+    private final PaymentCommandService paymentCommandService;
+    private final PaymentQueryService paymentQueryService;
+
+    @PostMapping("/confirm")
+    @Operation(summary = "결제 승인", description = "프론트엔드에서 받은 결제 정보를 승인합니다.")
+    public CustomResponse<PaymentResponseDTO.PaymentConfirmResponseDTO> confirmPayment(
+            @RequestBody PaymentRequestDTO.PaymentConfirmRequestDTO request,
+            @AuthenticationPrincipal CurrentUser user
+    ){
+        log.info("결제 승인 요청: paymentKey={}, orderId={}, userId={}", request.getPaymentKey(), request.getOrderId(), user.id());
+        PaymentResponseDTO.PaymentConfirmResponseDTO response = paymentCommandService.confirmPayment(request, user.id());
+        return CustomResponse.onSuccess(HttpStatus.OK, response);
+    }
+
+    @PostMapping("/webhook")
+    @Operation(summary = "토스페이먼츠 웹훅", description = "토스페이먼츠 결제 상태 변경 웹훅을 처리합니다.")
+    public CustomResponse<Void> receiveWebhook(@RequestBody String payload) {
+        log.info("웹훅 수신: payload={}", payload);
+        paymentCommandService.updateStatusFromWebhook(payload);
+        return CustomResponse.onSuccess(HttpStatus.OK, null);
+    }
+
+    @PatchMapping("/{orderId}/cancel")
+    @Operation(summary = "결제 취소", description = "결제를 취소합니다.")
+    public CustomResponse<PaymentResponseDTO.PaymentCancelResponseDTO> cancelPayment(
+            @RequestBody PaymentRequestDTO.PaymentCancelRequestDTO request,
+            @PathVariable("orderId") UUID orderId,
+            @AuthenticationPrincipal CurrentUser user
+    ){
+        log.info("결제 취소 요청: orderId={}, userId={}", orderId, user.id());
+        PaymentResponseDTO.PaymentCancelResponseDTO response = paymentCommandService.cancelPayment(request, orderId, user.id());
+        return CustomResponse.onSuccess(HttpStatus.OK, response);
+    }
+
     @GetMapping("/{orderId}")
-    @Operation(summary = "결제 상세 조회", description = "결제를 상세 조회합니다.")
-    public CustomResponse<String> getPayment(
+    @Operation(summary = "결제 상세 조회", description = "결제 상세 정보를 조회합니다.")
+    public CustomResponse<PaymentResponseDTO.PaymentDetailResponseDTO> getPayment(
             @PathVariable("orderId") UUID orderId,
             @AuthenticationPrincipal CurrentUser user
     ){
         log.info("결제 상세 조회 요청: orderId={}, userId={}", orderId, user.id());
-        String payment = "결제 상세 정보 - 주문ID: " + orderId + ", 사용자ID: " + user.id();
-        return CustomResponse.onSuccess(HttpStatus.OK, payment);
-    }
-
-    @GetMapping("store/{storeId}")
-    @Operation(summary = "가게 결제 이력 조회", description = "가게 결제 이력을 조회합니다.")
-    public CustomResponse<String> getStorePayment(
-            @PathVariable("storeId") UUID storeId,
-            @AuthenticationPrincipal CurrentUser user
-    ){
-        log.info("가게 결제 이력 조회 요청: storeId={}, userId={}", storeId, user.id());
-        String payment = "가게 결제 이력 - 스토어ID: " + storeId + ", 사용자ID: " + user.id();
-        return CustomResponse.onSuccess(HttpStatus.OK, payment);
+        PaymentResponseDTO.PaymentDetailResponseDTO response = paymentQueryService.getDetailPayment(orderId, user.id());
+        return CustomResponse.onSuccess(HttpStatus.OK, response);
     }
 
     @GetMapping("/me")
-    @Operation(summary = "내 결제 이력 조회", description = "내 결제 이력을 조회합니다.")
-    public CustomResponse<String> getUserPayment(
+    @Operation(summary = "내 결제 이력", description = "내 결제 이력을 조회합니다.")
+    public CustomResponse<PaymentResponseDTO.PaymentUserListResponseDTO> getUserPayments(
             @AuthenticationPrincipal CurrentUser user
     ){
         log.info("내 결제 이력 조회 요청: userId={}", user.id());
-        String payment = "내 결제 이력 - 사용자ID: " + user.id();
-        return CustomResponse.onSuccess(HttpStatus.OK, payment);
-    }
-
-    @GetMapping("store/{storeId}/summary")
-    @Operation(summary = "가게 매출 요약", description = "가게 매출 요약을 조회합니다.")
-    public CustomResponse<String> getStoreSummaryPayment(
-            @PathVariable("storeId") UUID storeId,
-            @AuthenticationPrincipal CurrentUser user
-    ) {
-        log.info("가게 매출 요약 조회 요청: storeId={}, userId={}", storeId, user.id());
-        String payment = "가게 매출 요약 - 스토어ID: " + storeId + ", 사용자ID: " + user.id();
-        return CustomResponse.onSuccess(HttpStatus.OK, payment);
+        PaymentResponseDTO.PaymentUserListResponseDTO response = paymentQueryService.getUserListPayment(user.id());
+        return CustomResponse.onSuccess(HttpStatus.OK, response);
     }
 }
