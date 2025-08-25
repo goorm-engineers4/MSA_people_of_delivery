@@ -34,8 +34,7 @@ public class PaymentQueryServiceImpl implements PaymentQueryService {
         if (orderId == null || userId == null) {
             throw new PaymentException(PaymentErrorCode.INVALID_INPUT);
         }
-        
-        // 사용자 존재 여부 검증
+
         if (!userClient.existsUser(userId)) {
             log.error("존재하지 않는 사용자: userId={}", userId);
             throw new PaymentException(PaymentErrorCode.USER_NOT_FOUND);
@@ -54,8 +53,7 @@ public class PaymentQueryServiceImpl implements PaymentQueryService {
         if (userId == null) {
             throw new PaymentException(PaymentErrorCode.INVALID_INPUT);
         }
-        
-        // 사용자 존재 여부 검증
+
         if (!userClient.existsUser(userId)) {
             log.error("존재하지 않는 사용자: userId={}", userId);
             throw new PaymentException(PaymentErrorCode.USER_NOT_FOUND);
