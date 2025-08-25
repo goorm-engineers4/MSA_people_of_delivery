@@ -1,6 +1,7 @@
 package com.example.cloudfour.cartservice.client;
 
 import com.example.cloudfour.cartservice.commondto.MenuOptionResponseDTO;
+import com.example.cloudfour.cartservice.commondto.MenuQuantityResponseDTO;
 import com.example.cloudfour.cartservice.commondto.MenuResponseDTO;
 import com.example.cloudfour.cartservice.commondto.StoreResponseDTO;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -120,6 +122,80 @@ public class StoreClient {
             throw e;
         }
     }
+
+    @Retryable(value = {Exception.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    public MenuQuantityResponseDTO getMenuStock(UUID menuId) {
+        if (menuId == null) {
+            log.warn("Menu ID가 null입니다");
+            return null;
+        }
+
+        try {
+            String url = BASE + "/menus/" + menuId + "/stock";
+            log.debug("재고 조회 요청: {}", url);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = rt.getForObject(url, Map.class);
+            
+            if (response != null && response.get("data") != null) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> data = (Map<String, Object>) response.get("data");
+                
+                MenuQuantityResponseDTO stockInfo = MenuQuantityResponseDTO.builder()
+                        .stockId(UUID.fromString((String) data.get("stockId")))
+                        .menuId(UUID.fromString((String) data.get("menuId")))
+                        .quantity(Long.valueOf(data.get("quantity").toString()))
+                        .version(Long.valueOf(data.get("version").toString()))
+                        .build();
+                
+                log.info("메뉴 재고 정보 조회 완료: menuId={}, quantity={}", menuId, stockInfo.getQuantity());
+                return stockInfo;
+            }
+            
+            log.warn("재고 정보가 없습니다: menuId={}", menuId);
+            return null;
+        } catch (Exception e) {
+            log.error("메뉴 재고 정보 조회 실패: {}", menuId, e);
+            throw e;
+        }
+    }
+
+    @Retryable(value = {Exception.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    public boolean decreaseStock(UUID stockId, Long quantity) {
+        if (stockId == null || quantity == null || quantity <= 0) {
+            log.warn("잘못된 재고 감소 요청: stockId={}, quantity={}", stockId, quantity);
+            return false;
+        }
+
+        try {
+            String url = BASE + "/menus/stock/" + stockId + "/decrease?quantity=" + quantity;
+            rt.postForObject(url, null, String.class);
+            log.info("재고 감소 완료: stockId={}, quantity={}", stockId, quantity);
+            return true;
+        } catch (Exception e) {
+            log.error("재고 감소 실패: stockId={}, quantity={}", stockId, quantity, e);
+            throw e;
+        }
+    }
+
+    @Retryable(value = {Exception.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    public boolean increaseStock(UUID stockId, Long quantity) {
+        if (stockId == null || quantity == null || quantity <= 0) {
+            log.warn("잘못된 재고 증가 요청: stockId={}, quantity={}", stockId, quantity);
+            return false;
+        }
+
+        try {
+            String url = BASE + "/menus/stock/" + stockId + "/increase?quantity=" + quantity;
+            rt.postForObject(url, null, String.class);
+            log.info("재고 증가 완료: stockId={}, quantity={}", stockId, quantity);
+            return true;
+        } catch (Exception e) {
+            log.error("재고 증가 실패: stockId={}, quantity={}", stockId, quantity, e);
+            throw e;
+        }
+    }
+
     public List<MenuOptionResponseDTO> menuOptionsByIds(List<UUID> menuOptionIds) {
         if (menuOptionIds == null || menuOptionIds.isEmpty()) {
             return List.of();
@@ -144,6 +220,4 @@ public class StoreClient {
             return null;
         }
     }
-
-
 }
