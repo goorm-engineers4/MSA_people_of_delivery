@@ -14,8 +14,6 @@ import com.example.cloudfour.paymentservice.domain.payment.service.IdempotencySe
 import com.example.cloudfour.paymentservice.domain.payment.service.WebhookSignatureService;
 import com.example.cloudfour.paymentservice.domain.payment.apiclient.OrderClient;
 import com.example.cloudfour.paymentservice.domain.payment.apiclient.TossApiClient;
-import com.example.cloudfour.paymentservice.domain.payment.apiclient.UserClient;
-import com.example.cloudfour.paymentservice.domain.payment.apiclient.StoreClient;
 import com.example.cloudfour.paymentservice.domain.payment.dto.TossWebhookPayload;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -39,26 +37,10 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
     private final WebhookSignatureService webhookSignatureService;
     private final PaymentConverter paymentConverter;
     private final ObjectMapper objectMapper;
-    private final OrderClient orderClient;
-    private final UserClient userClient;
-    private final StoreClient storeClient;
 
     @Override
     public PaymentResponseDTO.PaymentConfirmResponseDTO confirmPayment(PaymentRequestDTO.PaymentConfirmRequestDTO request, UUID userId) {
         log.info("결제 승인 시작: paymentKey={}, orderId={}, userId={}", request.getPaymentKey(), request.getOrderId(), userId);
-
-        if (!userClient.existsUser(userId)) {
-            log.error("존재하지 않는 사용자: userId={}", userId);
-            throw new PaymentException(PaymentErrorCode.USER_NOT_FOUND);
-        }
-
-        com.example.cloudfour.paymentservice.commondto.OrderResponseDTO order = 
-            orderClient.getOrderById(request.getOrderId(), userId);
-        
-        if (!storeClient.existsStore(order.getStoreId())) {
-            log.error("존재하지 않는 가게: storeId={}", order.getStoreId());
-            throw new PaymentException(PaymentErrorCode.STORE_NOT_FOUND);
-        }
 
         var existingPayment = idempotencyService.checkPaymentApprovalIdempotency(request.getPaymentKey(), request.getOrderId());
         if (existingPayment.isPresent()) {
@@ -104,13 +86,6 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
             idempotencyService.setPaymentCancelIdempotency(history);
             paymentHistoryRepository.save(history);
 
-            try {
-                orderClient.updateOrderStatus(request.getOrderId(), "주문완료");
-                log.info("주문 상태 업데이트 완료: orderId={}, status=주문완료", request.getOrderId());
-            } catch (Exception e) {
-                log.error("주문 상태 업데이트 실패하지만 결제는 성공: orderId={}, error={}", request.getOrderId(), e.getMessage());
-            }
-
             log.info("결제 승인 완료: paymentId={}, paymentKey={}", payment.getId(), payment.getPaymentKey());
             return paymentConverter.toConfirmResponse(payment);
 
@@ -148,11 +123,6 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
     public PaymentResponseDTO.PaymentCancelResponseDTO cancelPayment(PaymentRequestDTO.PaymentCancelRequestDTO request, UUID orderId, UUID userId) {
         log.info("결제 취소 시작: orderId={}, userId={}, reason={}", orderId, userId, request.getCancelReason());
 
-        if (!userClient.existsUser(userId)) {
-            log.error("존재하지 않는 사용자: userId={}", userId);
-            throw new PaymentException(PaymentErrorCode.USER_NOT_FOUND);
-        }
-
         Payment payment = paymentRepository.findByOrderIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
@@ -183,13 +153,6 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
 
             idempotencyService.setPaymentCancelIdempotency(history);
             history = paymentHistoryRepository.save(history);
-
-            try {
-                orderClient.updateOrderStatus(orderId.toString(), "주문취소");
-                log.info("주문 상태 업데이트 완료: orderId={}, status=주문취소", orderId);
-            } catch (Exception orderUpdateException) {
-                log.error("주문 상태 업데이트 실패하지만 결제 취소는 성공: orderId={}, error={}", orderId, orderUpdateException.getMessage());
-            }
 
             log.info("결제 취소 완료: paymentId={}, paymentKey={}", payment.getId(), payment.getPaymentKey());
             return paymentConverter.toCancelResponse(payment, history);
@@ -260,8 +223,6 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
             idempotencyService.setWebhookIdempotency(history);
             paymentHistoryRepository.save(history);
 
-            updateOrderStatusBasedOnPayment(payment.getOrderId().toString(), newStatus, previousStatus);
-
             log.info("웹훅 상태 업데이트 완료: paymentKey={}, {} → {}", 
                 webhookPayload.getPaymentKey(), previousStatus, newStatus);
 
@@ -279,38 +240,5 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
             case "FAILED" -> PaymentStatus.FAILED;
             default -> throw new PaymentException(PaymentErrorCode.UNKNOWN_TOSS_STATUS);
         };
-    }
-
-    private void updateOrderStatusBasedOnPayment(String orderId, PaymentStatus newPaymentStatus, PaymentStatus previousPaymentStatus) {
-        try {
-            String newOrderStatus = null;
-
-            if (newPaymentStatus == previousPaymentStatus) {
-                return;
-            }
-            
-            switch (newPaymentStatus) {
-                case APPROVED:
-                    newOrderStatus = "주문완료";
-                    break;
-                case CANCELED:
-                    newOrderStatus = "주문취소";
-                    break;
-                case FAILED:
-                    newOrderStatus = "결제전";
-                    break;
-                default:
-                    log.warn("알 수 없는 결제 상태로 주문 상태 업데이트 생략: paymentStatus={}", newPaymentStatus);
-                    return;
-            }
-            
-            orderClient.updateOrderStatus(orderId, newOrderStatus);
-            log.info("결제 상태 변경에 따른 주문 상태 업데이트 완료: orderId={}, paymentStatus={} → {}, orderStatus={}", 
-                orderId, previousPaymentStatus, newPaymentStatus, newOrderStatus);
-                
-        } catch (Exception e) {
-            log.error("결제 상태 변경에 따른 주문 상태 업데이트 실패: orderId={}, paymentStatus={} → {}, error={}", 
-                orderId, previousPaymentStatus, newPaymentStatus, e.getMessage());
-        }
     }
 }
