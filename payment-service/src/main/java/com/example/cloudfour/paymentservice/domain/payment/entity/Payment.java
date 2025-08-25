@@ -2,24 +2,14 @@ package com.example.cloudfour.paymentservice.domain.payment.entity;
 
 import com.example.cloudfour.paymentservice.domain.payment.enums.PaymentStatus;
 import com.example.cloudfour.modulecommon.entity.BaseEntity;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -29,6 +19,7 @@ import java.util.UUID;
 @Builder
 @Table(name = "p_payment")
 public class Payment extends BaseEntity {
+    
     @Id
     @GeneratedValue
     private UUID id;
@@ -37,10 +28,13 @@ public class Payment extends BaseEntity {
     private String paymentKey;
 
     @Column(nullable = false)
-    private String tossOrderId;
+    private String orderId;
 
     @Column(nullable = false)
-    private Integer totalPrice;
+    private UUID userId;
+
+    @Column(nullable = false)
+    private Integer amount;
 
     @Column(nullable = false)
     private String paymentMethod;
@@ -49,47 +43,74 @@ public class Payment extends BaseEntity {
     @Column(nullable = false)
     private PaymentStatus paymentStatus;
 
-    @Lob
+    @Column(length = 500)
     private String failedReason;
 
-    @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
-    private PaymentHistory paymentHistory;
+    @Column
+    private LocalDateTime approvedAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name ="orderId", nullable = false)
-    private UUID orderId;
+    @Column
+    private LocalDateTime canceledAt;
 
-    public void setPaymentStatus(PaymentStatus paymentStatus) {this.paymentStatus = paymentStatus;}
+    @Column(length = 1000)
+    private String rawResponse;
 
-    public void setFailedReason(String s) { this.failedReason = s;}
+    @Column(length = 100)
+    private String idempotencyKey;
 
-    public static class PaymentBuilder{
-        private PaymentBuilder id(UUID id){
+    public void approve(LocalDateTime approvedAt, String rawResponse) {
+        this.paymentStatus = PaymentStatus.APPROVED;
+        this.approvedAt = approvedAt;
+        this.rawResponse = maskSensitiveInfo(rawResponse);
+    }
+
+    public void fail(String reason, String rawResponse) {
+        this.paymentStatus = PaymentStatus.FAILED;
+        this.failedReason = reason;
+        this.rawResponse = maskSensitiveInfo(rawResponse);
+    }
+
+    public void cancel(String reason, LocalDateTime canceledAt, String rawResponse) {
+        this.paymentStatus = PaymentStatus.CANCELED;
+        this.canceledAt = canceledAt;
+        this.failedReason = reason;
+        this.rawResponse = maskSensitiveInfo(rawResponse);
+    }
+
+    public boolean isApproved() {
+        return PaymentStatus.APPROVED.equals(this.paymentStatus);
+    }
+
+    public boolean isCanceled() {
+        return PaymentStatus.CANCELED.equals(this.paymentStatus);
+    }
+
+    public boolean isFailed() {
+        return PaymentStatus.FAILED.equals(this.paymentStatus);
+    }
+
+    public boolean canCancel() {
+        return isApproved();
+    }
+
+    private String maskSensitiveInfo(String rawResponse) {
+        if (rawResponse == null) return null;
+        return rawResponse.replaceAll("(\"cardNumber\":\\s*\")([0-9]{4})([0-9]{4})([0-9]{4})([0-9]{4})(\")", 
+                                   "$1$2****$4****$6")
+                        .replaceAll("(\"accountNumber\":\\s*\")([0-9]{1,})(\")", 
+                                   "$1****$3");
+    }
+
+    // 테스트 및 내부 사용
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
+    public static class PaymentBuilder {
+        private PaymentBuilder id(UUID id) {
             throw new UnsupportedOperationException("id 수동 생성 불가");
         }
     }
-
-    public void setPaymentHistory(PaymentHistory paymentHistory){
-        this.paymentHistory = paymentHistory;
-    }
-
-    public PaymentHistory addHistory(PaymentStatus previousStatus, PaymentStatus currentStatus, String changeReason) {
-        PaymentHistory history = PaymentHistory.builder()
-                .previousStatus(previousStatus)
-                .paymentStatus(currentStatus)
-                .failedReason(this.getFailedReason())
-                .build();
-
-        history.setPayment(this);
-        this.setPaymentHistory(history);
-        return history;
-    }
-
-    public void markAsFailed(String message) {
-        this.paymentStatus = PaymentStatus.FAILED;
-        this.failedReason = message;
-    }
-
 }
 
 

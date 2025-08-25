@@ -2,23 +2,14 @@ package com.example.cloudfour.paymentservice.domain.payment.entity;
 
 import com.example.cloudfour.paymentservice.domain.payment.enums.PaymentStatus;
 import com.example.cloudfour.modulecommon.entity.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -28,32 +19,55 @@ import java.util.UUID;
 @Builder
 @Table(name = "p_payment_history")
 public class PaymentHistory extends BaseEntity {
+    
     @Id
     @GeneratedValue
     private UUID id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id", nullable = false)
+    private Payment payment;
+
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private PaymentStatus previousStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentStatus paymentStatus;
+    private PaymentStatus currentStatus;
 
-    @Lob
-    private String failedReason;
+    @Column(length = 500)
+    private String changeReason;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "paymentId", nullable = false)
-    private Payment payment;
+    @Column(length = 1000)
+    private String rawResponse;
 
-    public static class PaymentHistoryBuilder{
-        private PaymentHistoryBuilder id(UUID id){
-            throw new UnsupportedOperationException("id 수동 생성 불가");
-        }
+    @Column(length = 100)
+    private String idempotencyKey;
+
+    @Column
+    private LocalDateTime processedAt;
+
+    @Column
+    private LocalDateTime canceledAt;
+
+    public void markAsProcessed(String idempotencyKey) {
+        this.processedAt = LocalDateTime.now();
+        this.idempotencyKey = idempotencyKey;
     }
 
-    public void setPayment(Payment payment){
-        this.payment = payment;
-        payment.setPaymentHistory(this);
+    public boolean isProcessed() {
+        return this.processedAt != null;
+    }
+
+    // 테스트 및 내부 사용
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
+    public static class PaymentHistoryBuilder {
+        private PaymentHistoryBuilder id(UUID id) {
+            throw new UnsupportedOperationException("id 수동 생성 불가");
+        }
     }
 }
