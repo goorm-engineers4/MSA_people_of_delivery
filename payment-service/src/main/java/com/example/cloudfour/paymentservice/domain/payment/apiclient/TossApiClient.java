@@ -1,55 +1,84 @@
 package com.example.cloudfour.paymentservice.domain.payment.apiclient;
 
-import com.example.cloudfour.paymentservice.domain.payment.dto.TossApproveResponse;
-import com.example.cloudfour.paymentservice.domain.payment.dto.TossCancelResponse;
-import com.example.cloudfour.paymentservice.domain.payment.exception.PaymentErrorCode;
-import com.example.cloudfour.paymentservice.domain.payment.exception.PaymentException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TossApiClient {
 
-    private final RestClient restClient;
-
+    private final RestTemplate restTemplate;
+    
     @Value("${toss.secret-key}")
     private String secretKey;
 
-    public TossApproveResponse approvePayment(String paymentKey, String orderId, int amount, String idempotencyKey) {
-        if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            throw new IllegalArgumentException("Idempotency-Key는 null일 수 없습니다.");
-        }
+    private static final String BASE = "https://api.tosspayments.com";
 
-        return restClient.post()
-            .uri("/v1/payments/confirm")
-            .headers(h -> {
-                h.setBasicAuth(secretKey, "");
-                h.set("Idempotency-Key", idempotencyKey);})
-            .body(Map.of("paymentKey", paymentKey, "orderId", orderId, "amount", amount))
-            .retrieve()
-            .onStatus(HttpStatusCode::isError, (request, response) -> {
-                throw new PaymentException(PaymentErrorCode.TOSS_API_ERROR,
-                    "토스 결제 승인 API 호출에 실패했습니다. status: " + response.getStatusCode());
-            })
-            .body(TossApproveResponse.class);
+    public TossApproveResponse approvePayment(String paymentKey, String orderId, Integer amount, String idempotencyKey) {
+        String url = BASE + "/v1/payments/" + paymentKey;
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Basic " + java.util.Base64.getEncoder().encodeToString((secretKey + ":").getBytes()));
+        headers.set("Idempotency-Key", idempotencyKey);
+        
+        Map<String, Object> requestBody = Map.of(
+            "orderId", orderId,
+            "amount", amount
+        );
+        
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+        
+        try {
+            log.info("토스 결제 승인 요청: paymentKey={}, orderId={}, amount={}", paymentKey, orderId, amount);
+            TossApproveResponse response = restTemplate.postForObject(url, request, TossApproveResponse.class);
+            log.info("토스 결제 승인 성공: paymentKey={}", paymentKey);
+            return response;
+        } catch (Exception e) {
+            log.error("토스 결제 승인 실패: paymentKey={}, error={}", paymentKey, e.getMessage());
+            throw e;
+        }
     }
 
-    public TossCancelResponse cancelPayment(String paymentKey, String cancelReason) {
-        return restClient.post()
-            .uri("/v1/payments/" + paymentKey + "/cancel")
-            .headers(h -> h.setBasicAuth(secretKey, ""))
-            .body(Map.of("cancelReason", cancelReason))
-            .retrieve()
-            .onStatus(HttpStatusCode::isError, (request, response) -> {
-                throw new PaymentException(PaymentErrorCode.TOSS_API_ERROR,
-                    "토스 결제 취소 API 호출에 실패했습니다. status: " + response.getStatusCode());
-            })
-            .body(TossCancelResponse.class);
+
+    public void cancelPayment(String paymentKey, String cancelReason) {
+        String url = BASE + "/v1/payments/" + paymentKey + "/cancel";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Basic " + java.util.Base64.getEncoder().encodeToString((secretKey + ":").getBytes()));
+        
+        Map<String, Object> requestBody = Map.of(
+            "cancelReason", cancelReason
+        );
+        
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+        
+        try {
+            log.info("토스 결제 취소 요청: paymentKey={}, reason={}", paymentKey, cancelReason);
+            restTemplate.postForObject(url, request, Object.class);
+            log.info("토스 결제 취소 성공: paymentKey={}", paymentKey);
+        } catch (Exception e) {
+            log.error("토스 결제 취소 실패: paymentKey={}, error={}", paymentKey, e.getMessage());
+            throw e;
+        }
+    }
+
+    public static class TossApproveResponse {
+        public String paymentKey;
+        public String orderId;
+        public Integer totalAmount;
+        public String method;
+        public String status;
+        public String approvedAt;
     }
 }
