@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.*;
-import java.util.UUID;
 
 public class PaymentRequestDTO {
 
