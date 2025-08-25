@@ -5,16 +5,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class StoreResponseDTO {
-    private UUID storeId;
-    private String storeName;
-    private String address;
-    private String phoneNumber;
-    private boolean isDeleted;
+    private UUID id;
+    private String name;
+    private UUID ownerId;
 }

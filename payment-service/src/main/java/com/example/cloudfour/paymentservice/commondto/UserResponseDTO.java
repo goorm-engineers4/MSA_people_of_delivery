@@ -5,16 +5,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserResponseDTO {
-    private UUID userId;
+    private UUID id;
     private String email;
     private String name;
-    private String phoneNumber;
-    private boolean isDeleted;
+    private String role;
 }

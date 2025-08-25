@@ -21,6 +21,5 @@ public class OrderResponseDTO {
     private String orderType;
     private String receiptType;
     private String address;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }
+

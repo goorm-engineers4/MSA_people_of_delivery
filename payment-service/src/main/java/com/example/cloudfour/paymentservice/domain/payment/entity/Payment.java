@@ -77,20 +77,10 @@ public class Payment extends BaseEntity {
         this.rawResponse = maskSensitiveInfo(rawResponse);
     }
 
-    public boolean isApproved() {
-        return PaymentStatus.APPROVED.equals(this.paymentStatus);
-    }
 
-    public boolean isCanceled() {
-        return PaymentStatus.CANCELED.equals(this.paymentStatus);
-    }
-
-    public boolean isFailed() {
-        return PaymentStatus.FAILED.equals(this.paymentStatus);
-    }
 
     public boolean canCancel() {
-        return isApproved();
+        return PaymentStatus.APPROVED.equals(this.paymentStatus);
     }
 
     private String maskSensitiveInfo(String rawResponse) {

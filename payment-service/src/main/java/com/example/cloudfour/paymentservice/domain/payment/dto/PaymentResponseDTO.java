@@ -50,6 +50,7 @@ public class PaymentResponseDTO {
         private PaymentStatus paymentStatus;
         private String failedReason;
         private LocalDateTime approvedAt;
+        private LocalDateTime canceledAt;
         private LocalDateTime createdAt;
     }
 

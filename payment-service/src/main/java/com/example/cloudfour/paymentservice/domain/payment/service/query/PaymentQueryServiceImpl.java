@@ -7,6 +7,7 @@ import com.example.cloudfour.paymentservice.domain.payment.enums.PaymentStatus;
 import com.example.cloudfour.paymentservice.domain.payment.exception.PaymentErrorCode;
 import com.example.cloudfour.paymentservice.domain.payment.exception.PaymentException;
 import com.example.cloudfour.paymentservice.domain.payment.repository.PaymentRepository;
+import com.example.cloudfour.paymentservice.domain.payment.apiclient.UserClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class PaymentQueryServiceImpl implements PaymentQueryService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentConverter paymentConverter;
+    private final UserClient userClient;
 
     @Override
     public PaymentResponseDTO.PaymentDetailResponseDTO getDetailPayment(UUID orderId, UUID userId) {
@@ -31,6 +33,12 @@ public class PaymentQueryServiceImpl implements PaymentQueryService {
         
         if (orderId == null || userId == null) {
             throw new PaymentException(PaymentErrorCode.INVALID_INPUT);
+        }
+        
+        // 사용자 존재 여부 검증
+        if (!userClient.existsUser(userId)) {
+            log.error("존재하지 않는 사용자: userId={}", userId);
+            throw new PaymentException(PaymentErrorCode.USER_NOT_FOUND);
         }
         
         Payment payment = paymentRepository.findByOrderIdAndUserId(orderId, userId)
@@ -45,6 +53,12 @@ public class PaymentQueryServiceImpl implements PaymentQueryService {
         
         if (userId == null) {
             throw new PaymentException(PaymentErrorCode.INVALID_INPUT);
+        }
+        
+        // 사용자 존재 여부 검증
+        if (!userClient.existsUser(userId)) {
+            log.error("존재하지 않는 사용자: userId={}", userId);
+            throw new PaymentException(PaymentErrorCode.USER_NOT_FOUND);
         }
         
         List<Payment> payments = paymentRepository.findAllByUserId(userId);
