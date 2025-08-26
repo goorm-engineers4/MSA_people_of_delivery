@@ -53,7 +53,6 @@ public class PaymentController {
 
     @PatchMapping("/{orderId}/cancel")
     @Operation(summary = "결제 취소", description = "결제를 취소합니다.")
-    @PreAuthorize("hasRole('USER') and authentication.principal.id == #user.id()")
     public CustomResponse<PaymentResponseDTO.PaymentCancelResponseDTO> cancelPayment(
             @Valid @RequestBody PaymentRequestDTO.PaymentCancelRequestDTO request,
             @PathVariable("orderId") UUID orderId,
