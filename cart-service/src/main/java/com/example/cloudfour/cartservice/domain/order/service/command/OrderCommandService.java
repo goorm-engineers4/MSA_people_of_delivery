@@ -91,7 +91,6 @@ public class OrderCommandService {
         OrderStatus prevStatus = order.getStatus();
         OrderStatus newStatus = req.getNewStatus();
         
-        // 주문이 취소되는 경우 재고 복구
         if (newStatus == OrderStatus.주문취소 && prevStatus != OrderStatus.주문취소) {
             log.info("주문 취소로 인한 재고 복구 시작: orderId={}", orderId);
             restoreStock(orderId);
