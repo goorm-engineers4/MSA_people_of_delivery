@@ -33,7 +33,8 @@ public class Stock {
     @GeneratedValue
     private UUID id;
 
-    private Long quantity;
+    @Builder.Default
+    private Long quantity = (long) Integer.MAX_VALUE;
 
     @Version
     private Long version;
@@ -63,6 +64,7 @@ public class Stock {
     }
 
     public void decrease(Long quantity){
+        if(quantity<0)quantity = -quantity;
         if(this.quantity - quantity < 0){
             throw new StockException(StockErrorCode.MINUS_FAILED);
         }

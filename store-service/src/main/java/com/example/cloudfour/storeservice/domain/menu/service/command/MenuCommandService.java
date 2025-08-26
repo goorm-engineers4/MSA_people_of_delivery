@@ -38,6 +38,7 @@ public class MenuCommandService {
     private final StoreRepository storeRepository;
     private final MenuCategoryRepository menuCategoryRepository;
     private final MenuOptionRepository menuOptionRepository;
+    private final StockCommandService stockCommandService;
 
     public MenuResponseDTO.MenuDetailResponseDTO createMenu(
             MenuRequestDTO.MenuCreateRequestDTO requestDTO,
@@ -113,6 +114,15 @@ public class MenuCommandService {
         );
         menu.setMenuCategory(menuCategory);
 
+        Long quantity = requestDTO.getQuantity();
+        UUID stockId = menu.getStock().getId();
+        if(quantity>0){
+            log.info("재고 증가");
+            stockCommandService.increaseStock(stockId, quantity);
+        }else{
+            log.info("재고 감소");
+            stockCommandService.decreaseStock(stockId, quantity);
+        }
         Menu updatedMenu = menuRepository.save(menu);
         log.info("메뉴 수정 성공");
         return MenuConverter.toMenuDetail1ResponseDTO(updatedMenu);
