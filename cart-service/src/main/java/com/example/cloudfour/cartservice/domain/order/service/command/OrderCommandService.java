@@ -60,7 +60,6 @@ public class OrderCommandService {
         validateStoreExists(cart.getStore());
         validateCartItemsNotEmpty(cart.getCartItems());
 
-        // 재고 확인 및 감소
         validateAndDecreaseStock(cart.getCartItems());
 
         int totalPrice = calculateTotalPrice(cart.getCartItems());
@@ -114,7 +113,6 @@ public class OrderCommandService {
 
         Order order = findOrderById(orderId);
         
-        // 주문 삭제 시 재고 복구 (취소되지 않은 주문인 경우)
         if (order.getStatus() != OrderStatus.주문취소) {
             log.info("주문 삭제로 인한 재고 복구 시작: orderId={}", orderId);
             restoreStock(orderId);
