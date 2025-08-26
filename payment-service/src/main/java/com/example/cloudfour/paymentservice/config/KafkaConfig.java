@@ -40,8 +40,7 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        
-        // 안전한 프로듀서 설정
+
         configProps.put(ProducerConfig.ACKS_CONFIG, "all");
         configProps.put(ProducerConfig.RETRIES_CONFIG, 3);
         configProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
@@ -66,8 +65,7 @@ public class KafkaConfig {
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        
-        // JSON 역직렬화 설정
+
         configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "com.example.cloudfour.cartservice.event,com.example.cloudfour.paymentservice.domain.payment.event");
         configProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         configProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.cloudfour.paymentservice.domain.payment.event.OrderCreatedEvent");
@@ -80,11 +78,9 @@ public class KafkaConfig {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = 
             new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-        
-        // 수동 커밋 모드 설정
+
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
-        
-        // 에러 핸들링
+
         factory.setCommonErrorHandler(new org.springframework.kafka.listener.DefaultErrorHandler());
         
         return factory;
