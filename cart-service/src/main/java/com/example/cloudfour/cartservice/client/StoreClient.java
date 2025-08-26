@@ -129,27 +129,17 @@ public class StoreClient {
             log.warn("Menu ID가 null입니다");
             return null;
         }
-
+            
         try {
             String url = BASE + "/menus/" + menuId + "/stock";
             log.debug("재고 조회 요청: {}", url);
 
             @SuppressWarnings("unchecked")
-            Map<String, Object> response = rt.getForObject(url, Map.class);
+            MenuQuantityResponseDTO response = rt.getForObject(url, MenuQuantityResponseDTO.class);
             
-            if (response != null && response.get("data") != null) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> data = (Map<String, Object>) response.get("data");
-                
-                MenuQuantityResponseDTO stockInfo = MenuQuantityResponseDTO.builder()
-                        .stockId(UUID.fromString((String) data.get("stockId")))
-                        .menuId(UUID.fromString((String) data.get("menuId")))
-                        .quantity(Long.valueOf(data.get("quantity").toString()))
-                        .version(Long.valueOf(data.get("version").toString()))
-                        .build();
-                
-                log.info("메뉴 재고 정보 조회 완료: menuId={}, quantity={}", menuId, stockInfo.getQuantity());
-                return stockInfo;
+            if (response != null) {
+                log.info("메뉴 재고 정보 조회 완료: menuId={}, quantity={}", menuId, response.getQuantity());
+                return response;
             }
             
             log.warn("재고 정보가 없습니다: menuId={}", menuId);
