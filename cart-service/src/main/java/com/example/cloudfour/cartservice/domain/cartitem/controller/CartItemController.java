@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,7 @@ public class CartItemController {
     private final CartItemQueryService cartItemIdQueryService;
 
     @PostMapping("/{cartId}")
+    @PreAuthorize("hasRole('ROLE_USER') and authentication.principal.id == #user.id()")
     @Operation(summary = "장바구니 항목 추가", description = "장바구니 항목을 추가합니다. 장바구니 항목 추가에 사용되는 API입니다.")
     public CustomResponse<CartItemResponseDTO.CartItemAddResponseDTO> addCartItem(
             @PathVariable("cartId") UUID cartId,
@@ -45,6 +47,7 @@ public class CartItemController {
     }
 
     @GetMapping("/{cartItemId}")
+    @PreAuthorize("hasRole('ROLE_USER') and authentication.principal.id == #user.id()")
     @Operation(summary = "장바구니 항목 조회", description = "장바구니 항목을 조회합니다. 장바구니 항목 조회에 사용되는 API입니다.")
     public CustomResponse<CartItemResponseDTO.CartItemListResponseDTO> getCartItem(
             @PathVariable("cartItemId") UUID cartItemId,
@@ -55,6 +58,7 @@ public class CartItemController {
     }
 
     @PatchMapping("/{cartItemId}")
+    @PreAuthorize("hasRole('ROLE_USER') and authentication.principal.id == #user.id()")
     @Operation(summary = "장바구니 항목, 옵션 수정", description = "장바구니 항목, 옵션을 수정합니다. 장바구니 항목, 옵션 수정에 사용되는 API입니다.")
     public CustomResponse<CartItemResponseDTO.CartItemUpdateResponseDTO> updateCartItem(
             @PathVariable("cartItemId") UUID cartItemId,
@@ -69,6 +73,7 @@ public class CartItemController {
     }
 
     @DeleteMapping("/{cartItemId}")
+    @PreAuthorize("hasRole('ROLE_USER') and authentication.principal.id == #user.id()")
     @Operation(summary = "장바구니 항목 삭제", description = "장바구니 항목을 삭제합니다. 장바구니 항목 삭제에 사용되는 API입니다.")
     public CustomResponse<String> deleteCartItem(
             @PathVariable("cartItemId") UUID cartItemId,

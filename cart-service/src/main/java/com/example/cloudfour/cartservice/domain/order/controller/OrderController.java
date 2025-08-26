@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +37,7 @@ public class OrderController {
     private final OrderQueryService orderQueryService;
 
     @PostMapping("/{cartId}")
+    @PreAuthorize("hasRole('ROLE_USER') and authentication.principal.id == #user.id()")
     @Operation(summary = "주문 생성", description = "주문을 생성합니다. 주문 생성에 사용되는 API입니다.")
     public CustomResponse<OrderResponseDTO.OrderCreateResponseDTO> createOrder(
             @PathVariable("cartId") UUID cartId,
@@ -46,6 +49,7 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
+    @PreAuthorize("hasRole('ROLE_USER') and authentication.principal.id == #user.id()")
     @Operation(summary = "주문 상세 조회", description = "주문을 상세 조회합니다. 주문 상세 조회에 사용되는 API입니다.")
     public CustomResponse<OrderResponseDTO.OrderDetailResponseDTO> getOrder(
             @PathVariable("orderId") UUID orderId,
@@ -56,6 +60,7 @@ public class OrderController {
     }
 
     @GetMapping("/{orderItemId}")
+    @PreAuthorize("hasRole('ROLE_USER') and authentication.principal.id == #user.id()")
     @Operation(summary = "주문 아이템 상세 조회", description = "주문 아이템을 상세 조회합니다. 주문 아이템 상세 조회에 사용되는 API입니다.")
     public CustomResponse<OrderItemResponseDTO.OrderItemListResponseDTO> getOrderItem(
             @PathVariable("orderItemId") UUID orderItemId,
@@ -66,6 +71,7 @@ public class OrderController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasRole('ROLE_USER') and authentication.principal.id == #user.id()")
     @Operation(summary = "내 주문 내역 조회", description = "내 주문 내역을 조회합니다. 내 주문 내역 조회에 사용되는 API입니다.")
     @Parameter(name = "cursor", description = "데이터가 시작하는 부분을 표시합니다")
     @Parameter(name = "size", description = "size만큼 데이터를 가져옵니다.")
@@ -79,6 +85,7 @@ public class OrderController {
     }
 
     @GetMapping("/{storeId}/orders")
+    @Secured("ROLE_OWNER")
     @Operation(summary = "가게 주문 조회", description = "가게 주문을 조회합니다. 가게 주문 조회에 사용되는 API입니다.")
     @Parameter(name = "cursor", description = "데이터가 시작하는 부분을 표시합니다")
     @Parameter(name = "size", description = "size만큼 데이터를 가져옵니다.")
@@ -93,6 +100,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{orderId}/status")
+    @Secured("ROLE_OWNER")
     @Operation(summary = "주문 상태 변경", description = "주문 상태를 변경합니다. 주문 상태 변경에 사용되는 API입니다.")
     public CustomResponse<OrderResponseDTO.OrderUpdateResponseDTO>  updateOrderStatus(
             @Valid @RequestBody OrderRequestDTO.OrderUpdateRequestDTO orderUpdateRequestDTO,
@@ -104,6 +112,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{orderId}/canceled")
+    @PreAuthorize("hasRole('ROLE_OWNER') or hasRole('ROLE_MASTER')")
     @Operation(summary = "주문 취소", description = "주문을 취소합니다. 주문 취소에 사용되는 API입니다.")
     public CustomResponse<String>  deleteOrder(
             @PathVariable("orderId") UUID orderId,
