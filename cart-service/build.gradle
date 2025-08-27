@@ -58,6 +58,10 @@ dependencies {
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // test에서도 lombok 사용 가능하게 추가
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 dependencyManagement {
