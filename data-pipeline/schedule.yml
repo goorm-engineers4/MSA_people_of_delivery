@@ -1,0 +1,98 @@
+# 🍜 AI 메뉴 랭킹 시스템 - 스케줄러 설정
+# 매일 09:00 데이터 파이프라인 자동 실행
+
+name: "AI 메뉴 랭킹 데이터 파이프라인"
+version: "1.0"
+
+# 스케줄 설정
+schedule:
+  # 매일 오전 9시 실행
+  daily_ingest:
+    cron: "0 9 * * *"  # 매일 09:00 (KST)
+    command: "make ingest"
+    description: "메뉴 및 날씨 데이터 수집"
+    timeout: 1800  # 30분 타임아웃
+    retry: 3
+    on_failure: "alert"
+  
+  # 매시간 품질 체크
+  hourly_quality:
+    cron: "0 * * * *"  # 매시간 정각
+    command: "make quality-check"
+    description: "데이터 품질 모니터링"
+    timeout: 300   # 5분 타임아웃
+    retry: 1
+    on_failure: "log"
+  
+  # 매일 오후 6시 성능 테스트
+  daily_performance:
+    cron: "0 18 * * *"  # 매일 18:00 (KST)
+    command: "make performance-test"
+    description: "AI 랭킹 성능 측정"
+    timeout: 600   # 10분 타임아웃
+    retry: 2
+    on_failure: "alert"
+
+# 알림 설정
+notifications:
+  slack:
+    webhook_url: "${SLACK_WEBHOOK_URL}"
+    channels:
+      - "#data-pipeline"
+      - "#ai-alerts"
+  
+  email:
+    recipients:
+      - "data-team@company.com"
+      - "ai-team@company.com"
+    
+# 환경 변수
+environment:
+  PYTHON_PATH: "/usr/local/bin/python3"
+  DATA_DIR: "./data"
+  LOG_DIR: "./logs"
+  TZ: "Asia/Seoul"
+  
+# 의존성 체크
+health_checks:
+  - name: "PostgreSQL 연결"
+    command: "pg_isready -h localhost -p 5432"
+    
+  - name: "OpenWeatherMap API"
+    command: "curl -f https://api.openweathermap.org/data/2.5/weather?q=Seoul&appid=${WEATHER_API_KEY}"
+    
+  - name: "디스크 용량"
+    command: "df -h | grep -v '^Filesystem' | awk '{print $5}' | sed 's/%//g' | awk '{if($1 > 80) exit 1}'"
+
+# 로그 관리
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  rotation:
+    max_size: "100MB"
+    backup_count: 7
+  
+# 모니터링 대시보드
+monitoring:
+  metrics:
+    - name: "pipeline_success_rate"
+      description: "파이프라인 성공률"
+      target: "> 95%"
+    
+    - name: "data_freshness"
+      description: "데이터 신선도"
+      target: "< 24시간"
+    
+    - name: "ndcg5_score"
+      description: "AI 랭킹 성능"
+      target: "> 0.7"
+
+# Docker 컨테이너 설정 (선택사항)
+docker:
+  image: "python:3.9-slim"
+  volumes:
+    - "./data:/app/data"
+    - "./logs:/app/logs"
+  environment:
+    - "TZ=Asia/Seoul"
+    - "PYTHONPATH=/app"

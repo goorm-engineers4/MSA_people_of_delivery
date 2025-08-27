@@ -1,0 +1,324 @@
+# 🍜 AI 메뉴 랭킹 시스템 - PostgreSQL 기반 스키마 정의
+# Version: v2.0 (2024-12-19)  
+# 변경사항: PostgreSQL 운영 DB 기반으로 전면 개편, Analytics Schema 추가
+
+version: 2
+
+# 운영 DB 스키마 (Source)
+sources:
+  - name: production_db
+    description: "운영 환경 PostgreSQL 데이터베이스"
+    tables:
+      - name: menus
+        description: "메뉴 마스터 테이블 (store-service)"
+        columns:
+          - name: id
+            description: "메뉴 ID (PK)"
+          - name: store_id  
+            description: "매장 ID (FK)"
+          - name: name
+            description: "메뉴명"
+          - name: category
+            description: "메뉴 카테고리"
+          - name: price
+            description: "가격"
+          - name: is_active
+            description: "활성 상태"
+            
+      - name: users
+        description: "사용자 테이블 (user-service)"
+        columns:
+          - name: id
+            description: "사용자 ID (PK)"
+          - name: email
+            description: "이메일"
+          - name: created_at
+            description: "가입일"
+            
+      - name: orders
+        description: "주문 테이블"
+        columns:
+          - name: id
+            description: "주문 ID (PK)"
+          - name: user_id
+            description: "사용자 ID (FK)"
+          - name: status
+            description: "주문 상태"
+          - name: created_at
+            description: "주문 시간"
+
+# Analytics 스키마 모델 (Target)
+models:
+  - name: menu_features
+    description: "AI 랭킹용 메뉴 특성 테이블"
+    columns:
+      - name: menu_id
+        description: "메뉴 고유 ID (Source: menus.id)"
+        data_type: bigint
+        constraints:
+          - type: primary_key
+          - type: not_null
+      
+      - name: store_id
+        description: "매장 ID (Source: menus.store_id)"
+        data_type: bigint
+        constraints:
+          - type: not_null
+      
+      - name: name
+        description: "메뉴명 (Source: menus.name)"
+        data_type: varchar(100)
+        constraints:
+          - type: not_null
+      
+      - name: category
+        description: "메뉴 카테고리 (Source: menus.category)"
+        data_type: varchar(50)
+        constraints:
+          - type: not_null
+      
+      - name: price
+        description: "가격 원 (Source: menus.price)"
+        data_type: integer
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "price > 0"
+      
+      - name: rating
+        description: "평균 평점 (Calculated from reviews)"
+        data_type: decimal(3,2)
+        constraints:
+          - type: check
+            expression: "rating >= 0.0 AND rating <= 5.0"
+      
+      - name: review_count
+        description: "리뷰 개수 (Count from reviews)"
+        data_type: integer
+        constraints:
+          - type: check
+            expression: "review_count >= 0"
+      
+      - name: tags
+        description: "메뉴 태그 배열 (Aggregated from menu_tags)"
+        data_type: text[]
+      
+      - name: is_hot_food
+        description: "따뜻한 음식 여부 (Calculated by category)"
+        data_type: boolean
+        constraints:
+          - type: not_null
+      
+      - name: weather_score
+        description: "날씨 적합성 점수 0.0-1.0 (v2.0 category 기반 계산)"
+        data_type: decimal(3,2)
+        constraints:
+          - type: check
+            expression: "weather_score >= 0.0 AND weather_score <= 1.0"
+      
+      - name: last_synced_at
+        description: "마지막 동기화 시간 (KST)"
+        data_type: timestamp with time zone
+        constraints:
+          - type: not_null
+        default: "CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul'"
+
+  - name: user_preferences
+    description: "사용자 선호도 분석 테이블 (주문 패턴 기반)"
+    columns:
+      - name: user_id
+        description: "사용자 ID (Source: users.id)"
+        data_type: bigint
+        constraints:
+          - type: primary_key
+          - type: not_null
+      
+      - name: preference_category
+        description: "선호 카테고리 (주문 패턴 분석)"
+        data_type: varchar(50)
+        constraints:
+          - type: not_null
+      
+      - name: preference_value
+        description: "선호도 강도 (high/medium/low)"
+        data_type: varchar(10)
+        constraints:
+          - type: check
+            expression: "preference_value IN ('high', 'medium', 'low')"
+      
+      - name: confidence_score
+        description: "신뢰도 점수 (주문 수 기반)"
+        data_type: decimal(3,2)
+        constraints:
+          - type: check
+            expression: "confidence_score >= 0.0 AND confidence_score <= 1.0"
+      
+      - name: order_count
+        description: "총 주문 수 (최근 90일)"
+        data_type: integer
+        constraints:
+          - type: check
+            expression: "order_count >= 0"
+      
+      - name: last_order_date
+        description: "마지막 주문 날짜"
+        data_type: timestamp with time zone
+      
+      - name: last_updated
+        description: "분석 업데이트 시간"
+        data_type: timestamp with time zone
+        constraints:
+          - type: not_null
+        default: "CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul'"
+
+  - name: weather_data
+    description: "실시간 날씨 정보 (외부 API 수집)"
+    columns:
+      - name: city
+        description: "도시명"
+        data_type: varchar(50)
+        constraints:
+          - type: not_null
+      
+      - name: weather_date
+        description: "날씨 측정 시간 (시간 단위 반올림)"
+        data_type: timestamp with time zone
+        constraints:
+          - type: not_null
+      
+      - name: temperature
+        description: "온도 (섭씨)"
+        data_type: decimal(4,1)
+      
+      - name: weather_condition
+        description: "날씨 상태 (맑음, 비, 눈 등)"
+        data_type: varchar(20)
+      
+      - name: humidity
+        description: "습도 (%)"
+        data_type: integer
+        constraints:
+          - type: check
+            expression: "humidity >= 0 AND humidity <= 100"
+      
+      - name: wind_speed
+        description: "풍속 (m/s)"
+        data_type: decimal(4,1)
+        constraints:
+          - type: check
+            expression: "wind_speed >= 0"
+      
+      - name: created_at
+        description: "데이터 수집 시간 (KST)"
+        data_type: timestamp with time zone
+        constraints:
+          - type: not_null
+        default: "CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul'"
+    
+    constraints:
+      - type: primary_key
+        columns: [city, weather_date]
+
+  - name: ranking_performance
+    description: "AI 랭킹 성능 지표 (일별 측정)"
+    columns:
+      - name: test_scenario
+        description: "테스트 시나리오명"
+        data_type: varchar(100)
+        constraints:
+          - type: not_null
+      
+      - name: city
+        description: "테스트 도시"
+        data_type: varchar(50)
+        constraints:
+          - type: not_null
+      
+      - name: weather_condition
+        description: "날씨 조건"
+        data_type: varchar(20)
+      
+      - name: temperature
+        description: "온도"
+        data_type: decimal(4,1)
+      
+      - name: user_preference
+        description: "사용자 선호도"
+        data_type: varchar(20)
+      
+      - name: ndcg5_score
+        description: "NDCG@5 점수 (0.0-1.0)"
+        data_type: decimal(5,4)
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "ndcg5_score >= 0.0 AND ndcg5_score <= 1.0"
+      
+      - name: hit5_score
+        description: "Hit@5 점수 (0.0-1.0)"
+        data_type: decimal(5,4)
+        constraints:
+          - type: check
+            expression: "hit5_score >= 0.0 AND hit5_score <= 1.0"
+      
+      - name: response_time_ms
+        description: "응답 시간 (밀리초)"
+        data_type: integer
+        constraints:
+          - type: check
+            expression: "response_time_ms > 0"
+      
+      - name: total_menus
+        description: "전체 메뉴 수"
+        data_type: integer
+        constraints:
+          - type: not_null
+      
+      - name: measured_at
+        description: "측정 시간 (KST)"
+        data_type: timestamp with time zone
+        constraints:
+          - type: not_null
+        default: "CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul'"
+    
+    constraints:
+      - type: primary_key
+        columns: [test_scenario, measured_at]
+
+# 데이터 품질 테스트 (PostgreSQL 기반)
+tests:
+  - name: check_menu_features_completeness
+    description: "menu_features 테이블 필수 컬럼 완성도 확인"
+    query: |
+      SELECT COUNT(*) as incomplete_count
+      FROM analytics.menu_features 
+      WHERE name IS NULL OR category IS NULL OR price IS NULL
+    
+  - name: check_user_preferences_freshness
+    description: "사용자 선호도 데이터가 7일 이내인지 확인"
+    query: |
+      SELECT COUNT(*) as stale_count
+      FROM analytics.user_preferences
+      WHERE last_updated < NOW() - INTERVAL '7 days'
+    
+  - name: check_weather_data_freshness
+    description: "날씨 데이터가 24시간 이내인지 확인"
+    query: |
+      SELECT COUNT(*) as stale_count
+      FROM analytics.weather_data
+      WHERE created_at < NOW() - INTERVAL '24 hours'
+    
+  - name: check_ranking_performance_quality
+    description: "AI 랭킹 성능이 임계값 이상인지 확인"
+    query: |
+      SELECT COUNT(*) as poor_performance_count
+      FROM analytics.ranking_performance
+      WHERE ndcg5_score < 0.6
+        AND measured_at >= CURRENT_DATE - INTERVAL '7 days'
+
+# PostgreSQL 특화 설정
+database_config:
+  timezone: "Asia/Seoul"
+  schema_prefix: "analytics"
+  connection_pool_size: 10
+  query_timeout: 300
