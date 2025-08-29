@@ -1,3 +1,9 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.4'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
 dependencies {
     implementation project(':module-common')
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
@@ -53,6 +59,8 @@ tasks.named('test') {
     // Mockito agent configuration to fix future JDK compatibility warnings
     jvmArgs '-javaagent:' + configurations.testRuntimeClasspath.find { it.name.contains('byte-buddy-agent') }.absolutePath
 }
+
+tasks.register("prepareKotlinBuildScriptModel"){}
 
 def querydslDir = "$buildDir/generated/querydsl"
 
