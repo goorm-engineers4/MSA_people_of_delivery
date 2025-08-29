@@ -67,6 +67,24 @@ spring:
                 - AuthFilter
                 - RewritePath=/api/ai-service/(?<segment>.*),/${segment}
 
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    disable-swagger-default-url: true
+    urls:
+      - name: 인증 서비스
+        url: /api/auth-service/v3/api-docs
+      - name: 회원 서비스
+        url: /api/user-service/v3/api-docs
+      - name: 가게 서비스
+        url: /api/store-service/v3/api-docs
+      - name: 주문 서비스
+        url: /api/cart-service/v3/api-docs
+      - name: 결제 서비스
+        url: /api/payment-service/v3/api-docs
+
 management:
   endpoints:
     web:
