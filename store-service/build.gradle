@@ -1,41 +1,3 @@
-plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.5.4'
-    id 'io.spring.dependency-management' version '1.1.7'
-}
-
-group = 'com.example.cloudfour'
-version = '0.0.1-SNAPSHOT'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-    querydsl.extendsFrom compileClasspath
-}
-
-repositories {
-    mavenCentral()
-}
-
-ext {
-    set('springCloudVersion', "2025.0.0")
-    set('querydslVersion', "5.0.0")  // Querydsl 버전 명시적 정의
-}
-
-// dependencyManagement를 dependencies보다 먼저 선언
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-    }
-}
-
 dependencies {
     implementation project(':module-common')
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
@@ -91,8 +53,6 @@ tasks.named('test') {
     // Mockito agent configuration to fix future JDK compatibility warnings
     jvmArgs '-javaagent:' + configurations.testRuntimeClasspath.find { it.name.contains('byte-buddy-agent') }.absolutePath
 }
-
-tasks.register("prepareKotlinBuildScriptModel"){}
 
 def querydslDir = "$buildDir/generated/querydsl"
 

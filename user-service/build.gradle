@@ -1,34 +1,3 @@
-import org.gradle.jvm.toolchain.JavaLanguageVersion
-
-plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.5.4'
-    id 'io.spring.dependency-management' version '1.1.7'
-}
-
-group = 'com.example.cloudfour'
-version = '0.0.1-SNAPSHOT'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-}
-
-repositories {
-    mavenCentral()
-}
-
-ext {
-    set('springCloudVersion', "2025.0.0")
-}
-
 dependencies {
     implementation project(':module-common')
 
@@ -69,12 +38,6 @@ dependencies {
     testImplementation 'org.mockito:mockito-junit-jupiter:5.11.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'org.assertj:assertj-core:3.26.3'
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-    }
 }
 
 tasks.named('test') {
