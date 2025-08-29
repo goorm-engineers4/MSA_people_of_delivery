@@ -1,0 +1,57 @@
+server:
+  port: 8014
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: http://discovery:8761/eureka/
+
+spring:
+  application:
+    name: user-service
+  profiles:
+    active: local
+  jpa:
+    hibernate.ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5436/user_db
+    driver-class-name: org.postgresql.Driver
+    #    driver-class-name: org.h2.Driver # 테스트용
+    username: user
+    password: password
+  cloud:
+    config:
+      enabled: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    auth-code-expiration-millis: 1800000
