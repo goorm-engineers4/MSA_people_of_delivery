@@ -20,8 +20,6 @@ management:
 spring:
   application:
     name: module-common
-  profiles:
-    active: prod
   jpa:
     hibernate.ddl-auto: update
     show-sql: true

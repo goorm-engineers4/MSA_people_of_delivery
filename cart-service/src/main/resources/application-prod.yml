@@ -19,8 +19,6 @@ management:
 spring:
   application:
     name: cart-service
-  profiles:
-    active: prod
 
   jpa:
     hibernate.ddl-auto: update
