@@ -4,8 +4,6 @@ server:
 spring:
   application:
     name: ai-service
-  profiles:
-    active: local
 
   jpa:
     hibernate.ddl-auto: update

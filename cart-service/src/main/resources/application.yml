@@ -1,21 +1,10 @@
 server:
-  port: 8016
-
-eureka:
-  instance:
-    prefer-ip-address: true
-  client:
-    enabled: true
-    register-with-eureka: true
-    fetch-registry: true
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+  port: 8012
 
 spring:
   application:
-    name: payment-service
-  profiles:
-    active: local
+    name: cart-service
+
   jpa:
     hibernate.ddl-auto: update
     show-sql: true
@@ -23,6 +12,15 @@ spring:
       hibernate:
         format_sql: true
         highlight_sql: true
+
+    eureka:
+      instance:
+        prefer-ip-address: true
+      client:
+        register-with-eureka: true
+        fetch-registry: true
+        serviceUrl:
+          defaultZone: http://localhost:8761/eureka/
 
   datasource:
     url: ${LOCAL_DB_URL}
@@ -32,10 +30,6 @@ spring:
   cloud:
     config:
       enabled: false
-
-toss:
-  secret-key: ${TOSS_SECRET}
-  webhook-secret: ${TOSS_WEBHOOK_SECRET:webhook_secret_key}
 
 kafka:
   bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
@@ -47,18 +41,18 @@ kafka:
     batch-size: 16384
     linger-ms: 10
     buffer-memory: 33554432
-    properties:
-      enable.idempotence: true
   consumer:
-    group-id: payment-service-group
+    group-id: order-service-group
     auto-offset-reset: earliest
     key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     enable-auto-commit: false
     properties:
-      spring.json.trusted.packages: "com.example.cloudfour.cartservice.event,com.example.cloudfour.paymentservice.domain.payment.event"
+      spring.json.trusted.packages: "com.example.cloudfour.paymentservice.domain.payment.event,com.example.cloudfour.cartservice.event"
   topic:
     order-events: order-events
     payment-events: payment-events
+
+
 
 

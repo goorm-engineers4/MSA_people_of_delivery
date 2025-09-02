@@ -1,5 +1,5 @@
 server:
-  port: 8014
+  port: 8015
 
 eureka:
   instance:
@@ -13,9 +13,8 @@ eureka:
 
 spring:
   application:
-    name: user-service
-  profiles:
-    active: local
+    name: auth-service
+
   jpa:
     hibernate.ddl-auto: update
     show-sql: true
@@ -25,11 +24,10 @@ spring:
         highlight_sql: true
 
   datasource:
-    url: jdbc:postgresql://localhost:5436/user_db
+    url: ${LOCAL_DB_URL}
     driver-class-name: org.postgresql.Driver
-    #    driver-class-name: org.h2.Driver # 테스트용
-    username: user
-    password: password
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
   cloud:
     config:
       enabled: false
@@ -55,3 +53,12 @@ spring:
           timeout: 5000
           writetimeout: 5000
     auth-code-expiration-millis: 1800000
+
+jwt:
+  issuer: http://auth-service
+  audience: app
+  access-exp-seconds: 900
+  refresh-exp-seconds: 1209600
+  jwks:
+    enabled: true
+    key-id: auth-key-1

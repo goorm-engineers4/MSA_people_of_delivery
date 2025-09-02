@@ -21,8 +21,6 @@ management:
 spring:
   application:
     name: store-service
-  profiles:
-    active: prod
   jpa:
     hibernate.ddl-auto: update
     show-sql: true
