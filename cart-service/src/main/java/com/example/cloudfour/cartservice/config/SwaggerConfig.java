@@ -1,4 +1,4 @@
-package com.example.cloudfour.aiservice.config;
+package com.example.cloudfour.cartservice.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -16,7 +16,7 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 @Configuration
 @OpenAPIDefinition(
-        info = @Info(title = "API Document", description = "AI SERVICE 명세서", version = "v3")
+        info = @Info(title = "API Document", description = "Cart SERVICE 명세서", version = "v3")
 )
 public class SwaggerConfig {
 

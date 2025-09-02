@@ -26,6 +26,14 @@ spring:
         format_sql: true
         highlight_sql: true
 
+  springdoc:
+    api-docs:
+      version: openapi_3_1
+      enabled: true
+    enable-spring-security: true
+    default-consumes-media-type: application/json
+    default-produces-media-type: application/json
+
   data:
     mongodb:
       uri: ${MONGO_URI}

@@ -1,4 +1,4 @@
-package com.example.cloudfour.aiservice.config;
+package com.example.cloudfour.storeservice.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -16,7 +16,7 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 @Configuration
 @OpenAPIDefinition(
-        info = @Info(title = "API Document", description = "AI SERVICE 명세서", version = "v3")
+        info = @Info(title = "API Document", description = "Store SERVICE 명세서", version = "v3")
 )
 public class SwaggerConfig {
 
@@ -30,6 +30,6 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .components(new Components().addSecuritySchemes("bearerAuth", securityScheme))
                 .security(Arrays.asList(securityRequirement))
-                .addServersItem(new Server().url("/"));
+                .addServersItem(new Server().url("/api/store-service"));
     }
 }
