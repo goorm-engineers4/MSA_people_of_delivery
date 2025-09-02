@@ -33,6 +33,15 @@ spring:
     config:
       enabled: false
 
+  springdoc:
+    api-docs:
+      version: openapi_3_1
+      enabled: true
+    enable-spring-security: true
+    default-consumes-media-type: application/json
+    default-produces-media-type: application/json
+
+
 
 management:
   endpoints:
